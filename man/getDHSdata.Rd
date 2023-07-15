@@ -2,25 +2,25 @@
 % Please edit documentation in R/getDHSdata.R
 \name{getDHSdata}
 \alias{getDHSdata}
-\title{Download DHS data}
+\title{Download DHS survey data}
 \usage{
-getDHSdata(country, survey)
+getDHSdata(country, indicator, year)
 }
 \arguments{
-\item{country}{add description to country argument here.}
+\item{country}{Country name.}
 
-\item{survey}{add description to survey argument here.}
+\item{indicator}{Indicator of interests.}
+
+\item{year}{Year the survey conducted.}
 }
 \value{
-This function returns a list of datasets containing:
+This function returns the survey dataset that contains the indicator:
 \itemize{
-  \item IRdata individual file
-  \item PRdata 
-  \item KRdata 
+  \item Rdata
 }
 }
 \description{
-This function downloads all relevant DHS data for a particular country and survey.
+This function downloads DHS data for a particular country and survey.
 }
 \examples{
 \dontrun{

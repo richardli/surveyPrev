@@ -1,23 +1,39 @@
-#' Download DHS data
-#' 
-#' This function downloads all relevant DHS data for a particular country and survey.
+#' Download DHS survey data
 #'
-#' @param country add description to country argument here.
-#' @param survey add description to survey argument here.
-#' 
-#' @return This function returns a list of datasets containing:
+#' This function downloads DHS data for a particular country and survey.
+#'
+#' @param country Country name.
+#' @param indicator Indicator of interests.
+#' @param year Year the survey conducted.
+#'
+#' @return This function returns the survey dataset that contains the indicator:
 #' \itemize{
-#'   \item IRdata individual file
-#'   \item PRdata 
-#'   \item KRdata 
+#'   \item Rdata
 #' }
 #' @importFrom rdhs get_datasets
+#' @importFrom stringr str_to_title
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
 #' }
-#' 
+#'
 #' @export
-getDHSdata <- function(country, survey) {
-
+getDHSdata <- function(country, indicator, year) {
+  CountryName<-stringr::str_to_title(country)
+  indicator<-indicator
+  countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
+  potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
+    dplyr::filter( FileFormat=='Stata dataset (.dta)')
+  if (indicator %in% c("womananemia", "ancvisit4+")) {
+    Type <- c("Individual Recode")
+  } else if (indicator %in% c("stunting", "wasting")) {
+    Type <- c("Household Member Recode")
+  } else if (indicator %in% c("DPT3")) {
+    Type <- c("Children's Recode")
+  }
+  surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
+  data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, clear_cache = T)
+  Rdata<-readRDS(paste0(data.paths.tmp))
+  return(Rdata)
 }
+
