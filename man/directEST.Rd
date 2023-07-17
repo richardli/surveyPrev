@@ -4,12 +4,12 @@
 \alias{directEST}
 \title{Calculate direct estimates}
 \usage{
-directEST(dat.tem, cluserinfo, admininfo, admin)
+directEST(dat.tem, clusterinfo, admininfo, admin)
 }
 \arguments{
 \item{dat.tem}{dataframe that contains the indicator of interests}
 
-\item{cluserinfo}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
+\item{clusterinfo}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 
 \item{admininfo}{dataframe that contains population and urban/rural proportion at specific admin level}
 

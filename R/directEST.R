@@ -3,7 +3,7 @@
 #' This function calculate direct estimates at given admin level.
 #'
 #' @param dat.tem  dataframe that contains the indicator of interests
-#' @param cluserinfo dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
+#' @param clusterinfo dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admininfo dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
 #'
@@ -20,7 +20,7 @@
 #' @export
 
 
-directEST <- function(dat.tem, cluserinfo, admininfo, admin ){
+directEST <- function(dat.tem, clusterinfo, admininfo, admin ){
   if(sum(is.na(dat.tem$value))>0){
     dat.tem <- dat.tem[rowSums(is.na(dat.tem)) == 0, ]
     message("Removing NAs in indicator response")
