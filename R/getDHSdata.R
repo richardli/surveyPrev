@@ -3,7 +3,7 @@
 #' This function downloads DHS data for a particular country and survey.
 #'
 #' @param country Country name.
-#' @param indicator Indicator of interests.
+#' @param indicator Indicator of interests. Current list of supported indicators include: "womananemia", "ancvisit4+", "stunting", "wasting", "DPT3".
 #' @param year Year the survey conducted.
 #'
 #' @return This function returns the survey dataset that contains the indicator:

@@ -9,7 +9,7 @@ getDHSdata(country, indicator, year)
 \arguments{
 \item{country}{Country name.}
 
-\item{indicator}{Indicator of interests.}
+\item{indicator}{Indicator of interests. Current list of supported indicators include: "womananemia", "ancvisit4+", "stunting", "wasting", "DPT3".}
 
 \item{year}{Year the survey conducted.}
 }

@@ -18,7 +18,7 @@
 #' }
 #'
 #' @export
-cluserinfo <- function(geo, poly.adm1, poly.adm2) {
+clusterinfo <- function(geo, poly.adm1, poly.adm2) {
   # SpatialPointsDataFrame for point shape file for each cluster
   points<-geo
   cluster.info<-points@data%>%dplyr::select(cluster=DHSCLUST, LONGNUM, LATNUM)

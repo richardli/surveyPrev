@@ -2,7 +2,7 @@
 
 export(admininfo)
 export(aggPopulation)
-export(cluserinfo)
+export(clusterinfo)
 export(directEST)
 export(getDHSdata)
 export(getDHSgeo)
