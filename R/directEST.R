@@ -27,7 +27,7 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin ){
   }
   if(admin==2){
     #prepare data
-    modt<- left_join(dat.tem,cluserinfo$cluster.info,by="cluster")
+    modt<- left_join(dat.tem,clusterinfo$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
 
     #model
@@ -38,19 +38,21 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin ){
     admin2_res <- survey::svyby(formula = ~value, by = ~admin2.name,
                           design = design, survey::svymean, drop.empty.groups = FALSE)
     #aggregate results
-    admin1_agg<- left_join(admin2_res,admininfo,by="admin2.name")%>%
+    admin1_agg<- left_join(admininfo,admin2_res,by="admin2.name")%>%
       mutate(prop=population/sum(population))%>%
       group_by(admin1.name) %>%
+      mutate_all(~replace(., is.na(.), 0)) %>%
       summarise(weighted_avg = weighted.mean(value, prop))
 
     nation_agg<- left_join(admin2_res,admininfo,by="admin2.name")%>%
+      mutate_all(~replace(., is.na(.), 0)) %>%
       mutate(prop=population/sum(population))%>%
       summarise(weighted_avg = weighted.mean(value, prop))
 
     return(list(admin2_res,admin1_agg,nation_agg))
     }
   else{
-    modt<- left_join(dat.tem,cluserinfo$cluster.info,by="cluster")
+    modt<- left_join(dat.tem,clusterinfo$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
 
     #model
@@ -62,7 +64,7 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin ){
                                 design = design, survey::svymean, drop.empty.groups = FALSE)
     #aggregate results
 
-    nation_agg<- left_join(admin1_res,admininfo,by="admin1.name")%>%
+    nation_agg<- left_join(admininfo,admin1_res,by="admin1.name")%>%
       mutate(prop=population/sum(population))%>%
       summarise(weighted_avg = weighted.mean(value, prop))
     return(list(admin1_res,nation_agg))
