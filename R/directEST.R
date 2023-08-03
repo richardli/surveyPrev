@@ -110,7 +110,7 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin,Amat ){
                  is.unit.level=FALSE,
                  smooth=FALSE)
     admin1_res<-smoothSurvey_res$HT
-    colnames(admin1_res)[1:3] <- c("admin1.name","value","var")
+    colnames(admin1_res)[1:3] <- c("admin1.name","value","se")
 
 
     nation_agg<- left_join(admininfo,admin1_res,by="admin1.name")%>%
