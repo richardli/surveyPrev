@@ -3,7 +3,7 @@
 #' This function calculate smoothed direct estimates at given admin level.
 #'
 #' @param dat.tem  dataframe that contains the indicator of interests
-#' @param cluserinfo dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
+#' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admininfo dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
 #'
@@ -21,7 +21,7 @@
 #' @export
 
 
-smthdirectEST <- function(dat.tem, cluserinfo, admininfo, admin, Amat ){
+smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
   if(sum(is.na(dat.tem$value))>0){
     dat.tem <- dat.tem[rowSums(is.na(dat.tem)) == 0, ]
     message("Removing NAs in indicator response")
@@ -30,7 +30,7 @@ smthdirectEST <- function(dat.tem, cluserinfo, admininfo, admin, Amat ){
   if(admin==2){
 
     #prepare data
-    modt<- left_join(dat.tem,cluserinfo$cluster.info,by="cluster")
+    modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -55,16 +55,20 @@ smthdirectEST <- function(dat.tem, cluserinfo, admininfo, admin, Amat ){
       group_by(admin1.name) %>%
       summarise(weighted_avg = weighted.mean(value, prop))
 
+
+
+
     nation_agg<- left_join(admin2_res,admininfo,by="admin2.name")%>%
       mutate(prop=population/sum(population))%>%
-      summarise(weighted_avg = weighted.mean(value, prop))
+      summarise(weighted_avg = weighted.mean(value, prop))%>%
+      mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
     return(list(admin2_res,admin1_agg,nation_agg))
   }
   else{
 
     #prepare data
-    modt<- left_join(dat.tem,cluserinfo$cluster.info,by="cluster")
+    modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -86,7 +90,8 @@ smthdirectEST <- function(dat.tem, cluserinfo, admininfo, admin, Amat ){
     #aggregate results
     nation_agg<- left_join(admin1_res,admininfo,by="admin1.name")%>%
       mutate(prop=population/sum(population))%>%
-      summarise(weighted_avg = weighted.mean(value, prop))
+      summarise(weighted_avg = weighted.mean(value, prop))%>%
+      mutate(weighted_avg = sprintf("%.4f", weighted_avg))
     return(list(admin1_res,nation_agg))
   }
 

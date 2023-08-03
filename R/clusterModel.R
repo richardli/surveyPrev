@@ -14,6 +14,7 @@
 #' }
 #' @import dplyr
 #' @importFrom survey svydesign svyby
+#' @importFrom data.table data.table
 #' @importFrom SUMMER smoothSurvey
 #' @import INLA
 #' @author Qianyu Dong
@@ -26,8 +27,7 @@
 
 clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialmodel,stata){
 
-
-  modt<- left_join(dat.tem,cluster.infom,by="cluster")
+  modt<- left_join(dat.tem,cluster.info,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -240,7 +240,7 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
     weight=admin.info$population/admin.info$population1
 
     # post.all <-  data.table(weight*draw.all)
-    post.all <-  data.table(t(weight*t(draw.all)))#nrow=legth(weight)
+    post.all <-  data.table::data.table(t(weight*t(draw.all)))#nrow=legth(weight)
     colnames(post.all) <- admin.info$admin1.name
     subgroups<-split.default(post.all, names(post.all))
 

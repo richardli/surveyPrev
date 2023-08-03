@@ -40,6 +40,7 @@ admininfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
     colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin2.name'
     admininfo<-dplyr::left_join(adminname,agg.pop,by='admin2.name')
 
+
     #Adjacency matrix
     poly.adm2<-SpatialPolygons
     admin.mat <- spdep::poly2nb(SpatialPolygons(poly.adm2@polygons))

@@ -23,37 +23,96 @@ scatterPlot<-function(scatter,res1,nameres1,res2,nameres2){
   if(scatter=="estimate"){
     if(nameres1=="dir.admin1"){
       res1<-res1[[1]]
-      colnames(res1)[colnames(res1) == 'value'] <- 'dir.est'
+      name1<-'dir.est'
+      colnames(res1)[colnames(res1) == 'value'] <- name1
     } else if(nameres1=="dir.admin2"){
       res1<-res1[[2]]
-      colnames(res1)[colnames(res1) == 'weighted_avg'] <- 'agg.dir.est'
+      name1<- 'agg.dir.est'
+      colnames(res1)[colnames(res1) == 'weighted_avg'] <- name1
     } else if(nameres1=="smth.ad1"){
       res1<-res1[[1]]
-      colnames(res1)[colnames(res1) == 'value'] <- 'smth.est'
+      name1<- 'smth.est'
+      colnames(res1)[colnames(res1) == 'value'] <- name1
+    }else if(nameres1=="T1"){
+      res1<-res1[[1]][21:30,]
+      name1<- 'strata.est'
+      colnames(res1)[colnames(res1) == 'value'] <-name1
+    }else if(nameres1=="T2"){
+      res1<-res1[[2]]
+      name1<- 'agg.strata.est'
+      colnames(res1)[colnames(res1) == 'value'] <- name1
+    }else if(nameres1=="F1"){
+      res1<-res1[[1]]
+      name1<- 'cluster.est'
+      colnames(res1)[colnames(res1) == 'value'] <-name1
+    }else if(nameres1=="F2"){
+      res1<-res1[[2]]
+      name1<-'agg.cluster.est'
+      colnames(res1)[colnames(res1) == 'value'] <- name1
     }
 
     if(nameres2=="dir.admin1"){
       res2<-res2[[1]]
-      colnames(res2)[colnames(res2) == 'value'] <- 'dir.est'
+      name2<- 'dir.est'
+      colnames(res2)[colnames(res2) == 'value'] <- name2
     }else if(nameres2=="dir.admin2"){
       res2<-res2[[2]]
-      colnames(res2)[colnames(res2) == 'weighted_avg'] <- 'agg.dir.est'
+      name2<- 'agg.dir.est'
+      colnames(res2)[colnames(res2) == 'weighted_avg'] <-name2
     }else if(nameres2=="smth.ad1"){
       res2<-res2[[1]]
-      colnames(res2)[colnames(res2) == 'value'] <- 'smth.est'
+      name2<- 'smth.est'
+      colnames(res2)[colnames(res2) == 'value'] <- name2
+    }else if(nameres2=="T1"){
+      res2<-res2[[1]][21:30,]
+      name2 <- 'strata.est'
+      colnames(res2)[colnames(res2) == 'value']<- name2
+    }else if(nameres2=="T2"){
+      res2<-res2[[2]]
+      name2<- 'agg.strata.est'
+      colnames(res2)[colnames(res2) == 'value'] <- name2
+    }else if(nameres2=="F1"){
+      res2<-res2[[1]]
+      name2 <- 'cluster.est'
+      colnames(res2)[colnames(res2) == 'value']<- name2
+    }else if(nameres2=="F2"){
+      res2<-res2[[2]]
+      name2<-'agg.cluster.est'
+      colnames(res2)[colnames(res2) == 'value'] <- name2
     }
-    xandy<-c(colnames(res1)[2], colnames(res2)[2])
 
+
+
+
+    xandy<-c(name1, name2)
+    # print(xandy)
 
   }else if (scatter=="se"){
     if(nameres1=="dir.admin1"){
       res1<-res1[[1]]
-      res1$dir.est<-res1$se
+      name1<- 'direct.sd'
+      colnames(res1)[colnames(res1) == 'se'] <-name1
 
-    } else if(nameres1=="smth.ad1"){
+    }else if(nameres1=="smth.ad1"){
       res1<-res1[[1]]
-      res1$dir.est<-sqrt(res1$var)
-
+      res1$smth.dir.sd<-sqrt(res1$var)
+      name1<-"smth.dir.sd"
+    }else if(nameres1=="T1"){
+      res1<-res1[[1]][21:30,]
+      name1<- 'strata.sd'
+      colnames(res1)[colnames(res1) == 'sd'] <-name1
+    }else if(nameres1=="T2"){
+      res1<-res1[[2]]
+      name1<- 'agg.strata.sd'
+      colnames(res1)[colnames(res1) == 'sd'] <- name1
+    }else if(nameres1=="F1"){
+      res1<-res1[[1]]
+      name1<- 'cluster.sd'
+      colnames(res1)[colnames(res1) == 'sd'] <-name1
+    }else if(nameres1=="F2"){
+      res1<-res1[[2]]
+      name1<-'agg.cluster.sd'
+      colnames(res1)[colnames(res1) == 'sd'] <- name1
     }
     # } else if(nameres1=="dir.admin2"){
     #   res1<-res1[[2]]
@@ -61,22 +120,43 @@ scatterPlot<-function(scatter,res1,nameres1,res2,nameres2){
 
     if(nameres2=="dir.admin1"){
       res2<-res2[[1]]
-      # colnames(res2)[colnames(res2) == 'var'] <- 'dir.est'
-      res2$dir.est<-res2$se
-      }else if(nameres2=="smth.ad1"){
+      name2<- 'direct.sd'
+      colnames(res2)[colnames(res2) == 'se'] <-name2
+
+    }else if(nameres2=="smth.ad1"){
       res2<-res2[[1]]
-      # colnames(res2)[colnames(res2) == 'var'] <- 'smth.est'
-      res2$smth.est<-sqrt(res2$var)}
-    # }else if(nameres2=="dir.admin2"){
-    #   res2<-res2[[2]]
-    #   colnames(res2)[colnames(res2) == 'weighted_avg'] <- 'agg.dir.est'
-    xandy<-c(colnames(res1)[length(colnames(res1))], colnames(res2)[length(colnames(res2))])
+      res2$smth.dir.sd<-sqrt(res2$var)
+      name2<-'smth.dir.sd'
+    }else if(nameres2=="T1"){
+      res2<-res2[[1]][21:30,]
+      name2<- 'strata.sd'
+      colnames(res2)[colnames(res2) == 'sd'] <-name2
+    }else if(nameres2=="T2"){
+      res2<-res2[[2]]
+      name2<- 'agg.strata.sd'
+      colnames(res2)[colnames(res2) == 'sd'] <- name2
+    }else if(nameres2=="F1"){
+      res2<-res2[[1]]
+      name2<- 'cluster.sd'
+      colnames(res2)[colnames(res2) == 'sd'] <-name2
+    }else if(nameres2=="F2"){
+      res2<-res2[[2]]
+      name2<-'agg.cluster.sd'
+      colnames(res2)[colnames(res2) == 'sd'] <- name2
+    }
+
+    xandy<-c(name1, name2)
+    # xandy<-c(colnames(res1)[length(colnames(res1))], colnames(res2)[length(colnames(res2))])
 
   }
 
 
+
+
+
   df<- merge(x = res1, y = res2, by="admin1.name" )
-  # df
+  # print(df)
+
   lim <- range(c(df[,c(xandy[1])], df[,c(xandy[2])]), na.rm = TRUE)
   ggplot(df, aes(x=df[,c(xandy[1])],y=df[,c(xandy[2])])) +
     geom_point(alpha = 0.5,aes())+
