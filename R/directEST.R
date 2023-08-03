@@ -95,22 +95,22 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin,Amat ){
     design <- survey::svydesign(ids = stats::formula(clusterVar),
                                 weights = ~weight , data = modt)
 
-    admin1_res <- survey::svyby(formula = ~value, by = ~admin1.name,
-                                design = design, survey::svymean, drop.empty.groups = FALSE)
-    #aggregate results
-    # smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
-    #              responseType ="binary",
-    #              responseVar= "value",
-    #              regionVar = "admin1.name",
-    #              clusterVar = "~cluster+householdID",
-    #              weightVar = "weight",
-    #              strataVar = "strata.full",
-    #              Amat =Amat,
-    #              CI = 0.95,
-    #              is.unit.level=FALSE,
-    #              smooth=FALSE)
-    # admin1_res<-smoothSurvey_res$HT
-    # colnames(admin1_res)[1:3] <- c("admin1.name","value","var")
+    # admin1_res <- survey::svyby(formula = ~value, by = ~admin1.name,
+                                # design = design, survey::svymean, drop.empty.groups = FALSE)
+  #  aggregate results
+    smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+                 responseType ="binary",
+                 responseVar= "value",
+                 regionVar = "admin1.name",
+                 clusterVar = "~cluster+householdID",
+                 weightVar = "weight",
+                 strataVar = "strata.full",
+                 Amat =Amat,
+                 CI = 0.95,
+                 is.unit.level=FALSE,
+                 smooth=FALSE)
+    admin1_res<-smoothSurvey_res$HT
+    colnames(admin1_res)[1:3] <- c("admin1.name","value","var")
 
 
     nation_agg<- left_join(admininfo,admin1_res,by="admin1.name")%>%
