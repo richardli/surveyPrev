@@ -64,8 +64,8 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
       mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
     return(list(admin2_res,admin1_agg,nation_agg))
-  }
-  else{
+
+    }else if(admin==1){
 
     #prepare data
     modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
@@ -93,6 +93,39 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
       summarise(weighted_avg = weighted.mean(value, prop))%>%
       mutate(weighted_avg = sprintf("%.4f", weighted_avg))
     return(list(admin1_res,nation_agg))
+
+    }else if(admin==0){
+    dat.tem$admin0.name="Zambia"
+    modt<- left_join(dat.tem,clusterinfo$cluster.info,by="cluster")
+    modt<- modt[!(is.na(modt$LONGNUM)), ]
+    # clusterVar = "~cluster+householdID"
+    # design <- survey::svydesign(ids = stats::formula(clusterVar),
+    #                             weights = ~weight , data = modt)
+    #
+    # admin0_res <- survey::svyby(formula = ~value, by = ~admin0.name,
+    #                       design = design,
+    #                       survey::svymean,
+    #                       drop.empty.groups = FALSE)
+
+    modt$strata.full <- paste(modt$admin0.name, modt$strata)
+
+    smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+                                   responseType ="binary",
+                                   responseVar= "value",
+                                   regionVar = "admin0.name",
+                                   clusterVar = "~cluster+householdID",
+                                   weightVar = "weight",
+                                   strataVar = "strata.full",
+                                   Amat =NULL,
+                                   CI = 0.95,
+                                   is.unit.level=FALSE,
+                                   smooth=T)
+    admin0_res<-smoothSurvey_res$smooth
+    colnames(admin0_res)[1:3] <- c("admin0.name","value","var")
+
+
+    return(admin0_res)
   }
+
 
 }
