@@ -146,8 +146,8 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin,Amat ){
     admin0_res$se<-sqrt(admin0_res$HT.var)
 
     CI <- 0.95
-    admin0_res$quant025 <- expit(admin0_res$HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))[1]
-    admin0_res$quant975 <- expit(admin0_res$HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))[2]
+    admin0_res$quant025 <- expit(admin0_res$HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(admin0_res$HT.logit.var))[1]
+    admin0_res$quant975 <- expit(admin0_res$HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(admin0_res$HT.logit.var))[2]
 
      # lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
 
