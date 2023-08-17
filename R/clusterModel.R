@@ -25,7 +25,7 @@
 #' @export
 
 
-clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialmodel,stata){
+clusterModel<-function(dat.tem,cluster.info,admin,admin.info,admin.mat,spatialmodel,stata){
 
   modt<- left_join(dat.tem,cluster.info,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
@@ -166,9 +166,9 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
       post.all.sd <- apply(draw.all, 2, sd)
 
 
-      post.u.ci <- apply(draw.u, 2, quantile, probs = c(0.25,0.75))
-      post.r.ci <- apply(draw.r, 2,  quantile, probs = c(0.25,0.75))
-      post.all.ci <- apply(draw.all, 2,  quantile, probs = c(0.25,0.75))
+      post.u.ci <- apply(draw.u, 2, quantile, probs = c(0.025,0.975))
+      post.r.ci <- apply(draw.r, 2,  quantile, probs = c(0.025,0.975))
+      post.all.ci <- apply(draw.all, 2,  quantile, probs = c(0.025,0.975))
 
       admin1.bb.res <- data.frame(value = c(post.u, post.r, post.all),
                                   sd = c(post.u.sd, post.r.sd, post.all.sd),
@@ -185,8 +185,8 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
     post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
-                           quant025=quantile(post.all, probs = c(0.25,0.75))[1],
-                           quant975=quantile(post.all, probs = c(0.25,0.75))[2])
+                           quant025=quantile(post.all, probs = c(0.025,0.975))[1],
+                           quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 
     return(list(admin1.bb.res=admin1.bb.res,agg.natl=agg.natl,inla=imod,
                 admin1_post=draw.all,nation_post=post.all))
@@ -206,8 +206,7 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
       admin2.bb.res$sd<-as.numeric (admin2.bb.res$sd)
       admin2.bb.res$quant025<-as.numeric (admin2.bb.res$quant025)
       admin2.bb.res$quant975<-as.numeric (admin2.bb.res$quant975)
-
-      admin2.bb.res<-left_join(admin2.bb.res,admin.info,by="admin2.name")
+      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name")
 
     }else if(stata==T){
       post.u <- apply(draw.u, 2, mean)
@@ -219,9 +218,9 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
       post.all.sd <- apply(draw.all, 2, sd)
 
 
-      post.u.ci <- apply(draw.u, 2, quantile, probs = c(0.25,0.75))
-      post.r.ci <- apply(draw.r, 2,  quantile, probs = c(0.25,0.75))
-      post.all.ci <- apply(draw.all, 2,  quantile, probs = c(0.25,0.75))
+      post.u.ci <- apply(draw.u, 2, quantile, probs = c(0.025,0.975))
+      post.r.ci <- apply(draw.r, 2,  quantile, probs = c(0.025,0.975))
+      post.all.ci <- apply(draw.all, 2,  quantile, probs = c(0.025,0.975))
 
       admin2.bb.res <- data.frame(value = c(post.u, post.r, post.all),
                                   sd = c(post.u.sd, post.r.sd, post.all.sd),
@@ -230,7 +229,7 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("aggregated", nregion)))
       admin2.bb.res$admin2.name <- rep(admin.info$admin2.name, 3)
-      admin2.bb.res<-left_join(admin2.bb.res,admin.info,by="admin2.name")
+      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name")
 
     }
 
@@ -252,8 +251,8 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
 
     agg.admin1 <- data.frame(value = colMeans(admin1.samp),
                              sd =  apply(admin1.samp, 2, sd),
-                             quant025= apply(admin1.samp, 2,  quantile, probs = c(0.25,0.75))[1,],
-                             quant975= apply(admin1.samp, 2,  quantile, probs = c(0.25,0.75))[2,]
+                             quant025= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[1,],
+                             quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
                             )
     agg.admin1$admin1.name=rownames(agg.admin1)
     #agg national
@@ -262,8 +261,8 @@ clusterModel<-function(dat.tem,cluster.info,admin,admin.info, admin.mat,spatialm
     post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
-                           quant025=quantile(post.all, probs = c(0.25,0.75))[1],
-                           quant975=quantile(post.all, probs = c(0.25,0.75))[2])
+                           quant025=quantile(post.all, probs = c(0.025,0.975))[1],
+                           quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 
 
     return(list(admin2.bb.res=admin2.bb.res,agg.admin1=agg.admin1,agg.natl=agg.natl,inla=imod,

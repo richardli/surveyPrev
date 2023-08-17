@@ -30,7 +30,7 @@ if(admin==1){
     } else if(nameres1=="dir.admin2"){
       res1<-res1[[2]]
       name1<- 'agg.dir.est'
-      colnames(res1)[colnames(res1) == 'weighted_avg'] <- name1
+      colnames(res1)[colnames(res1) == 'value'] <- name1
     } else if(nameres1=="smth.ad1"){
       res1<-res1[[1]]
       name1<- 'smth.est'
@@ -60,7 +60,7 @@ if(admin==1){
     }else if(nameres2=="dir.admin2"){
       res2<-res2[[2]]
       name2<- 'agg.dir.est'
-      colnames(res2)[colnames(res2) == 'weighted_avg'] <-name2
+      colnames(res2)[colnames(res2) == 'value'] <-name2
     }else if(nameres2=="smth.ad1"){
       res2<-res2[[1]]
       name2<- 'smth.est'
@@ -93,7 +93,7 @@ if(admin==1){
     if(nameres1=="dir.admin1"){
       res1<-res1[[1]]
       name1<- 'direct.sd'
-      colnames(res1)[colnames(res1) == 'se'] <-name1
+      colnames(res1)[colnames(res1) == 'sd'] <-name1
 
     }else if(nameres1=="smth.ad1"){
       res1<-res1[[1]]
@@ -118,12 +118,12 @@ if(admin==1){
     }
     # } else if(nameres1=="dir.admin2"){
     #   res1<-res1[[2]]
-    #   colnames(res1)[colnames(res1) == 'weighted_avg'] <- 'agg.dir.est'
+    #   colnames(res1)[colnames(res1) == 'value'] <- 'agg.dir.est'
 
     if(nameres2=="dir.admin1"){
       res2<-res2[[1]]
       name2<- 'direct.sd'
-      colnames(res2)[colnames(res2) == 'se'] <-name2
+      colnames(res2)[colnames(res2) == 'sd'] <-name2
 
     }else if(nameres2=="smth.ad1"){
       res2<-res2[[1]]
@@ -220,7 +220,7 @@ if(admin==1){
     if(nameres1=="dir.admin2"){
       res1<-res1[[1]]
       name1<- 'direct.sd'
-      colnames(res1)[colnames(res1) == 'se'] <-name1
+      colnames(res1)[colnames(res1) == 'sd'] <-name1
     }else if(nameres1=="T2"){
       res1<-res1[[1]]
       res1<-res1[which(res1$type=="aggregated"),]
@@ -233,12 +233,12 @@ if(admin==1){
     }
     # } else if(nameres1=="dir.admin2"){
     #   res1<-res1[[2]]
-    #   colnames(res1)[colnames(res1) == 'weighted_avg'] <- 'agg.dir.est'
+    #   colnames(res1)[colnames(res1) == 'value'] <- 'agg.dir.est'
 
     if(nameres2=="dir.admin2"){
       res2<-res2[[1]]
       name2<- 'direct.sd'
-      colnames(res2)[colnames(res2) == 'se'] <-name2
+      colnames(res2)[colnames(res2) == 'sd'] <-name2
     }else if(nameres2=="T2"){
       res2<-res2[[1]]
       res2<-res2[which(res2$type=="aggregated"),]

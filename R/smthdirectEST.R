@@ -49,6 +49,10 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name'
     colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
 
+
+
+
+
     #aggregate results
     admin1_agg<- left_join(admin2_res,admininfo,by="admin2.name")%>%
       mutate(prop=population/sum(population))%>%
@@ -63,7 +67,8 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
       summarise(weighted_avg = weighted.mean(value, prop))%>%
       mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
-    return(list(admin2_res,admin1_agg,nation_agg))
+    return(list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg))
+
 
     }else if(admin==1){
 
@@ -86,18 +91,45 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     colnames(admin1_res)[colnames(admin1_res) == 'mean'] <- 'value'
+    admin1_res$sd<-sqrt(admin1_res$var)
+
+    dd=data.frame(mean=admin1_res$logit.mean,sd=sqrt(admin1_res$logit.var))
+    draw.all= apply(dd, 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
+    weight=admininfo$population/sum(admininfo$population)
+
+    log.nation.samp<-draw.all%*%weight
+
+   #HT.logit.est=mean(log.nation.samp)
+   #HT.logit.var=var(log.nation.samp)
+   #CI <- 0.95
+   #lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
+
+    nation.samp<-expit(log.nation.samp)
+    nation_agg <- data.frame(value = mean(nation.samp),
+                           sd = sd(nation.samp),
+                           quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
+                           quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
+
+
 
     #aggregate results
-    nation_agg<- left_join(admin1_res,admininfo,by="admin1.name")%>%
-      mutate(prop=population/sum(population))%>%
-      summarise(weighted_avg = weighted.mean(value, prop))%>%
-      mutate(weighted_avg = sprintf("%.4f", weighted_avg))
-    return(list(admin1_res,nation_agg))
+    # nation_agg<- left_join(admin1_res,admininfo,by="admin1.name")%>%
+    #   mutate(prop=population/sum(population))%>%
+    #   summarise(weighted_avg = weighted.mean(value, prop))%>%
+    #   mutate(weighted_avg = sprintf("%.4f", weighted_avg))
+
+    return(list(admin1.res=admin1_res,agg.natl=nation_agg,fit1))
 
     }else if(admin==0){
+
+
     dat.tem$admin0.name="Zambia"
-    modt<- left_join(dat.tem,clusterinfo$cluster.info,by="cluster")
+    modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
+    modt$strata.full <- paste(modt$admin1.name, modt$strata)
+
+    # Amat=NULL
+
     # clusterVar = "~cluster+householdID"
     # design <- survey::svydesign(ids = stats::formula(clusterVar),
     #                             weights = ~weight , data = modt)
@@ -107,7 +139,6 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
     #                       survey::svymean,
     #                       drop.empty.groups = FALSE)
 
-    modt$strata.full <- paste(modt$admin0.name, modt$strata)
 
     smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
@@ -122,10 +153,12 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
                                    smooth=T)
     admin0_res<-smoothSurvey_res$smooth
     colnames(admin0_res)[1:3] <- c("admin0.name","value","var")
+    colnames(admin0_res)[5:6] <- c("quant025","quant975")
 
+    admin0_res$sd<-sqrt(admin0_res$var)
 
-    return(admin0_res)
-  }
+    return(admin0.res=admin0_res)
 
+    }
 
 }

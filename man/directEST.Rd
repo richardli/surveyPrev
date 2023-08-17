@@ -4,7 +4,7 @@
 \alias{directEST}
 \title{Calculate direct estimates}
 \usage{
-directEST(dat.tem, clusterinfo, admininfo, admin, Amat)
+directEST(dat.tem, clusterinfo, admininfo, admin, Amat, strata)
 }
 \arguments{
 \item{dat.tem}{dataframe that contains the indicator of interests}
