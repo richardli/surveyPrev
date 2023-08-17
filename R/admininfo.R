@@ -38,7 +38,10 @@ admininfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
     agg.pop<-agg.pop2
     adminname<-data.frame(admin1.name=SpatialPolygons$NAME_1,admin2.name=SpatialPolygons$NAME_2 )
     colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin2.name'
-    admininfo<-dplyr::left_join(adminname,agg.pop,by='admin2.name')
+
+    admininfo<-dplyr::left_join(adminname,agg.pop,by='admin2.name') %>%
+    group_by(admin1.name)%>%
+    mutate(population1=sum(population))
 
 
     #Adjacency matrix
