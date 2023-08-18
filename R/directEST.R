@@ -78,7 +78,6 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin,Amat,strata){
    admin1.samp<- expit(logit.admin1.samp)
 
 
-
    admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
                             value = colMeans(admin1.samp[]),
                             sd =  apply(admin1.samp, 2, sd),
@@ -86,7 +85,7 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin,Amat,strata){
                             quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
    )
 
-   admin1.distinct=distinct( data.frame(admin1.name=admininfo$admin1.name, population=admininfo$population1))
+   admin1.distinct=distinct(data.frame(admin1.name=admininfo$admin1.name, population=admininfo$population1))
    weight=admin1.distinct$population/sum(admin1.distinct$population)
 
    logit.nation.samp<-logit.admin1.samp%*%weight

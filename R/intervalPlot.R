@@ -20,16 +20,11 @@ intervalPlot<-function(res){
   data<-res[[1]]
   linedata<-res[[2]]
   line2<-res[[3]]$value
-  # con_interval <- data.frame(x = res[[3]]$value, upper = res[[3]]$quant975, lower = res[[3]]$quant025)
   plot_fun <- function(dat) {
     line1= linedata[unique(dat$admin1.name),"value"]
-    # line2data<-data.frame(
-    #   xx=dat$admin2.name,
-    #   yymin=rep(res[[3]]$quant025,length(dat$admin1.name)),
-    #   yymax=rep(res[[3]]$quant975,length(dat$admin1.name)) )
 
     ggplot(dat, aes(x = admin2.name, y = value)) +
-        geom_point() +
+        geom_point( aes(type = type), position = position_dodge(width = 0.5)) +
         geom_errorbar(aes(ymin = quant025 , ymax = quant975,color = type), alpha = 0.5,position = position_dodge(width = 0.5)) +
         scale_color_manual(values = c("red", "blue", "darkgreen"))+
         geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="grey30",size = 1) +
@@ -38,7 +33,6 @@ intervalPlot<-function(res){
       labs(title = unique(dat$admin1.name))+
       scale_linetype_manual(values = c("dashed", "solid"),
                             labels = c("admin1","national")) +
-    # theme(legend.position = "bottom")+
       theme(axis.text.x = element_text(angle = 45))
   }
 
@@ -46,6 +40,8 @@ intervalPlot<-function(res){
     data <- data %>% filter(admin1.name == x)
     plot_fun(data)
   })
+
+
 
   return(plots)
 

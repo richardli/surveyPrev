@@ -82,7 +82,7 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
                          responseType ="binary",
                          responseVar= "value",
                          regionVar = "admin1.name",
-                         clusterVar = "~cluster+householdID",#+householdID same result
+                         clusterVar = "~cluster+householdID",
                          weightVar = "weight",
                          strataVar = "strata.full",
                          Amat =Amat,
@@ -93,35 +93,17 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
     colnames(admin1_res)[colnames(admin1_res) == 'mean'] <- 'value'
     admin1_res$sd<-sqrt(admin1_res$var)
 
-    dd=data.frame(mean=admin1_res$logit.mean,sd=sqrt(admin1_res$logit.var))
-    draw.all= apply(dd, 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
-    weight=admininfo$population/sum(admininfo$population)
-
-    log.nation.samp<-draw.all%*%weight
-
-   #HT.logit.est=mean(log.nation.samp)
-   #HT.logit.var=var(log.nation.samp)
-   #CI <- 0.95
-   #lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
-
-    nation.samp<-expit(log.nation.samp)
-    nation_agg <- data.frame(value = mean(nation.samp),
-                           sd = sd(nation.samp),
-                           quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
-                           quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
 
 
-
-    #aggregate results
-    # nation_agg<- left_join(admin1_res,admininfo,by="admin1.name")%>%
-    #   mutate(prop=population/sum(population))%>%
-    #   summarise(weighted_avg = weighted.mean(value, prop))%>%
-    #   mutate(weighted_avg = sprintf("%.4f", weighted_avg))
+    # aggregate results
+    nation_agg<- left_join(admin1_res,admininfo,by="admin1.name")%>%
+      mutate(prop=population/sum(population))%>%
+      summarise(weighted_avg = weighted.mean(value, prop))%>%
+      mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
     return(list(admin1.res=admin1_res,agg.natl=nation_agg,fit1))
 
     }else if(admin==0){
-
 
     dat.tem$admin0.name="Zambia"
     modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
