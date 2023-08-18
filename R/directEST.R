@@ -119,7 +119,7 @@ directEST <- function(dat.tem, clusterinfo, admininfo, admin,Amat,strata){
                  clusterVar = "~cluster+householdID",
                  weightVar = "weight",
                  strataVar = "strata.full",
-                 Amat =Amat,
+                 Amat =NULL,
                  CI = 0.95,
                  is.unit.level=FALSE,
                  smooth=FALSE)
