@@ -2,7 +2,7 @@
 #'
 #' This function calculate smoothed direct estimates at given admin level.
 #'
-#' @param dat.tem  dataframe that contains the indicator of interests
+#' @param data  dataframe that contains the indicator of interests
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admininfo dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
@@ -25,9 +25,9 @@
 #' @export
 
 
-clusterModel<-function(dat.tem,cluster.info,admin,admin.info,admin.mat,spatialmodel,stata){
+clusterModel<-function(data,cluster.info,admin,admin.info,admin.mat,spatialmodel,stata){
 
-  modt<- left_join(dat.tem,cluster.info,by="cluster")
+  modt<- left_join(data,cluster.info,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
 

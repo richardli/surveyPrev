@@ -2,7 +2,7 @@
 #'
 #' This function calculate smoothed direct estimates at given admin level.
 #'
-#' @param dat.tem  dataframe that contains the indicator of interests
+#' @param data  dataframe that contains the indicator of interests
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admininfo dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
@@ -21,16 +21,16 @@
 #' @export
 
 
-smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
-  if(sum(is.na(dat.tem$value))>0){
-    dat.tem <- dat.tem[rowSums(is.na(dat.tem)) == 0, ]
+smthdirectEST <- function(data, cluster.info, admininfo, admin, Amat ){
+  if(sum(is.na(data$value))>0){
+    data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
 
   if(admin==2){
 
     #prepare data
-    modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -73,7 +73,7 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
     }else if(admin==1){
 
     #prepare data
-    modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -105,8 +105,8 @@ smthdirectEST <- function(dat.tem, cluster.info, admininfo, admin, Amat ){
 
     }else if(admin==0){
 
-    dat.tem$admin0.name="Zambia"
-    modt<- left_join(dat.tem,cluster.info$cluster.info,by="cluster")
+    data$admin0.name="Zambia"
+    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
