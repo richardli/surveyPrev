@@ -39,6 +39,9 @@ directEST <- function(data, cluster.info, admin.info, admin, strata){
     #                       design = design, survey::svymean, drop.empty.groups = FALSE)
     #
 
+    ##
+    ## TODO: this does not consider potential duplication of admin2.name when specifying regionVar (which needs to be unique identifier). This can be fixed by using unique identifiers of cluster.info and map back to both admin1 and admin2 names. 
+    ##
     smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
@@ -59,22 +62,34 @@ directEST <- function(data, cluster.info, admin.info, admin, strata){
 
 
     dd=data.frame(admin2.name=admin2_res$admin2.name,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))
-    draw.all=  apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
+    draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
+    ##
+    ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
+    ##
     weight<-left_join(dd,distinct(admin.info$admin.info), by="admin2.name")%>%
     group_by(admin1.name)%>%
     mutate(prop=round(population/sum(population),digits = 4))
+    ## 
+    ## here making weight the same order as draw.all
+    ##
+    ## TODO: Similar to above, the match() does not work when admin2 has duplicated names, need to rewrite this when above is fixed.
+    ##
+    weight <- weight[match(admin2_res$admin2.name, weight$admin2.name), ]
 
 
-   logit.post.all <-  data.table::data.table(t(t(draw.all)*weight$prop))#nrow=lenth(weight)
-   colnames(logit.post.all) <- weight$admin1.name
-   subgroups<-split.default(logit.post.all, names(logit.post.all))
+   ##
+   ## TODO: can we remove the dependence on data.table? It will simplify the package maintainance in the future and makes it easier to understand what's computed here. We can use simple for loops since the number of regions will not be too large anyway.
+   ##
+   ## 
+   post.all <-  data.table::data.table(t(t(draw.all)*weight$prop))#nrow=lenth(weight)
+   colnames(post.all) <- weight$admin1.name
+   subgroups<-split.default(post.all, names(post.all))
 
    sums_list <- lapply(subgroups, function(subgroup) {
      rowSums(subgroup)
    })
-   logit.admin1.samp <- do.call(cbind, sums_list)
-   admin1.samp<- expit(logit.admin1.samp)
+   admin1.samp <- do.call(cbind, sums_list)
 
 
    admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
@@ -85,11 +100,10 @@ directEST <- function(data, cluster.info, admin.info, admin, strata){
    )
 
    admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
-   weight=admin1.distinct$population/sum(admin1.distinct$population)
+   weight=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
 
-   logit.nation.samp<-logit.admin1.samp%*%weight
+   nation.samp<- admin1.samp%*%weight
 
-   nation.samp<-expit(logit.nation.samp)
    nation_agg <- data.frame(value = mean(nation.samp),
                             sd = sd(nation.samp),
                             quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
@@ -128,17 +142,16 @@ directEST <- function(data, cluster.info, admin.info, admin, strata){
     colnames(admin1_res)[1:2] <- c("admin1.name","value")
 
     dd=data.frame(mean=admin1_res$HT.logit.est,sd=sqrt(admin1_res$HT.logit.var))
-    draw.all= apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
-    weight=admin.info$admin.info$population/sum(admin.info$admin.info$population)
+    draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
+    weight=admin.info$admin.info$population[match(admin1_res$admin1.name, admin.info$admin.info$admin1.name)]/sum(admin.info$admin.info$population)
 
-    logit.nation.samp<-draw.all%*%weight
+    nation.samp<-draw.all%*%weight
 
     #HT.logit.est=mean(logit.nation.samp)
     #HT.logit.var=var(logit.nation.samp)
     #CI <- 0.95
     #lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
 
-    nation.samp<-expit(logit.nation.samp)
     nation_agg <- data.frame(value = mean(nation.samp),
                              sd = sd(nation.samp),
                              quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
@@ -153,7 +166,7 @@ directEST <- function(data, cluster.info, admin.info, admin, strata){
     #   mutate(weighted_avg = sprintf("%.5f", weighted_avg))%>%
     #   mutate_at(c('weighted_avg'), as.numeric)
 
-    return(list(res.admin1=admin1_res,agg.natl=nation_agg))
+    return(list(res.admin1=admin1_res, agg.natl=nation_agg))
   }
   else if(admin==0){
     data$admin0.name="Zambia"
