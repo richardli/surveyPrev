@@ -2,9 +2,9 @@
 #'
 #' This function get admin information including name, character, population and unban/rural proportion.
 #'
-#' @param agg.pop  aggregated poplulation from aggPopulation function.
+#' @param agg.pop  data frame of aggregated poplulation from aggPopulation function. It should have two columns: "DistrictName" and "population". 
 #' @param SpatialPolygons spatial polygons dataframe for admin 1 or admin 2.
-#' @param proportion urban/rural proportion from proportion function
+#' @param proportion data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names. 
 #' @param admin admin level
 #' @return This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix
 #' \itemize{
@@ -22,7 +22,8 @@ adminInfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
 
   if (admin==1) {
     colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin1.name'
-    admininfo<-agg.pop
+    admininfo <- agg.pop
+    admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "urban")])
 
     #Adjacency matrix
     poly.adm1<-SpatialPolygons
@@ -30,18 +31,16 @@ adminInfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
     admin.mat <- spdep::nb2mat(admin.mat, zero.policy = TRUE)
     colnames(admin.mat) <- rownames(admin.mat) <-  poly.adm1$NAME_1
 
-
-
   }
   else{
-    SpatialPolygons<-poly.adm2
-    agg.pop<-agg.pop2
-    adminname<-data.frame(admin1.name=SpatialPolygons$NAME_1,admin2.name=SpatialPolygons$NAME_2 )
+    adminname<-data.frame(admin1.name=SpatialPolygons$NAME_1,
+                          admin2.name=SpatialPolygons$NAME_2 )
     colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin2.name'
 
-    admininfo<-dplyr::left_join(adminname,agg.pop,by='admin2.name') %>%
+    admininfo<-dplyr::left_join(adminname, agg.pop, by='admin2.name') %>%
     group_by(admin1.name)%>%
     mutate(population1=sum(population))
+    admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name", "urban")])
 
 
     #Adjacency matrix
@@ -53,7 +52,8 @@ adminInfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
     }
 
 
-  return(list(admin.info=admininfo,admin.mat=as.data.frame(admin.mat)))
+  return(list(admin.info= as.data.frame(admininfo),
+              admin.mat=as.data.frame(admin.mat)))
 
 }
 
