@@ -4,10 +4,10 @@
 \alias{smthdirectEST}
 \title{Calculate smoothed direct estimates}
 \usage{
-smthdirectEST(dat.tem, cluster.info, admininfo, admin, Amat)
+smthdirectEST(data, cluster.info, admininfo, admin, Amat)
 }
 \arguments{
-\item{dat.tem}{dataframe that contains the indicator of interests}
+\item{data}{dataframe that contains the indicator of interests}
 
 \item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 

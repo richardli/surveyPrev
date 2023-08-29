@@ -5,7 +5,7 @@
 \title{Calculate cluster model estimates using beta binomial model}
 \usage{
 clusterModel(
-  dat.tem,
+  data,
   cluster.info,
   admin,
   admin.info,
@@ -15,7 +15,7 @@ clusterModel(
 )
 }
 \arguments{
-\item{dat.tem}{dataframe that contains the indicator of interests}
+\item{data}{dataframe that contains the indicator of interests}
 
 \item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 

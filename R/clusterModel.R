@@ -16,7 +16,6 @@
 #' @importFrom survey svydesign svyby
 #' @importFrom data.table data.table
 #' @importFrom SUMMER smoothSurvey
-#' @import INLA
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
