@@ -78,19 +78,13 @@ directEST <- function(data, cluster.info, admin.info, admin, strata){
     weight <- weight[match(admin2_res$admin2.name, weight$admin2.name), ]
 
 
-   ##
-   ## TODO: can we remove the dependence on data.table? It will simplify the package maintainance in the future and makes it easier to understand what's computed here. We can use simple for loops since the number of regions will not be too large anyway.
-   ##
-   ## 
-   post.all <-  data.table::data.table(t(t(draw.all)*weight$prop))#nrow=lenth(weight)
-   colnames(post.all) <- weight$admin1.name
-   subgroups<-split.default(post.all, names(post.all))
-
-   sums_list <- lapply(subgroups, function(subgroup) {
-     rowSums(subgroup)
-   })
-   admin1.samp <- do.call(cbind, sums_list)
-
+   admin1.list <- unique(weight$admin1.name)
+   admin1.samp <- matrix(NA, 10000, length(admin1.list))
+   for(i in 1:length(admin1.list)){
+      which.admin2 <- which(weight$admin1.name == admin1.list[i])
+      admin1.samp[, i] <- apply(draw.all[, which.admin2, drop = FALSE], 1, function(x, w){sum(x * w)}, weight$prop[which.admin2])
+   }
+   colnames(admin1.samp) <- admin1.list
 
    admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
                             value = colMeans(admin1.samp[]),
