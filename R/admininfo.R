@@ -18,7 +18,7 @@
 #' }
 #'
 #' @export
-admininfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
+adminInfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
 
   if (admin==1) {
     colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin1.name'
@@ -53,7 +53,7 @@ admininfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
     }
 
 
-  return(list(admininfo=admininfo,admin.mat=as.data.frame(admin.mat)))
+  return(list(admin.info=admininfo,admin.mat=as.data.frame(admin.mat)))
 
 }
 
