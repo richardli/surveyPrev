@@ -24,9 +24,11 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info,admin,admin.info,admin.mat,spatialmodel,stata){
+clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
 
-  modt<- left_join(data,cluster.info,by="cluster")
+  admin.mat <- admin.info$admin.mat
+  admin.info <- admin.info$admin.info
+  modt<- left_join(data,cluster.info$cluster.info,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
