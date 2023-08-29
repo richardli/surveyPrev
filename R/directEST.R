@@ -4,7 +4,7 @@
 #'
 #' @param data  dataframe that contains the indicator of interests
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
+#' @param admin.info list from the output of adminInfo function
 #' @param admin admin level for the model
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -12,7 +12,6 @@
 #' }
 #' @import dplyr
 #' @importFrom SUMMER smoothSurvey
-#' @importFrom survey svydesign svyby
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -21,7 +20,7 @@
 #' @export
 
 
-directEST <- function(data, cluster.info, admin.info, admin,Amat,strata){
+directEST <- function(data, cluster.info, admin.info, admin, strata){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -62,7 +61,7 @@ directEST <- function(data, cluster.info, admin.info, admin,Amat,strata){
     dd=data.frame(admin2.name=admin2_res$admin2.name,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))
     draw.all=  apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
 
-    weight<-left_join(dd,distinct(admin.info), by="admin2.name")%>%
+    weight<-left_join(dd,distinct(admin.info$admin.info), by="admin2.name")%>%
     group_by(admin1.name)%>%
     mutate(prop=round(population/sum(population),digits = 4))
 
@@ -85,7 +84,7 @@ directEST <- function(data, cluster.info, admin.info, admin,Amat,strata){
                             quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
    )
 
-   admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin1.name, population=admin.info$population1))
+   admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
    weight=admin1.distinct$population/sum(admin1.distinct$population)
 
    logit.nation.samp<-logit.admin1.samp%*%weight
@@ -105,9 +104,9 @@ directEST <- function(data, cluster.info, admin.info, admin,Amat,strata){
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
     # model
-    clusterVar = "~cluster+householdID"
-    design <- survey::svydesign(ids = stats::formula(clusterVar),
-                                weights = ~weight , data = modt)
+    # clusterVar = "~cluster+householdID"
+    # design <- survey::svydesign(ids = stats::formula(clusterVar),
+    #                             weights = ~weight , data = modt)
 
     # admin1_res <- survey::svyby(formula = ~value, by = ~admin1.name,
                                 # design = design, survey::svymean, drop.empty.groups = FALSE)
@@ -130,7 +129,7 @@ directEST <- function(data, cluster.info, admin.info, admin,Amat,strata){
 
     dd=data.frame(mean=admin1_res$HT.logit.est,sd=sqrt(admin1_res$HT.logit.var))
     draw.all= apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
-    weight=admin.info$population/sum(admin.info$population)
+    weight=admin.info$admin.info$population/sum(admin.info$admin.info$population)
 
     logit.nation.samp<-draw.all%*%weight
 
