@@ -3,8 +3,8 @@
 #' This function calculate direct estimates at given admin level.
 #'
 #' @param data  dataframe that contains the indicator of interests
-#' @param clusterinfo dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @param admininfo dataframe that contains population and urban/rural proportion at specific admin level
+#' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
+#' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -21,14 +21,14 @@
 #' @export
 
 
-directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
+directEST <- function(data, cluster.info, admin.info, admin,Amat,strata){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
   if(admin==2){
     #prepare data
-    modt<- left_join(data,clusterinfo$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
     # model
@@ -62,7 +62,7 @@ directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
     dd=data.frame(admin2.name=admin2_res$admin2.name,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))
     draw.all=  apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
 
-    weight<-left_join(dd,distinct(admininfo), by="admin2.name")%>%
+    weight<-left_join(dd,distinct(admin.info), by="admin2.name")%>%
     group_by(admin1.name)%>%
     mutate(prop=round(population/sum(population),digits = 4))
 
@@ -85,7 +85,7 @@ directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
                             quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
    )
 
-   admin1.distinct=distinct(data.frame(admin1.name=admininfo$admin1.name, population=admininfo$population1))
+   admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin1.name, population=admin.info$population1))
    weight=admin1.distinct$population/sum(admin1.distinct$population)
 
    logit.nation.samp<-logit.admin1.samp%*%weight
@@ -100,7 +100,7 @@ directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
     return(list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg))
     }
   else if(admin==1){
-    modt<- left_join(data,clusterinfo$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -130,7 +130,7 @@ directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
 
     dd=data.frame(mean=admin1_res$HT.logit.est,sd=sqrt(admin1_res$HT.logit.var))
     draw.all= apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2])) # sqrt(colVars(draw.all))
-    weight=admininfo$population/sum(admininfo$population)
+    weight=admin.info$population/sum(admin.info$population)
 
     logit.nation.samp<-draw.all%*%weight
 
@@ -148,7 +148,7 @@ directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
 
 
 
-    # nation_agg<- left_join(admininfo,admin1_res,by="admin1.name")%>%
+    # nation_agg<- left_join(admin.info,admin1_res,by="admin1.name")%>%
     #   mutate(prop=population/sum(population))%>%
     #   summarise(weighted_avg = weighted.mean(value, prop))%>%
     #   mutate(weighted_avg = sprintf("%.5f", weighted_avg))%>%
@@ -158,7 +158,7 @@ directEST <- function(data, clusterinfo, admininfo, admin,Amat,strata){
   }
   else if(admin==0){
     data$admin0.name="Zambia"
-    modt<- left_join(data,clusterinfo$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
