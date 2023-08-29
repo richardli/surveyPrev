@@ -21,7 +21,7 @@
 adminInfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
 
   if (admin==1) {
-    colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin1.name'
+    # colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin1.name'
     admininfo <- agg.pop
     admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "urban")])
 
@@ -33,11 +33,11 @@ adminInfo <- function(agg.pop, SpatialPolygons, proportion, admin) {
 
   }
   else{
-    adminname<-data.frame(admin1.name=SpatialPolygons$NAME_1,
-                          admin2.name=SpatialPolygons$NAME_2 )
-    colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin2.name'
+    # adminname<-data.frame(admin1.name=SpatialPolygons$NAME_1,
+                          # admin2.name=SpatialPolygons$NAME_2 )
+    # colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin2.name'
 
-    admininfo<-dplyr::left_join(adminname, agg.pop, by='admin2.name') %>%
+    admininfo<-agg.pop %>%
     group_by(admin1.name)%>%
     mutate(population1=sum(population))
     admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name", "urban")])
