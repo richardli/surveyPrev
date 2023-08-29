@@ -4,15 +4,7 @@
 \alias{clusterModel}
 \title{Calculate cluster model estimates using beta binomial model}
 \usage{
-clusterModel(
-  data,
-  cluster.info,
-  admin,
-  admin.info,
-  admin.mat,
-  spatialmodel,
-  stata
-)
+clusterModel(data, cluster.info, admin, admin.info, spatialmodel, stata)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}

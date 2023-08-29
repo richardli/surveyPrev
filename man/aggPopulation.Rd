@@ -4,14 +4,16 @@
 \alias{aggPopulation}
 \title{Get population information}
 \usage{
-aggPopulation(tiff_100m, SpatialPolygons, varname)
+aggPopulation(tiff, fact = 10, SpatialPolygons, varname)
 }
 \arguments{
+\item{tiff}{spatial raster of population estimates.}
+
+\item{fact}{factor to aggregate pixels. Default to be 10, i.e., the population estimates will be saved on 1km by 1km grids if the input is 100m by 100m tiff. Larger values of aggregation factor improves the computation speed, but can introduce more errors when the regions defined by the polygon are small in size.}
+
 \item{SpatialPolygons}{spatial polygons dataframe.}
 
 \item{varname}{column name of district name in SpatialPolygons file.}
-
-\item{tiff100}{spatial point dataframe}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level
