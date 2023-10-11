@@ -4,20 +4,36 @@
 \alias{scatterPlot}
 \title{Get scatter plot for any two model results}
 \usage{
-scatterPlot(admin, scatter, res1, nameres1, res2, nameres2)
+scatterPlot(
+  res1,
+  value1,
+  res2,
+  value2,
+  label1,
+  label2,
+  by.res1,
+  by.res2,
+  title
+)
 }
 \arguments{
-\item{admin}{admin level of the plot}
-
-\item{scatter}{"estimate" or "se"}
-
 \item{res1}{model result 1 using surveyPrev}
 
-\item{nameres1}{name of model 1}
+\item{value1}{value1}
 
 \item{res2}{model result 2 using surveyPrev}
 
-\item{nameres2}{name of model 2}
+\item{value2}{value2}
+
+\item{label1}{label for x axis}
+
+\item{label2}{label for y axis}
+
+\item{by.res1}{by.res1}
+
+\item{by.res2}{by.res2}
+
+\item{title}{title}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level

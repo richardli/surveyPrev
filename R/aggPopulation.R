@@ -30,6 +30,12 @@ aggPopulation <- function(tiff, fact = 10, SpatialPolygons, varname){
   pop_aggre.df<- raster::as.data.frame(pop_aggre, xy=TRUE)
   colnames(pop_aggre.df)[3] <- "population"
 
+  if(varname=="NAME_2"){
+    varname<-"fullname"
+    SpatialPolygons$fullname<-paste0(SpatialPolygons$NAME_1,"_",SpatialPolygons$NAME_2)
+  }
+
+
   loc_df <- data.frame(x = pop_aggre.df$x, y = pop_aggre.df$y)
   coordinates(loc_df) <- ~x+y
   proj4string(loc_df) <- proj4string(SpatialPolygons)
@@ -39,5 +45,13 @@ aggPopulation <- function(tiff, fact = 10, SpatialPolygons, varname){
   pop_dt <- pop_dt[!is.na(pop_dt$DistrictName), ]
   pop_dt[is.na(pop_dt$population), "population"] <- 0
   tab <- aggregate(population ~ DistrictName, data = pop_dt, FUN = sum)
+
+
+  if(varname=="fullname"){
+    tab$admin1.name<-do.call(cbind, strsplit(tab$DistrictName, "_"))[1,]
+    tab$admin2.name<-do.call(cbind, strsplit(tab$DistrictName, "_"))[2,]
+    # tab$DistrictName<-NULL
+  }
+
   return(tab)
 }

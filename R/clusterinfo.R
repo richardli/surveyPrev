@@ -48,6 +48,8 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   cluster.info$admin2 <- admin2.key
   cluster.info$admin2.char <- paste0("admin2_", admin2.key)
   cluster.info$admin2.name <- as.character(eval(str2lang("poly.adm2@data$NAME_2")))[admin2.key]
+  cluster.info$DistrictName <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
+
 
  # return(cluster.info)
   return(list(cluster.info=cluster.info,wrong.points=wrong.points))

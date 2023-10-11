@@ -6,9 +6,10 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
+#' @param spatialmodel "iid" or "BYM2"
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
-#'   \item { 
+#'   \item {
 #' }
 #' @import dplyr
 #' @importFrom survey svydesign svyby
@@ -21,12 +22,18 @@
 #' @export
 
 
-fhModel <- function(data, cluster.info, admin.info, admin ){
+fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
-  Amat <- admin.info$admin.mat
+
+  if(spatialmodel=="iid"){
+    Amat<- NULL
+  }else
+  {
+    Amat <- admin.info$admin.mat
+  }
 
   if(admin==2){
 
@@ -39,7 +46,7 @@ fhModel <- function(data, cluster.info, admin.info, admin ){
     fit2 <- smoothSurvey(as.data.frame(modt),
                          responseType ="binary",
                          responseVar= "value",
-                         regionVar = "admin2.name",
+                         regionVar = "DistrictName",
                          clusterVar = "~cluster+householdID",#+householdID same result
                          weightVar = "weight",
                          strataVar = "strata.full",
@@ -47,7 +54,7 @@ fhModel <- function(data, cluster.info, admin.info, admin ){
                          CI = 0.95)
 
     admin2_res <- fit2$smooth
-    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name'
+    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
     colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
 
 
@@ -58,7 +65,7 @@ fhModel <- function(data, cluster.info, admin.info, admin ){
     ##       the below codes computes only overall proportion? The group_by call needs to be before mutate?
     ##
     #aggregate results
-    admin1_agg<- left_join(admin2_res,admin.info$admin.info,by="admin2.name")%>%
+    admin1_agg<- left_join(admin2_res,admin.info$admin.info,by="DistrictName")%>%
       mutate(prop=population/sum(population))%>%
       group_by(admin1.name) %>%
       summarise(weighted_avg = weighted.mean(value, prop))
@@ -66,7 +73,7 @@ fhModel <- function(data, cluster.info, admin.info, admin ){
 
 
 
-    nation_agg<- left_join(admin2_res,admin.info$admin.info,by="admin2.name")%>%
+    nation_agg<- left_join(admin2_res,admin.info$admin.info,by="DistrictName")%>%
       mutate(prop=population/sum(population))%>%
       summarise(weighted_avg = weighted.mean(value, prop))%>%
       mutate(weighted_avg = sprintf("%.4f", weighted_avg))
@@ -106,7 +113,6 @@ fhModel <- function(data, cluster.info, admin.info, admin ){
       mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
     return(list(admin1.res=admin1_res,agg.natl=nation_agg,fit1))
-
     }else if(admin==0){
     stop("No estimates to smooth at admin0 level.")
     # data$admin0.name="Zambia"
