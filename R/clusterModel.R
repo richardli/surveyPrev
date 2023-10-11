@@ -197,7 +197,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
     if(stata==F){
 
       admin2.bb.res<- data.frame(cbind(
-        admin2.name=admin.info$admin2.name[tail(c.dat.tmp$sID,n=nregion)],
+        DistrictName=admin.info$DistrictName[tail(c.dat.tmp$sID,n=nregion)],
         value= tail(imod$summary.fitted.values,n=nregion)[,1],
         sd= tail(imod$summary.fitted.values,n=nregion)[,2],
         quant025= tail(imod$summary.fitted.values,n=nregion)[,3],
@@ -207,7 +207,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
       admin2.bb.res$sd<-as.numeric (admin2.bb.res$sd)
       admin2.bb.res$quant025<-as.numeric (admin2.bb.res$quant025)
       admin2.bb.res$quant975<-as.numeric (admin2.bb.res$quant975)
-      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name")
+      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
 
     }else if(stata==T){
       post.u <- apply(draw.u, 2, mean)
@@ -229,8 +229,8 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
                                   quant975=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("aggregated", nregion)))
-      admin2.bb.res$admin2.name <- rep(admin.info$admin2.name, 3)
-      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name")
+      admin2.bb.res$DistrictName <- rep(admin.info$DistrictName, 3)
+      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
 
     }
 

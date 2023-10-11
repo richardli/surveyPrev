@@ -67,6 +67,11 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
     admin2_res$sd<-sqrt(admin2_res$HT.var)
 
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
+    a<-strsplit(admin2_res$DistrictName,"_")
+    # admin2_res$admin1.name<-matrix(unlist(a),ncol =2, byrow =T)[,1]
+    admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]
+
+
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
 
 
@@ -76,7 +81,6 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
     ##
     ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
     ##
-
 
 
 
