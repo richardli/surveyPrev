@@ -8,8 +8,6 @@ intervalPlot(res)
 }
 \arguments{
 \item{res}{model result  using surveyPrev}
-
-\item{line1}{yintercept}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level

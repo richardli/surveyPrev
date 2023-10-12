@@ -3,7 +3,6 @@
 #' This function return scatter plot at admin 1 level for any two model results
 #'
 #' @param res  model result  using surveyPrev
-#' @param line1 yintercept
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level
 #'   \item {plot
 #' }
@@ -21,7 +20,7 @@ intervalPlot<-function(res){
   linedata<-res[[2]]
   line2<-res[[3]]$value
   plot_fun <- function(dat) {
-    line1= linedata[unique(dat$admin1.name),"value"]
+    line1 = linedata[unique(dat$admin1.name),"value"]
 
     ggplot(dat, aes(x = admin2.name, y = value)) +
         geom_point( aes(type = type), position = position_dodge(width = 0.5)) +

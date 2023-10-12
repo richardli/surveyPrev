@@ -13,11 +13,11 @@ clusterModel(data, cluster.info, admin, admin.info, spatialmodel, stata)
 
 \item{admin}{admin level for the model}
 
+\item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
+
 \item{spatialmodel}{model for area-level random effects, "iid" or "bym2.}
 
 \item{stata}{whether or not to include urban/rural stratum.}
-
-\item{admininfo}{dataframe that contains population and urban/rural proportion at specific admin level}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

@@ -10,8 +10,6 @@ getDHSgeo(country, year)
 \item{country}{Country name.}
 
 \item{year}{Year the survey conducted.}
-
-\item{indicator}{Indicator of interests.}
 }
 \value{
 The function returns a spatial point dataset with coordinates for each cluster based on the chosen survey and year.

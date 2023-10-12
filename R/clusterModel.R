@@ -4,7 +4,7 @@
 #'
 #' @param data  dataframe that contains the indicator of interests
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @param admininfo dataframe that contains population and urban/rural proportion at specific admin level
+#' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
 #' @param spatialmodel model for area-level random effects, "iid" or "bym2.
 #' @param stata whether or not to include urban/rural stratum.
@@ -15,6 +15,9 @@
 #' @import dplyr
 #' @importFrom survey svydesign svyby
 #' @importFrom data.table data.table
+#' @importFrom utils tail
+#' @importFrom stats sd quantile rnorm
+#' 
 #' @importFrom SUMMER smoothSurvey
 #' @author Qianyu Dong
 #' @examples
@@ -111,7 +114,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
 
 
   nsamp <- 1000
-  samp <- inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
+  samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
 
 
   if(stata==F){
@@ -121,7 +124,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
       tmp <- samp[[i]]$latent
       s.effect <- tmp[paste0("sID:", 1:nregion), 1]
       intercept <- tmp["(Intercept):1", 1]
-      draw.all[i, ] <-expit(s.effect + intercept)
+      draw.all[i, ] <- SUMMER::expit(s.effect + intercept)
     }
   }else if(stata==T){
     draw.u <- matrix(NA, nsamp, nregion)

@@ -3,7 +3,6 @@
 #' This function downloads cluster's coordinate data for country and survey.
 #'
 #' @param country Country name.
-#' @param indicator Indicator of interests.
 #' @param year Year the survey conducted.
 #'
 #' @return The function returns a spatial point dataset with coordinates for each cluster based on the chosen survey and year.

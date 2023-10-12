@@ -45,6 +45,7 @@ This function return scatter plot at admin 1 level for any two model results
 }
 \examples{
 \dontrun{
+
 }
 
 }

@@ -14,6 +14,7 @@
 #' @import dplyr
 #' @importFrom survey svydesign svyby
 #' @importFrom SUMMER smoothSurvey
+#' @importFrom stats weighted.mean
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -68,7 +69,7 @@ fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
     admin1_agg<- left_join(admin2_res,admin.info$admin.info,by="DistrictName")%>%
       mutate(prop=population/sum(population))%>%
       group_by(admin1.name) %>%
-      summarise(weighted_avg = weighted.mean(value, prop))
+      summarise(weighted_avg = stats::weighted.mean(value, prop))
 
 
 

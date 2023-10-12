@@ -15,7 +15,7 @@
 #'   \item { directEST.result
 #' }
 #' @import dplyr
-#' @importFrom SUMMER smoothSurvey
+#' @importFrom SUMMER smoothSurvey expit
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
