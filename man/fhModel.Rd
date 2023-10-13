@@ -27,7 +27,6 @@ This function calculate smoothed direct estimates at given admin level.
 }
 \examples{
 \dontrun{
-
 }
 
 }
