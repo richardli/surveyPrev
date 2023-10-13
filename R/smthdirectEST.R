@@ -22,7 +22,6 @@
 #'
 #' @export
 
-
 fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -43,6 +42,22 @@ fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
+
+    # modt1<- left_join(admin.info2$admin.info,modt,by="DistrictName")
+    # modt2<- modt1%>%
+    #   filter(is.na( value)) %>%
+    #   mutate(cluster=c(546,547,548),householdID=c(1,1,1),
+    #          weight=c(1892890,1892890,1892890),
+    #          strata=c("urban","urban","urban"),
+    #          strata.full=c("Central urban","Lusaka urban","Lusaka urban"))
+    # modt2$value[is.na( modt2$value)] <- 0
+    # modt1 <- modt1 %>%
+    #   filter(!is.na(value))
+    # modt<-rbind(modt2,modt1,modt1)
+    # vector1<-admin.info2$admin.info$admin2.name
+    # vector2<-unique(modt$admin2.name)
+    # missing_admin2 <- vector1[!(vector1 %in% vector2)]
+
     #model
     fit2 <- smoothSurvey(as.data.frame(modt),
                          responseType ="binary",
@@ -52,32 +67,45 @@ fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
                          weightVar = "weight",
                          strataVar = "strata.full",
                          Amat =Amat,
-                         CI = 0.95)
+                         CI = 0.95,
+                         smooth=T)
+
 
     admin2_res <- fit2$smooth
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
     colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
+    admin2_res$sd<-sqrt(admin2_res$var)
 
-
+    # admin2_res$value<-1:115
+    # admin2_res$var<-0.6
 
 
     ##
     ## TODO: also need to deal with duplicated admin2 names
-    ##       the below codes computes only overall proportion? The group_by call needs to be before mutate?
-    ##
+    ##       the below codes computes only overall proportion?
+    # The group_by call needs to be before mutate? same results
+
     #aggregate results
     admin1_agg<- left_join(admin2_res,admin.info$admin.info,by="DistrictName")%>%
-      mutate(prop=population/sum(population))%>%
       group_by(admin1.name) %>%
-      summarise(weighted_avg = stats::weighted.mean(value, prop))
-
-
-
-
-    nation_agg<- left_join(admin2_res,admin.info$admin.info,by="DistrictName")%>%
       mutate(prop=population/sum(population))%>%
-      summarise(weighted_avg = weighted.mean(value, prop))%>%
-      mutate(weighted_avg = sprintf("%.4f", weighted_avg))
+      summarise(value = stats::weighted.mean(value, prop))
+
+    #code used for agg direct est
+    # weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="DistrictName")%>%
+    #   group_by(admin1.name)%>%
+    #   mutate(prop=round(population/sum(population),digits = 4))%>%
+    #   mutate(value1=prop*value)
+    # admin1_agg<-aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum)
+
+
+
+    nation_agg<- admin.info$admin.info%>%
+                  distinct(admin1.name,.keep_all = TRUE)%>%
+                  left_join(admin1_agg,by="admin1.name")%>%
+                  mutate(prop=population1/sum(population1))%>%
+                  summarise(weighted_avg = weighted.mean(value, prop))%>%
+                  mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
     return(list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg))
 
