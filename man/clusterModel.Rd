@@ -4,7 +4,7 @@
 \alias{clusterModel}
 \title{Calculate cluster model estimates using beta binomial model}
 \usage{
-clusterModel(data, cluster.info, admin, admin.info, spatialmodel, stata)
+clusterModel(data, cluster.info, admin, admin.info, Amat, stata, aggregation)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}
@@ -15,9 +15,11 @@ clusterModel(data, cluster.info, admin, admin.info, spatialmodel, stata)
 
 \item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
 
-\item{spatialmodel}{model for area-level random effects, "iid" or "bym2.}
+\item{Amat}{null for"iid" or adjacency matrix  for"BYM2"}
 
 \item{stata}{whether or not to include urban/rural stratum.}
+
+\item{aggregation}{whether or not report aggregation results.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

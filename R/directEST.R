@@ -8,6 +8,7 @@
 #' @param admin admin level for the model
 #' @param strata admin level for the model
 #' @param weight the weight used for aggregating result, "population" or "SamplingWeight"
+#' @param aggregation whether or not report aggregation results.
 #'
 #'
 #'
@@ -25,30 +26,17 @@
 
 
 
-
-directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
+directEST <- function(data, cluster.info, admin.info, admin, strata, weight ,aggregation){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
+
   if(admin==2){
     #prepare data
     modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
-
-    # model
-    # clusterVar = "~cluster+householdID"
-    # design <- survey::svydesign(ids = stats::formula(clusterVar),
-    #                             weights = ~weight , data = modt)
-
-    # admin2_res <- survey::svyby(formula = ~value, by = ~admin2.name,
-    #                       design = design, survey::svymean, drop.empty.groups = FALSE)
-    #
-
-    ##
-    ## TODO: this does not consider potential duplication of admin2.name when specifying regionVar (which needs to be unique identifier). This can be fixed by using unique identifiers of cluster.info and map back to both admin1 and admin2 names.
-    ##
 
 
 
@@ -70,23 +58,25 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
     a<-strsplit(admin2_res$DistrictName,"_")
     # admin2_res$admin1.name<-matrix(unlist(a),ncol =2, byrow =T)[,1]# cause issue when join with admininfo
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
-
-
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
 
 
-     dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
+   if(aggregation==F){
+   res.admin2=admin2_res
+      }else{
+
+        if(is.na(weight)==T|is.na(admin.info)==T){
+          stop("Need admin.info and weight for aggregation")
+        }
+    ##aggregation
+
+    dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
 
     draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
     ##
     ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
     ##
-
-
-
-
-    ##aggregation
 
 
     ##If J-th admin2 nested within the i-th admin 1, and the k-th region has no data,
@@ -200,12 +190,15 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
                             quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
                             quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
 
+   res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg)
 
-    return(list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg))
+
+}
+    return(res.admin2)
+
+
     }
   else if(admin==1){
-
-
 
     modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
@@ -235,23 +228,32 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
 
     colnames(admin1_res)[1:2] <- c("admin1.name","value")
 
+    if(aggregation==F){
+
+
+
+      admin1_res<-admin1_res
+
+
+    }else{
+
+      if(is.na(weight)==T|is.na(admin.info)==T){
+        stop("Need admin.info and weight for aggregation")
+      }
+      ### ### ### ### ### ### ### ### ### ###
+      ### admin1 to national for admin1 result
+      ### ### ### ### ### ### ### ### ### ###
+
     dd=data.frame(mean=admin1_res$HT.logit.est,sd=sqrt(admin1_res$HT.logit.var))
     draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
-
-    ### ### ### ### ### ### ### ### ### ###
-    ### admin1 to national for admin1 result
-    ### ### ### ### ### ### ### ### ### ###
-
-
-    if(weight=="population"){
+   if(weight=="population"){
       #for variance
       admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population))
       weight_dt=admin1.distinct$population[match(admin1_res$admin1.name, admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
       nation.samp<- draw.all%*%weight_dt
       #for mean
       weight_dt_mean<-weight_dt%*%admin1_res$value
-
 
 
     }else{
@@ -261,7 +263,6 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
         ungroup()%>%
         mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))
 
-
       nation.samp<- draw.all%*%weight_dt$prop  #for variance
       weight_dt_mean<-weight_dt$prop%*%admin1_res$value #for mean
 
@@ -269,8 +270,11 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
 
 
 
+    weight_dt=admin.info$admin.info$population[match(admin1_res$admin1.name, admin.info$admin.info$admin1.name)]/sum(admin.info$admin.info$population)
 
-    nation_agg <- data.frame(value =weight_dt_mean,
+    nation.samp<-draw.all%*%weight_dt
+
+    nation_agg <- data.frame(value =mean(nation.samp),
                              sd = sd(nation.samp),
                              quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
                              quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
@@ -278,9 +282,7 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
 
 
 
-    # weight_dt=admin.info$admin.info$population[match(admin1_res$admin1.name, admin.info$admin.info$admin1.name)]/sum(admin.info$admin.info$population)
-    #
-    # nation.samp<-draw.all%*%weight_dt
+
 
     #HT.logit.est=mean(logit.nation.samp)
     #HT.logit.var=var(logit.nation.samp)
@@ -295,8 +297,10 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ){
     #   summarise(weighted_avg = weighted.mean(value, prop))%>%
     #   mutate(weighted_avg = sprintf("%.5f", weighted_avg))%>%
     #   mutate_at(c('weighted_avg'), as.numeric)
+    admin1_res=list(res.admin1=admin1_res, agg.natl=nation_agg)
 
-    return(list(res.admin1=admin1_res, agg.natl=nation_agg))
+    }
+    return(admin1_res)
   }
   else if(admin==0){
     data$admin0.name="country"

@@ -4,7 +4,7 @@
 \alias{directEST}
 \title{Calculate direct estimates}
 \usage{
-directEST(data, cluster.info, admin.info, admin, strata, weight)
+directEST(data, cluster.info, admin.info, admin, strata, weight, aggregation)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}
@@ -18,6 +18,8 @@ directEST(data, cluster.info, admin.info, admin, strata, weight)
 \item{strata}{admin level for the model}
 
 \item{weight}{the weight used for aggregating result, "population" or "SamplingWeight"}
+
+\item{aggregation}{whether or not report aggregation results.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

@@ -6,7 +6,8 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
-#' @param spatialmodel model for area-level random effects, "iid" or "bym2.
+#' @param Amat  null for"iid" or adjacency matrix  for"BYM2"
+#' @param aggregation whether or not report aggregation results.
 #' @param stata whether or not to include urban/rural stratum.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -17,7 +18,7 @@
 #' @importFrom data.table data.table
 #' @importFrom utils tail
 #' @importFrom stats sd quantile rnorm
-#' 
+#'
 #' @importFrom SUMMER smoothSurvey
 #' @author Qianyu Dong
 #' @examples
@@ -27,9 +28,17 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
+clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation){
 
-  admin.mat <- admin.info$admin.mat
+
+ if(is.null(Amat)==T){
+
+     spatialmodel="iid"}else{
+      spatialmodel="bym2"
+     }
+
+
+  admin.mat <- Amat
   admin.info <- admin.info$admin.info
   modt<- left_join(data,cluster.info$cluster.info,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
@@ -192,9 +201,19 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
                            quant025=quantile(post.all, probs = c(0.025,0.975))[1],
                            quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 
+
+    if(aggregation==F){
+      return(list(admin1.bb.res=admin1.bb.res,inla=imod ))
+
+
+
+    }else{
+
+
     return(list(admin1.bb.res=admin1.bb.res,agg.natl=agg.natl,inla=imod,
                 admin1_post=draw.all,nation_post=post.all))
 
+    }
   }else if(admin==2){
 
     if(stata==F){
@@ -269,10 +288,19 @@ clusterModel<-function(data,cluster.info,admin,admin.info,spatialmodel,stata){
                            quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 
 
+
+
+    if(aggregation==F){
+      return(list(admin2.bb.res=admin2.bb.res,agg.inla=imod,
+                  admin2_post=draw.all))
+
+
+    }else{
+
     return(list(admin2.bb.res=admin2.bb.res,agg.admin1=agg.admin1,agg.natl=agg.natl,inla=imod,
                 admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all))
 
-
+}
 
   }
 

@@ -6,7 +6,8 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
-#' @param spatialmodel "iid" or "BYM2"
+#' @param Amat  null for"iid" or adjacency matrix  for"BYM2"
+#' @param aggregation whether or not report aggregation results.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #'   \item {
@@ -22,18 +23,13 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
+fhModel <- function(data, cluster.info, admin.info, admin, Amat,aggregation ){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
 
-  if(spatialmodel=="iid"){
-    Amat<- NULL
-  }else
-  {
-    Amat <- admin.info$admin.mat
-  }
+
 
   if(admin==2){
 
@@ -76,6 +72,16 @@ fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
     colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
     admin2_res$sd<-sqrt(admin2_res$var)
 
+
+    if(aggregation==F){
+      res.admin2=admin2_res
+    }else{
+
+
+      if(is.na(weight)==T|is.na(admin.info)==T){
+        stop("Need admin.info and weight for aggregation")
+      }
+
     # admin2_res$value<-1:115
     # admin2_res$var<-0.6
 
@@ -107,8 +113,10 @@ fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
                   summarise(weighted_avg = weighted.mean(value, prop))%>%
                   mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
-    return(list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg))
+    admin2.res=list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg)
+    }
 
+    return(admin2.res)
 
     }else if(admin==1){
 
@@ -135,13 +143,32 @@ fhModel <- function(data, cluster.info, admin.info, admin,spatialmodel ){
 
 
 
+    if(aggregation==F){
+      admin1.res=admin1_res
+    }else{
+
+      if(is.na(weight)==T|is.na(admin.info)==T){
+        stop("Need admin.info and weight for aggregation")
+      }
+
     # aggregate results
     nation_agg<- left_join(admin1_res,admin.info$admin.info,by="admin1.name")%>%
       mutate(prop=population/sum(population))%>%
       summarise(weighted_avg = weighted.mean(value, prop))%>%
       mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
-    return(list(admin1.res=admin1_res,agg.natl=nation_agg,fit1))
+
+
+    admin1.res=list(admin1_res,agg.natl=nation_agg,fit1)
+
+    }
+
+
+    return(admin1.res)
+
+
+
+
     }else if(admin==0){
     stop("No estimates to smooth at admin0 level.")
     # data$admin0.name="Zambia"

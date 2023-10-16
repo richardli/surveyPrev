@@ -4,7 +4,7 @@
 \alias{fhModel}
 \title{Calculate smoothed direct estimates}
 \usage{
-fhModel(data, cluster.info, admin.info, admin, spatialmodel)
+fhModel(data, cluster.info, admin.info, admin, Amat, aggregation)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}
@@ -15,7 +15,9 @@ fhModel(data, cluster.info, admin.info, admin, spatialmodel)
 
 \item{admin}{admin level for the model}
 
-\item{spatialmodel}{"iid" or "BYM2"}
+\item{Amat}{null for"iid" or adjacency matrix  for"BYM2"}
+
+\item{aggregation}{whether or not report aggregation results.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
