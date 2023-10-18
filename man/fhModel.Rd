@@ -4,7 +4,14 @@
 \alias{fhModel}
 \title{Calculate smoothed direct estimates}
 \usage{
-fhModel(data, cluster.info, admin.info, admin, Amat, aggregation)
+fhModel(
+  data,
+  cluster.info,
+  admin.info = NULL,
+  admin,
+  model = c("bym2", "iid"),
+  aggregation = FALSE
+)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}
@@ -15,7 +22,7 @@ fhModel(data, cluster.info, admin.info, admin, Amat, aggregation)
 
 \item{admin}{admin level for the model}
 
-\item{Amat}{null for"iid" or adjacency matrix  for"BYM2"}
+\item{model}{smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").}
 
 \item{aggregation}{whether or not report aggregation results.}
 }

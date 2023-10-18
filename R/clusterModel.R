@@ -28,13 +28,24 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
+clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
 
 
-  if(is.null(admin.info) && model != "iid"){
-    message("No admin.info supplied. Using IID random effects.")
-    model <- "iid"
+  # if(is.null(admin.info) && model != "iid"){
+  #   message("No admin.info supplied. Using IID random effects.")
+  #   model <- "iid"
+  # }
+  if( unique(is.na(admin.info$admin.info$urban)) && stratification==T){
+    message("No urban/rural proportion found")
+    stratification = F
   }
+
+  if( unique(is.na(admin.info$admin.info$population)) && aggregation==T){
+    message("No population found")
+    aggregation = F
+  }
+
+
   if(model == "bym2"){
     Amat <- admin.info$admin.mat
   }else{
@@ -129,9 +140,8 @@ clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("b
   nsamp <- 1000
   samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
 
-
+#draw posterior samples
   if(stratification==F){
-
     draw.all <- matrix(NA, nsamp, nregion)
     for(i in 1:length(samp)){
       tmp <- samp[[i]]$latent
@@ -143,9 +153,6 @@ clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("b
     draw.u <- matrix(NA, nsamp, nregion)
     draw.r <- matrix(NA, nsamp, nregion)
     draw.all <- matrix(NA, nsamp, nregion)
-
-
-    # nregion=115
     for(i in 1:length(samp)){
       tmp <- samp[[i]]$latent
       s.effect <- tmp[paste0("sID:", 1:nregion), 1]
@@ -158,6 +165,9 @@ clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("b
     }
 
   }
+
+  #aggregation
+
 
   if(admin==1){
     if(stratification==F){
@@ -199,12 +209,14 @@ clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("b
     #admin.bb.res
 
     #agg.nationl
+
+    if(aggregation==T){
     post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
                            quant025=quantile(post.all, probs = c(0.025,0.975))[1],
                            quant975=quantile(post.all, probs = c(0.025,0.975))[2])
-
+}
 
     if(aggregation==F){
       return(list(admin1.bb.res=admin1.bb.res,inla=imod ))
@@ -262,7 +274,13 @@ clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("b
 
 
 
+    if(aggregation==T){
     #agg admin1
+
+    admin.info<-admin.info%>%
+      dplyr::group_by(admin1.name)%>%
+      dplyr::mutate(population1=sum(population))
+
     weight=admin.info$population/admin.info$population1
 
     # post.all <-  data.table(weight*draw.all)
@@ -291,7 +309,7 @@ clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("b
                            quant025=quantile(post.all, probs = c(0.025,0.975))[1],
                            quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 
-
+}
 
 
     if(aggregation==F){

@@ -19,22 +19,51 @@
 #'
 #' @export
 adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
-  
-  admin.info <- NULL 
+
+
+
+  admin.info <- NULL
 
   if (admin==1) {
     # colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin1.name'
-    if (is.null(agg.pop)){
+    if (is.null(agg.pop)&is.null(proportion)){
 
-      # DO nothing here if no population input
+      # admininfo$population and admininfo$urban are cols of NA
 
-    }else{
+      admininfo<-data.frame(admin1.name=geo$NAME_1)
+      admininfo$population<-NA
+      admininfo$urban<-NA
+      admin.info= as.data.frame(admininfo)
+
+
+      }else if(is.null(agg.pop)& !is.null(proportion)){
+
+      # Needed for cluster model when stratification=T and aggregation=F.
+      admininfo<-data.frame(admin1.name=geo$NAME_1)
+      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name","urban")])
+      admin.info= as.data.frame(admininfo)
+      admininfo$population<-NA
+      admin.info= as.data.frame(admininfo)
+
+      }else if(!is.null(agg.pop)&is.null(proportion)){
+      admininfo<-data.frame(admin1.name=geo$NAME_1)
+      admininfo <- dplyr::left_join(admininfo, agg.pop[, c("admin1.name","population")])
+      admin.info= as.data.frame(admininfo)
+      admininfo$urban<-NA
+      admin.info= as.data.frame(admininfo)
+
+
+
+      }else{
 
       admininfo <- agg.pop
-      if(!is.null(proportion)) admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "urban")])
+      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "urban")])
       admin.info= as.data.frame(admininfo)
 
     }
+
+
+
     #Adjacency matrix
     poly.adm1<-geo
     admin.mat <- spdep::poly2nb(sp::SpatialPolygons(poly.adm1@polygons))
@@ -44,23 +73,50 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
   }
   else if(admin==2){
 
-    if (is.null(agg.pop)){
+    if (is.null(agg.pop)&is.null(proportion)){
 
-      # DO nothing here if no population input
+      # admininfo$population and admininfo$urban are cols of NA
+
+      admininfo<-data.frame(admin1.name=geo$NAME_1,admin2.name=geo$NAME_2,
+                            DistrictName=paste0(geo$NAME_1,"_",geo$NAME_2))
+      admininfo$population<-NA
+      # admininfo$population1<-NA
+      admininfo$urban<-NA
+      admin.info= as.data.frame(admininfo)
+
+
+    }else if(is.null(agg.pop)& !is.null(proportion)){
+
+      # Needed for cluster model when stratification=T and aggregation=F.
+      admininfo<-data.frame(admin1.name=geo$NAME_1,admin2.name=geo$NAME_2,
+                            DistrictName=paste0(geo$NAME_1,"_",geo$NAME_2))
+      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name","urban")])
+      admin.info= as.data.frame(admininfo)
+      admininfo$population<-NA
+      # admininfo$population1<-NA
+      admin.info= as.data.frame(admininfo)
+
+
+    }else if(!is.null(agg.pop)&is.null(proportion)){
+      admininfo<-data.frame(admin1.name=geo$NAME_1,admin2.name=geo$NAME_2,
+                            DistrictName=paste0(geo$NAME_1,"_",geo$NAME_2))
+      admininfo <- dplyr::left_join(admininfo, agg.pop[, c("DistrictName","population")])
+      admin.info= as.data.frame(admininfo)
+      admininfo$urban<-NA
+      admin.info= as.data.frame(admininfo)
+
+
 
     }else{
 
-
-      # adminname<-data.frame(admin1.name=SpatialPolygons$NAME_1,
-                            # admin2.name=SpatialPolygons$NAME_2 )
-      # colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin2.name'
-
-      admininfo<-agg.pop %>%
-      group_by(admin1.name)%>%
-      mutate(population1=sum(population))
-      if(!is.null(proportion)) admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name", "urban")])
+      admininfo <- agg.pop
+      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name", "urban")])
       admin.info= as.data.frame(admininfo)
-  }
+      admin.info= as.data.frame(admininfo)
+
+    }
+
+
 
     #Adjacency matrix
     poly.adm2<-geo

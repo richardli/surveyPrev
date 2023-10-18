@@ -4,16 +4,16 @@
 \alias{adminInfo}
 \title{Get admin information}
 \usage{
-adminInfo(agg.pop, SpatialPolygons, proportion, admin)
+adminInfo(geo, admin, agg.pop = NULL, proportion = NULL)
 }
 \arguments{
-\item{agg.pop}{data frame of aggregated poplulation from aggPopulation function. It should have two columns: "DistrictName" and "population".}
-
-\item{SpatialPolygons}{spatial polygons dataframe for admin 1 or admin 2.}
-
-\item{proportion}{data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.}
+\item{geo}{spatial polygons dataframe for admin 1 or admin 2.}
 
 \item{admin}{admin level}
+
+\item{agg.pop}{data frame of aggregated poplulation from aggPopulation function. It should have two columns: "DistrictName" and "population".}
+
+\item{proportion}{data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.}
 }
 \value{
 This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix

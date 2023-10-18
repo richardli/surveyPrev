@@ -4,20 +4,28 @@
 \alias{directEST}
 \title{Calculate direct estimates}
 \usage{
-directEST(data, cluster.info, admin.info, admin, strata, weight, aggregation)
+directEST(
+  data,
+  cluster.info,
+  admin,
+  strata,
+  weight = c("population", "survey")[1],
+  admin.info = NULL,
+  aggregation = FALSE
+)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}
 
 \item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 
-\item{admin.info}{list from the output of adminInfo function}
-
 \item{admin}{admin level for the model}
 
 \item{strata}{admin level for the model}
 
-\item{weight}{the weight used for aggregating result, "population" or "SamplingWeight"}
+\item{weight}{the weight used for aggregating result, "population" or "survey"}
+
+\item{admin.info}{list from the output of adminInfo function}
 
 \item{aggregation}{whether or not report aggregation results.}
 }

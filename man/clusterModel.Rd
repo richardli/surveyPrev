@@ -4,20 +4,28 @@
 \alias{clusterModel}
 \title{Calculate cluster model estimates using beta binomial model}
 \usage{
-clusterModel(data, cluster.info, admin, admin.info, Amat, stata, aggregation)
+clusterModel(
+  data,
+  cluster.info,
+  admin.info,
+  admin,
+  model = c("bym2", "iid"),
+  stratification = FALSE,
+  aggregation = FALSE
+)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests}
 
 \item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 
-\item{admin}{admin level for the model}
-
 \item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
 
-\item{Amat}{null for"iid" or adjacency matrix  for"BYM2"}
+\item{admin}{admin level for the model}
 
-\item{stata}{whether or not to include urban/rural stratum.}
+\item{model}{smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").}
+
+\item{stratification}{whether or not to include urban/rural stratum.}
 
 \item{aggregation}{whether or not report aggregation results.}
 }
