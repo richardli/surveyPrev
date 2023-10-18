@@ -175,11 +175,13 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
         admin1.name=admin.info$admin1.name[tail(c.dat.tmp$sID,n=nregion)],
         value= tail(imod$summary.fitted.values,n=nregion)[,1],
         sd= tail(imod$summary.fitted.values,n=nregion)[,2],
+        var = tail(imod$summary.fitted.values,n=nregion)[,2]^2,
         quant025= tail(imod$summary.fitted.values,n=nregion)[,3],
         quant975= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin1.bb.res$value<-as.numeric (admin1.bb.res$value)
       admin1.bb.res$sd<-as.numeric (admin1.bb.res$sd)
+      admin1.bb.res$var<-admin1.bb.res$sd^2
       admin1.bb.res$quant025<-as.numeric (admin1.bb.res$quant025)
       admin1.bb.res$quant975<-as.numeric (admin1.bb.res$quant975)
 
@@ -199,6 +201,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
 
       admin1.bb.res <- data.frame(value = c(post.u, post.r, post.all),
                                   sd = c(post.u.sd, post.r.sd, post.all.sd),
+                                  var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   quant025=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   quant975=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
@@ -214,19 +217,20 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
     post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
+                           var = var(post.all),
                            quant025=quantile(post.all, probs = c(0.025,0.975))[1],
                            quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 }
 
     if(aggregation==F){
-      return(list(admin1.bb.res=admin1.bb.res,inla=imod ))
+      return(list(res.admin1=admin1.bb.res,inla=imod ))
 
 
 
     }else{
 
 
-    return(list(admin1.bb.res=admin1.bb.res,agg.natl=agg.natl,inla=imod,
+    return(list(res.admin1=admin1.bb.res,agg.natl=agg.natl,inla=imod,
                 admin1_post=draw.all,nation_post=post.all))
 
     }
@@ -238,11 +242,13 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
         DistrictName=admin.info$DistrictName[tail(c.dat.tmp$sID,n=nregion)],
         value= tail(imod$summary.fitted.values,n=nregion)[,1],
         sd= tail(imod$summary.fitted.values,n=nregion)[,2],
+        var = tail(imod$summary.fitted.values,n=nregion)[,2]^2,
         quant025= tail(imod$summary.fitted.values,n=nregion)[,3],
         quant975= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin2.bb.res$value<-as.numeric (admin2.bb.res$value)
       admin2.bb.res$sd<-as.numeric (admin2.bb.res$sd)
+      admin2.bb.res$var <- admin2.bb.res$sd^2
       admin2.bb.res$quant025<-as.numeric (admin2.bb.res$quant025)
       admin2.bb.res$quant975<-as.numeric (admin2.bb.res$quant975)
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
@@ -263,6 +269,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
 
       admin2.bb.res <- data.frame(value = c(post.u, post.r, post.all),
                                   sd = c(post.u.sd, post.r.sd, post.all.sd),
+                                  var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   quant025=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   quant975=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
@@ -296,6 +303,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
 
     agg.admin1 <- data.frame(value = colMeans(admin1.samp),
                              sd =  apply(admin1.samp, 2, sd),
+                             var =  apply(admin1.samp, 2, var),
                              quant025= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[1,],
                              quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
                             )
@@ -306,6 +314,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
     post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
+                           var = var(post.all),
                            quant025=quantile(post.all, probs = c(0.025,0.975))[1],
                            quant975=quantile(post.all, probs = c(0.025,0.975))[2])
 
@@ -313,13 +322,13 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
 
 
     if(aggregation==F){
-      return(list(admin2.bb.res=admin2.bb.res,agg.inla=imod,
+      return(list(res.admin2=admin2.bb.res, inla=imod,
                   admin2_post=draw.all))
 
 
     }else{
 
-    return(list(admin2.bb.res=admin2.bb.res,agg.admin1=agg.admin1,agg.natl=agg.natl,inla=imod,
+    return(list(res.admin2=admin2.bb.res,agg.admin1=agg.admin1,agg.natl=agg.natl,inla=imod,
                 admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all))
 
 }
