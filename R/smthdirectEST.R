@@ -6,7 +6,7 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
-#' @param Amat  null for"iid" or adjacency matrix  for"BYM2"
+#' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param aggregation whether or not report aggregation results.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -23,10 +23,21 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info, admin, Amat,aggregation ){
+fhModel <- function(data, cluster.info, admin.info = NULL, admin, model = c("bym2", "iid"), aggregation = FALSE){
+  
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
+  }
+
+  if(is.null(admin.info) && model != "iid"){
+    message("No admin.info supplied. Using IID random effects.")
+    model <- "iid"
+  }
+  if(model == "bym2"){
+    Amat <- admin.info$admin.mat
+  }else{
+    Amat <- NULL
   }
 
 
@@ -78,7 +89,7 @@ fhModel <- function(data, cluster.info, admin.info, admin, Amat,aggregation ){
     }else{
 
 
-      if(is.na(weight)==T|is.na(admin.info)==T){
+      if(is.null(weight) || is.null(admin.info)==T){
         stop("Need admin.info and weight for aggregation")
       }
 
@@ -113,7 +124,7 @@ fhModel <- function(data, cluster.info, admin.info, admin, Amat,aggregation ){
                   summarise(weighted_avg = weighted.mean(value, prop))%>%
                   mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
-    admin2.res=list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg)
+    admin2.res=list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg, model = fit2)
     }
 
     return(admin2.res)
@@ -147,8 +158,8 @@ fhModel <- function(data, cluster.info, admin.info, admin, Amat,aggregation ){
       admin1.res=admin1_res
     }else{
 
-      if(is.na(weight)==T|is.na(admin.info)==T){
-        stop("Need admin.info and weight for aggregation")
+      if(is.null(admin.info)){
+        stop("Need admin.info for aggregation")
       }
 
     # aggregate results
@@ -159,7 +170,7 @@ fhModel <- function(data, cluster.info, admin.info, admin, Amat,aggregation ){
 
 
 
-    admin1.res=list(admin1_res,agg.natl=nation_agg,fit1)
+    admin1.res=list(res.admin1 = admin1_res, agg.natl=nation_agg, model = fit1)
 
     }
 
