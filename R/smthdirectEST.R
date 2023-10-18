@@ -124,7 +124,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, model = c("bym
                   summarise(weighted_avg = weighted.mean(value, prop))%>%
                   mutate(weighted_avg = sprintf("%.4f", weighted_avg))
 
-    admin2.res=list(admin2.res=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg, model = fit2)
+    admin2.res=list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg, model = fit2)
     }
 
     return(admin2.res)
