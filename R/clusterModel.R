@@ -6,9 +6,9 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
-#' @param Amat  null for"iid" or adjacency matrix  for"BYM2"
+#' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
+#' @param stratification whether or not to include urban/rural stratum.
 #' @param aggregation whether or not report aggregation results.
-#' @param stata whether or not to include urban/rural stratum.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #'   \item { clusterModel.result
@@ -28,14 +28,18 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation){
+clusterModel<-function(data,cluster.info, admin.info = NULL, admin, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
 
 
- if(is.null(Amat)==T){
-
-     spatialmodel="iid"}else{
-      spatialmodel="bym2"
-     }
+  if(is.null(admin.info) && model != "iid"){
+    message("No admin.info supplied. Using IID random effects.")
+    model <- "iid"
+  }
+  if(model == "bym2"){
+    Amat <- admin.info$admin.mat
+  }else{
+    Amat <- NULL
+  }
 
 
   admin.mat <- Amat
@@ -67,38 +71,38 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
 
 
   ## MODEL setup
-  if(stata==F){
-    if(spatialmodel=="iid"){
+  if(stratification==F){
+    if(model=="iid"){
       pc.u = 1
       pc.alpha = 0.01
-      formula <- value ~ 1 + f(sID, model = spatialmodel,graph = admin.mat, hyper = list(prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha))))
-    }else if(spatialmodel=="bym2"){
+      formula <- value ~ 1 + f(sID, model = model,graph = admin.mat, hyper = list(prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha))))
+    }else if(model=="bym2"){
 
       pc.u = 1
       pc.alpha = 0.01
       pc.u.phi <- 0.5
       pc.alpha.phi <- 2/3
       formula <- value ~ 1+
-        f(sID, model = spatialmodel, graph = admin.mat,
+        f(sID, model = model, graph = admin.mat,
           hyper = list(
             prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha)),
             phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))
 
     }
 
-  }else if(stata==T){
-    if(spatialmodel=="iid"){
+  }else if(stratification){
+    if(model=="iid"){
       pc.u = 1
       pc.alpha = 0.01
-      formula <- value ~ 1 + strata+ f(sID, model = spatialmodel,graph = admin.mat, hyper = list(prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha))))
-    }else if(spatialmodel=="bym2"){
+      formula <- value ~ 1 + strata+ f(sID, model = model,graph = admin.mat, hyper = list(prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha))))
+    }else if(model=="bym2"){
 
       pc.u = 1
       pc.alpha = 0.01
       pc.u.phi <- 0.5
       pc.alpha.phi <- 2/3
       formula <- value ~ 1  + strata +
-        f(sID, model = spatialmodel, graph = admin.mat,
+        f(sID, model = model, graph = admin.mat,
           hyper = list(
             prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha)),
             phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))
@@ -126,7 +130,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
   samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
 
 
-  if(stata==F){
+  if(stratification==F){
 
     draw.all <- matrix(NA, nsamp, nregion)
     for(i in 1:length(samp)){
@@ -135,7 +139,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
       intercept <- tmp["(Intercept):1", 1]
       draw.all[i, ] <- SUMMER::expit(s.effect + intercept)
     }
-  }else if(stata==T){
+  }else if(stratification){
     draw.u <- matrix(NA, nsamp, nregion)
     draw.r <- matrix(NA, nsamp, nregion)
     draw.all <- matrix(NA, nsamp, nregion)
@@ -156,7 +160,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
   }
 
   if(admin==1){
-    if(stata==F){
+    if(stratification==F){
       admin1.bb.res<- data.frame(cbind(
         admin1.name=admin.info$admin1.name[tail(c.dat.tmp$sID,n=nregion)],
         value= tail(imod$summary.fitted.values,n=nregion)[,1],
@@ -169,7 +173,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
       admin1.bb.res$quant025<-as.numeric (admin1.bb.res$quant025)
       admin1.bb.res$quant975<-as.numeric (admin1.bb.res$quant975)
 
-    }else if(stata==T){
+    }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
       post.r <- apply(draw.r, 2, mean)
       post.all <- apply(draw.all, 2, mean)
@@ -216,7 +220,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
     }
   }else if(admin==2){
 
-    if(stata==F){
+    if(stratification==F){
 
       admin2.bb.res<- data.frame(cbind(
         DistrictName=admin.info$DistrictName[tail(c.dat.tmp$sID,n=nregion)],
@@ -231,7 +235,7 @@ clusterModel<-function(data,cluster.info,admin,admin.info,Amat,stata,aggregation
       admin2.bb.res$quant975<-as.numeric (admin2.bb.res$quant975)
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
 
-    }else if(stata==T){
+    }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
       post.r <- apply(draw.r, 2, mean)
       post.all <- apply(draw.all, 2, mean)
