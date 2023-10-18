@@ -7,7 +7,7 @@
 #' @param admin.info list from the output of adminInfo function
 #' @param admin admin level for the model
 #' @param strata admin level for the model
-#' @param weight the weight used for aggregating result, "population" or "SamplingWeight"
+#' @param weight the weight used for aggregating result, "population" or "survey"
 #' @param aggregation whether or not report aggregation results.
 #'
 #'
@@ -26,7 +26,7 @@
 
 
 
-directEST <- function(data, cluster.info, admin.info, admin, strata, weight ,aggregation){
+directEST <- function(data, cluster.info, admin, strata, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -62,143 +62,141 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ,agg
 
 
    if(aggregation==F){
-   res.admin2=admin2_res
-      }else{
+   
+       res.admin2=admin2_res
+   
+   }else{
 
-        if(is.na(weight)==T|is.na(admin.info)==T){
+        if(is.null(weight) || is.null(admin.info)){
           stop("Need admin.info and weight for aggregation")
         }
-    ##aggregation
+    
+        ##aggregation
 
-    dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
+        dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
 
-    draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
+        draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
-    ##
-    ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
-    ##
+        ##
+        ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
+        ##
 
 
-    ##If J-th admin2 nested within the i-th admin 1, and the k-th region has no data,
-    ##the admin 1 estimate is $p_i = \sum_{j\neq k}^J p_{ij} * n_{ij} /\sum_{j\neq k}^J n_{ij} )$.
-    ##And the national estimate is p = $p_i *(\sum_{j=1}^J n_{ij} )/ n$ + other admin1 estimates weighted by the admin1 pop fraction)
+        ##If J-th admin2 nested within the i-th admin 1, and the k-th region has no data,
+        ##the admin 1 estimate is $p_i = \sum_{j\neq k}^J p_{ij} * n_{ij} /\sum_{j\neq k}^J n_{ij} )$.
+        ##And the national estimate is p = $p_i *(\sum_{j=1}^J n_{ij} )/ n$ + other admin1 estimates weighted by the admin1 pop fraction)
 
-    ### ### ### ### ### ### ### ### ### ###
-    ### admin2 to admin1 for admin2 result
-    ### ### ### ### ### ### ### ### ### ###
+        ### ### ### ### ### ### ### ### ### ###
+        ### admin2 to admin1 for admin2 result
+        ### ### ### ### ### ### ### ### ### ###
 
-    ####aggregation for variance
-    if(weight=="population"){
-      #weight using worldpop
-      weight_dt<-left_join(dd,distinct(admin.info$admin.info), by="DistrictName")%>%
-        group_by(admin1.name)%>%
-        mutate(prop=round(population/sum(population),digits = 4))
-    }else{
-      #weight using dhs sampling weight (modt$weight
-      weight_dt<- modt%>%group_by(DistrictName)%>%
-        mutate(sumweight2=sum(weight),digits = 4)%>%
-        distinct(DistrictName,sumweight2,admin1.name,admin2.name)%>%
-        group_by(admin1.name)%>%
-        mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
-        left_join(dd, by="DistrictName")
+        ####aggregation for variance
+        if(weight=="population"){
+          #weight using worldpop
+          weight_dt<-left_join(dd,distinct(admin.info$admin.info), by="DistrictName")%>%
+            group_by(admin1.name)%>%
+            mutate(prop=round(population/sum(population),digits = 4))
+        }else{
+          #weight using dhs sampling weight (modt$weight
+          weight_dt<- modt%>%group_by(DistrictName)%>%
+            mutate(sumweight2=sum(weight),digits = 4)%>%
+            distinct(DistrictName,sumweight2,admin1.name,admin2.name)%>%
+            group_by(admin1.name)%>%
+            mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
+            left_join(dd, by="DistrictName")
+        }
+        weight_dt <- weight_dt[match(admin2_res$DistrictName, weight_dt$DistrictName), ]
+
+        ##
+        ## here making weight the same order as draw.all
+        ##
+        ## TODO: Similar to above, the match() does not work when admin2 has duplicated names, need to rewrite this when above is fixed.
+        ##
+
+       admin1.list <- unique(weight_dt$admin1.name)
+       admin1.samp <- matrix(NA, 10000, length(admin1.list))
+       for(i in 1:length(admin1.list)){
+          which.admin2 <- which(weight_dt$admin1.name == admin1.list[i])
+          admin1.samp[, i] <- apply(draw.all[, which.admin2, drop = FALSE], 1, function(x, w){sum(x * w)}, weight_dt$prop[which.admin2])
+       }
+       colnames(admin1.samp) <- admin1.list
+
+
+
+       ## aggregation for mean
+       if(weight=="population"){
+         #weight using worldpop
+         weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="DistrictName")%>%
+           group_by(admin1.name)%>%
+           mutate(prop=round(population/sum(population),digits = 4))%>%
+           mutate(value1=prop*value)
+       }else{
+         #weight using dhs sampling weight (modt$weight
+         weight_dt_mean<- modt%>%group_by(DistrictName)%>%
+           mutate(sumweight2=sum(weight),digits = 4)%>%
+           distinct(DistrictName,sumweight2,admin1.name,admin2.name)%>%
+           group_by(admin1.name)%>%
+           mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
+           left_join(admin2_res, by="DistrictName")%>%
+           mutate(value1=prop*value)
+
+       }
+
+
+
+       admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
+                                sd =  apply(admin1.samp, 2, sd),
+                                quant025= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[1,],
+                                quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
+       )
+
+       admin1_agg <- admin1_agg%>% left_join( aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum), by="admin1.name")%>%
+       rename( value = value1)#admin1_agg: admin2toadmin1 result
+       admin1_agg <- admin1_agg[, c("admin1.name", "value", "sd", "quant025", "quant975")]
+
+
+       ### ### ### ### ### ### ### ### ### ###
+       ### admin1 to national for admin2 result
+       ### ### ### ### ### ### ### ### ### ###
+
+       if(weight=="population"){
+          #for variance
+           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
+           weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
+           nation.samp<- admin1.samp%*%weight_dt
+
+           #for mean
+           weight_dt_mean<-weight_dt%*%admin1_agg$value
+
+       }else{
+         admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
+         # weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
+         weight_dt<- modt%>%group_by(admin1.name)%>%
+           mutate(sumweight2=sum(weight),digits = 4)%>%
+           distinct(admin1.name,sumweight2)%>%
+           ungroup()%>%
+           mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))
+
+
+         nation.samp<- admin1.samp%*%weight_dt$prop  #for variance
+         weight_dt_mean<-weight_dt$prop%*%admin1_agg$value #for mean
+
+       }
+
+
+
+
+       nation_agg <- data.frame(value =weight_dt_mean,
+                                sd = sd(nation.samp),
+                                quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
+                                quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
+
+       res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg, agg.natl=nation_agg)
+    
     }
-    weight_dt <- weight_dt[match(admin2_res$DistrictName, weight_dt$DistrictName), ]
-
-    ##
-    ## here making weight the same order as draw.all
-    ##
-    ## TODO: Similar to above, the match() does not work when admin2 has duplicated names, need to rewrite this when above is fixed.
-    ##
-
-   admin1.list <- unique(weight_dt$admin1.name)
-   admin1.samp <- matrix(NA, 10000, length(admin1.list))
-   for(i in 1:length(admin1.list)){
-      which.admin2 <- which(weight_dt$admin1.name == admin1.list[i])
-      admin1.samp[, i] <- apply(draw.all[, which.admin2, drop = FALSE], 1, function(x, w){sum(x * w)}, weight_dt$prop[which.admin2])
-   }
-   colnames(admin1.samp) <- admin1.list
-
-
-
-   ## aggregation for mean
-   if(weight=="population"){
-     #weight using worldpop
-     weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="DistrictName")%>%
-       group_by(admin1.name)%>%
-       mutate(prop=round(population/sum(population),digits = 4))%>%
-       mutate(value1=prop*value)
-   }else{
-     #weight using dhs sampling weight (modt$weight
-     weight_dt_mean<- modt%>%group_by(DistrictName)%>%
-       mutate(sumweight2=sum(weight),digits = 4)%>%
-       distinct(DistrictName,sumweight2,admin1.name,admin2.name)%>%
-       group_by(admin1.name)%>%
-       mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
-       left_join(admin2_res, by="DistrictName")%>%
-       mutate(value1=prop*value)
-
-   }
-
-
-
-   admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
-                            sd =  apply(admin1.samp, 2, sd),
-                            quant025= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[1,],
-                            quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
-   )
-
-   admin1_agg<- admin1_agg%>% left_join( aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum), by="admin1.name")%>%
-   rename( value = value1)#admin1_agg: admin2toadmin1 result
-
-
-
-   ### ### ### ### ### ### ### ### ### ###
-   ### admin1 to national for admin2 result
-   ### ### ### ### ### ### ### ### ### ###
-
-   if(weight=="population"){
-  #for variance
-   admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
-   weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
-   nation.samp<- admin1.samp%*%weight_dt
-
-   #for mean
-   weight_dt_mean<-weight_dt%*%admin1_agg$value
-
-
-
-   }else{
-     admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
-     # weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
-     weight_dt<- modt%>%group_by(admin1.name)%>%
-       mutate(sumweight2=sum(weight),digits = 4)%>%
-       distinct(admin1.name,sumweight2)%>%
-       ungroup()%>%
-       mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))
-
-
-     nation.samp<- admin1.samp%*%weight_dt$prop  #for variance
-     weight_dt_mean<-weight_dt$prop%*%admin1_agg$value #for mean
-
-   }
-
-
-
-
-   nation_agg <- data.frame(value =weight_dt_mean,
-                            sd = sd(nation.samp),
-                            quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
-                            quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
-
-   res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg)
-
-
-}
     return(res.admin2)
 
-
-    }
-  else if(admin==1){
+  }else if(admin==1){
 
     modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
@@ -237,7 +235,7 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ,agg
 
     }else{
 
-      if(is.na(weight)==T|is.na(admin.info)==T){
+      if(is.null(weight) || is.null(admin.info)==T){
         stop("Need admin.info and weight for aggregation")
       }
       ### ### ### ### ### ### ### ### ### ###
@@ -301,8 +299,8 @@ directEST <- function(data, cluster.info, admin.info, admin, strata, weight ,agg
 
     }
     return(admin1_res)
-  }
-  else if(admin==0){
+
+}else if(admin==0){
     data$admin0.name="country"
     modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
