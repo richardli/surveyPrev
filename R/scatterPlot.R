@@ -25,8 +25,10 @@
 
 
 scatterPlot<-function(res1,value1,res2,value2,label1,label2,by.res1, by.res2,title){
-  if(dim(res1)[1]!=dim(res2)[1]){
-    stop("Two results are not in the same area level")  }
+ 
+  ## TODO: add a better check for consistency, as sometimes estimates can be missing rows
+  # if(dim(res1)[1]!=dim(res2)[1]){
+    # stop("Two results are not in the same area level")  }
 
   res1$value_x=res1[,value1]
   res2$value_y=res2[,value2]
@@ -38,12 +40,12 @@ scatterPlot<-function(res1,value1,res2,value2,label1,label2,by.res1, by.res2,tit
 
     lim <- range(c(df$value_x, df$value_y), na.rm = TRUE)
     ggplot(df, aes(x=value_x,y=value_y)) +
-      geom_point(alpha = 0.5,aes())+
       geom_abline(slope = 1, intercept = 0, linetype = "dashed")+
+      geom_point(alpha = 0.5, color = "royalblue") +
       labs(title = title)+
       xlab(label1)+
       ylab(label2)+
-    xlim(lim) + ylim(lim)
+    xlim(lim) + ylim(lim) + theme_bw()
 
 
 # if(admin==1){
