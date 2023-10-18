@@ -35,8 +35,8 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   admin1.key <- over(points.frame, poly.over.adm1)
 
 
-  cluster.info$admin1 <- admin1.key
-  cluster.info$admin1.char <- paste0("admin1_", admin1.key)
+  # cluster.info$admin1 <- admin1.key
+  # cluster.info$admin1.char <- paste0("admin1_", admin1.key)
   cluster.info$admin1.name <- as.character(eval(str2lang("poly.adm1@data$NAME_1")))[admin1.key]
 
   poly.over.adm2 <- SpatialPolygons(poly.adm2@polygons)
@@ -45,8 +45,8 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   miss.frame.adm2 <- points.frame@coords[which(is.na(admin2.key)),]
 
 
-  cluster.info$admin2 <- admin2.key
-  cluster.info$admin2.char <- paste0("admin2_", admin2.key)
+  # cluster.info$admin2 <- admin2.key
+  # cluster.info$admin2.char <- paste0("admin2_", admin2.key)
   cluster.info$admin2.name <- as.character(eval(str2lang("poly.adm2@data$NAME_2")))[admin2.key]
   cluster.info$DistrictName <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
 
