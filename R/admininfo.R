@@ -85,6 +85,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
       admin.info= as.data.frame(admininfo)
 
 
+
     }else if(is.null(agg.pop)& !is.null(proportion)){
 
       # Needed for cluster model when stratification=T and aggregation=F.
@@ -103,6 +104,9 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
       admininfo <- dplyr::left_join(admininfo, agg.pop[, c("DistrictName","population")])
       admin.info= as.data.frame(admininfo)
       admininfo$urban<-NA
+      admininfo<-admininfo%>%
+        dplyr::group_by(admin1.name)%>%
+        dplyr::mutate(population1=sum(population))
       admin.info= as.data.frame(admininfo)
 
 
@@ -110,6 +114,9 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
     }else{
 
       admininfo <- agg.pop
+      admininfo<-admininfo%>%
+        dplyr::group_by(admin1.name)%>%
+        dplyr::mutate(population1=sum(population))
       admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name", "urban")])
       admin.info= as.data.frame(admininfo)
       admin.info= as.data.frame(admininfo)

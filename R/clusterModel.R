@@ -284,9 +284,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
     if(aggregation==T){
     #agg admin1
 
-    admin.info<-admin.info%>%
-      dplyr::group_by(admin1.name)%>%
-      dplyr::mutate(population1=sum(population))
+
 
     weight=admin.info$population/admin.info$population1
 
