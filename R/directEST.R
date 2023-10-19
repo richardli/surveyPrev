@@ -62,15 +62,15 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
 
 
    if(aggregation==F){
-   
+
        res.admin2=admin2_res
-   
+
    }else{
 
         if(is.null(weight) || is.null(admin.info)){
           stop("Need admin.info and weight for aggregation")
         }
-    
+
         ##aggregation
 
         dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
@@ -188,11 +188,12 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
 
        nation_agg <- data.frame(value =weight_dt_mean,
                                 sd = sd(nation.samp),
+                                var = var(nation.samp),
                                 quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
                                 quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
 
        res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg, agg.natl=nation_agg)
-    
+
     }
     return(res.admin2)
 
@@ -274,6 +275,7 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
 
     nation_agg <- data.frame(value =mean(nation.samp),
                              sd = sd(nation.samp),
+                             var = var(nation.samp),
                              quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
                              quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
 
