@@ -40,6 +40,24 @@ getDHSindicator <- function(Rdata, indicator) {
      raw.dat.tmp<-IRdata
       colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'nt_wm_any_anem'] <- "value"
 
+  }else if(indicator == "unmet_family")
+  {
+    IRdata <- Rdata %>%
+      mutate(wt = v005/1000000)
+
+    IRdata <- IRdata %>%
+      mutate(n_un_fam_plan =
+               case_when(
+                 v626 == 1 ~ 1,
+                 v626 == 2 ~ 1,
+                 v626 == 3 ~ 0,
+                 v626 == 4 ~ 0,
+                 v626 %in% c(5, 6, 7, 8, 9) ~ NA)) %>%
+      set_value_labels(n_un_fam_plan = c("Yes" = 1, "No"=0  )) %>%
+      set_variable_labels(n_un_fam_plan = "Unmet need for family planning")
+
+    raw.dat.tmp<-IRdata
+    colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'n_un_fam_plan'] <- "value"
   }else if(indicator =="ancvisit4+")
   {
     IRdata <- Rdata%>%
@@ -101,6 +119,24 @@ getDHSindicator <- function(Rdata, indicator) {
 
     raw.dat.tmp<-PRdata
     colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'nt_ch_wast'] <- "value"
+
+  }else if(indicator == "sanitation")
+  {
+    PRdata <- Rdata %>%
+      mutate(wt = hv005/1000000)
+    PRdata <- PRdata %>%
+      mutate(n_improved_sani =
+               case_when(
+                 # household using improved sanitation = 1
+                 hv205 %in% c(10, 11, 12, 13, 14, 15, 20, 21, 22, 41) ~ 1,
+                 # household using unimproved sanitation = 0
+                 hv205 %in% c(14, 23, 42, 43, 96, 31, 30) ~ 0)) %>%
+      #replace_with_na(replace = list(n_improved_sani = c(99))) %>%
+      set_value_labels(n_improved_sani = c("Yes" = 1, "No"=0  )) %>%
+      set_variable_labels(n_improved_sani = "Household using improved sanitation")
+
+    raw.dat.tmp<-PRdata
+    colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'n_improved_sani'] <- "value"
 
   }else if(indicator == "stunting")
   {
@@ -230,7 +266,7 @@ getDHSindicator <- function(Rdata, indicator) {
     #filter( b19<=60)%>% #for birth file
     dplyr::  select(c(cluster="v001", householdID= "v002",region="v024", weight="v005", strata="v025", value="value"))
   }
-  else if(indicator %in%  c("wasting","stunting"))  {
+  else if(indicator %in%  c("wasting","stunting","sanitation"))  {
     strat <- attr(raw.dat.tmp$hv025,which='labels')
     names(strat) <- tolower(names(strat))
     raw.dat.tmp$hv025 <- ifelse(raw.dat.tmp$hv025 == strat["urban"][[1]],'urban','rural')

@@ -22,9 +22,9 @@ getDHSdata <- function(country, indicator, year) {
 
 
   indicator<-indicator
-  if (indicator %in% c("womananemia", "ancvisit4+")) {
+  if (indicator %in% c("womananemia", "ancvisit4+", "unmet_family")) {
     Type <- c("Individual Recode")
-  } else if (indicator %in% c("stunting", "wasting")) {
+  } else if (indicator %in% c("stunting", "wasting", "sanitation")) {
     Type <- c("Household Member Recode")
   } else if (indicator %in% c("DPT3")) {
     Type <- c("Children's Recode")
