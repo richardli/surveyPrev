@@ -135,7 +135,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
 
 
   return(list(admin.info=admin.info,
-              admin.mat=as.data.frame(admin.mat)))
+              admin.mat=as.matrix(as.data.frame(admin.mat))))
 
 }
 
