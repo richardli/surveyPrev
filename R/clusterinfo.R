@@ -67,13 +67,13 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   cluster.info <- cluster.info[!(cluster.info$cluster %in% points_sf$DHSCLUST[wrong.points]),]
 
   admin1.sf <- st_join(cluster.info, poly.adm1) %>%
-    st_transform(st_crs(poly.adm1)) # Transform CRS if needed
+    sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
 
   cluster.info$admin1.name <- admin1.sf$NAME_1
 
   # Spatial join for admin2
   admin2.sf <- st_join(cluster.info, poly.adm2) %>%
-    st_transform(st_crs(poly.adm2)) # Transform CRS if needed
+    sf::st_transform(st_crs(poly.adm2)) # Transform CRS if needed
 
   # Add admin2 name to cluster.info
   cluster.info$admin2.name <- admin2.sf$NAME_2
