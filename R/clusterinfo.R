@@ -62,8 +62,10 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   cluster.info <- points_sf %>%
     select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
   #filter(!(LATNUM < 0.0000001 & LONGNUM < 0.0000001))
-
+#removing wrong.points that has weird LONGNUM LATNUM
   wrong.points <- which(points_sf$LATNUM < 0.0000001 & points_sf$LONGNUM < 0.0000001)
+
+
   cluster.info <- cluster.info[!(cluster.info$cluster %in% points_sf$DHSCLUST[wrong.points]),]
 
   admin1.sf <- st_join(cluster.info, poly.adm1) %>%
@@ -77,8 +79,14 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
 
   # Add admin2 name to cluster.info
   cluster.info$admin2.name <- admin2.sf$NAME_2
+   cluster.info$DistrictName <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
 
-  cluster.info$DistrictName <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
+
+   #removing wrong.points that has no admin 1 name
+   wrong.points <- c(wrong.points, which(is.na(cluster.info$admin1.name)))
+   cluster.info <- cluster.info[!(cluster.info$cluster %in% wrong.points),]
+
+
   # return(cluster.info)
   cluster.info<-as.data.frame(cluster.info)
   return(list(cluster.info=cluster.info, wrong.points = wrong.points))
