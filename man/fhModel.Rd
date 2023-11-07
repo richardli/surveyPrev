@@ -9,6 +9,7 @@ fhModel(
   cluster.info,
   admin.info = NULL,
   admin,
+  CI = 0.95,
   model = c("bym2", "iid"),
   aggregation = FALSE
 )
@@ -21,6 +22,8 @@ fhModel(
 \item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
 
 \item{admin}{admin level for the model}
+
+\item{CI}{Credible interval to be used. Default to 0.95.}
 
 \item{model}{smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").}
 

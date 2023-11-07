@@ -6,6 +6,7 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
+#' @param CI Credible interval to be used. Default to 0.95.
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param aggregation whether or not report aggregation results.
 #'
@@ -15,7 +16,7 @@
 #' @import dplyr
 #' @importFrom survey svydesign svyby
 #' @importFrom SUMMER smoothSurvey
-#' @importFrom stats weighted.mean
+#' @importFrom stats weighted.mean var
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -23,7 +24,7 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info = NULL, admin, model = c("bym2", "iid"), aggregation = FALSE){
+fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE){
   
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -74,7 +75,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, model = c("bym
                          weightVar = "weight",
                          strataVar = "strata.full",
                          Amat =Amat,
-                         CI = 0.95,
+                         CI = CI,
                          smooth=T)
 
 
@@ -145,7 +146,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, model = c("bym
                          weightVar = "weight",
                          strataVar = "strata.full",
                          Amat =Amat,
-                         CI = 0.95)
+                         CI = CI)
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
@@ -212,7 +213,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, model = c("bym
     #                                smooth=T)
     # admin0_res<-smoothSurvey_res$smooth
     # colnames(admin0_res)[1:3] <- c("admin0.name","value","var")
-    # colnames(admin0_res)[5:6] <- c("quant025","quant975")
+    # colnames(admin0_res)[5:6] <- c("lower","upper")
 
     # admin0_res$sd<-sqrt(admin0_res$var)
 

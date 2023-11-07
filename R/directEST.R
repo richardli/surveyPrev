@@ -7,6 +7,7 @@
 #' @param admin.info list from the output of adminInfo function
 #' @param admin admin level for the model
 #' @param strata admin level for the model
+#' @param CI Credible interval to be used. Default to 0.95.
 #' @param weight the weight used for aggregating result, "population" or "survey"
 #' @param aggregation whether or not report aggregation results.
 #'
@@ -26,7 +27,7 @@
 
 
 
-directEST <- function(data, cluster.info, admin, strata, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
+directEST <- function(data, cluster.info, admin, strata, CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -48,7 +49,7 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
                                    weightVar = "weight",
                                    strataVar = "strata.full",
                                    Amat =NULL,
-                                   CI = 0.95,
+                                   CI = CI,
                                    is.unit.level=FALSE,
                                    smooth=FALSE)
     admin2_res<-as.data.frame(smoothSurvey_res$HT)
@@ -63,8 +64,9 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
 
    if(aggregation==F){
 
-       res.admin2=admin2_res
-
+      res.admin2=admin2_res
+      res.admin2$lower <- expit(res.admin2$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+      res.admin2$upper <- expit(res.admin2$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
    }else{
 
         if(is.null(weight) || is.null(admin.info)){
@@ -146,13 +148,13 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
 
        admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
                                 sd =  apply(admin1.samp, 2, sd),
-                                quant025= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[1,],
-                                quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
+                                lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[1,],
+                                upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[2,]
        )
 
        admin1_agg <- admin1_agg%>% left_join( aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum), by="admin1.name")%>%
        rename( value = value1)#admin1_agg: admin2toadmin1 result
-       admin1_agg <- admin1_agg[, c("admin1.name", "value", "sd", "quant025", "quant975")]
+       admin1_agg <- admin1_agg[, c("admin1.name", "value", "sd", "lower", "upper")]
 
 
        ### ### ### ### ### ### ### ### ### ###
@@ -189,8 +191,8 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
        nation_agg <- data.frame(value =weight_dt_mean,
                                 sd = sd(nation.samp),
                                 var = var(nation.samp),
-                                quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
-                                quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
+                                lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
+                                upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
        res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
@@ -218,7 +220,7 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
                  weightVar = "weight",
                  strataVar = "strata.full",
                  Amat =NULL,
-                 CI = 0.95,
+                 CI = CI,
                  is.unit.level=FALSE,
                  smooth=FALSE)
 
@@ -232,6 +234,8 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
 
 
       admin1_res<-admin1_res
+      admin1_res$lower <- expit(admin1_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
+      admin1_res$upper <- expit(admin1_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
 
 
     }else{
@@ -276,8 +280,8 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
     nation_agg <- data.frame(value =mean(nation.samp),
                              sd = sd(nation.samp),
                              var = var(nation.samp),
-                             quant025=quantile(nation.samp, probs = c(0.025,0.975))[1],
-                             quant975=quantile(nation.samp, probs = c(0.025,0.975))[2])
+                             lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
+                             upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
 
 
@@ -326,15 +330,14 @@ directEST <- function(data, cluster.info, admin, strata, weight = c("population"
                                    weightVar = "weight",
                                    strataVar = "strata.full",
                                    Amat =NULL,
-                                   CI = 0.95,
+                                   CI = CI,
                                    is.unit.level=FALSE,
                                    smooth=FALSE)
     admin0_res<-smoothSurvey_res$HT
     admin0_res$sd<-sqrt(admin0_res$HT.var)
 
-    CI <- 0.95
-    admin0_res$quant025 <- expit(admin0_res$HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(admin0_res$HT.logit.var))[1]
-    admin0_res$quant975 <- expit(admin0_res$HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(admin0_res$HT.logit.var))[2]
+    admin0_res$lower <- expit(admin0_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin0_res$HT.logit.var))
+    admin0_res$upper <- expit(admin0_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$HT.logit.var))
 
      # lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
 
