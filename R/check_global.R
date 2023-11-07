@@ -34,7 +34,10 @@ utils::globalVariables(c("admin1.name",
 						"value1", 
 						"value_x", 
 						"value_y",
-						"."
+						".", 
+						"var", 
+						"weight", 
+						"population1"
 						))
 
  
