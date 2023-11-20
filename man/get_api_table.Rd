@@ -11,7 +11,7 @@ get_api_table(coutry, survey, indicator, simplify = TRUE)
 
 \item{indicator}{keys at: https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html}
 
-\item{simplify}{if TRUE only the value and region index is returned}
+\item{simplify}{if TRUE only the value and region index is returned.}
 
 \item{country}{keys at: https://api.dhsprogram.com/rest/dhs/countries?returnFields=CountryName,DHS_CountryCode&f=html}
 }
