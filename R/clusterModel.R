@@ -6,6 +6,7 @@
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
+#' @param CI Credible interval to be used. Default to 0.95.
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param stratification whether or not to include urban/rural stratum.
 #' @param aggregation whether or not report aggregation results.
@@ -28,7 +29,7 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
+clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
 
 
   # if(is.null(admin.info) && model != "iid"){
@@ -176,14 +177,14 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
         value= tail(imod$summary.fitted.values,n=nregion)[,1],
         sd= tail(imod$summary.fitted.values,n=nregion)[,2],
         var = tail(imod$summary.fitted.values,n=nregion)[,2]^2,
-        quant025= tail(imod$summary.fitted.values,n=nregion)[,3],
-        quant975= tail(imod$summary.fitted.values,n=nregion)[,5]))
+        lower= tail(imod$summary.fitted.values,n=nregion)[,3],
+        upper= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin1.bb.res$value<-as.numeric (admin1.bb.res$value)
       admin1.bb.res$sd<-as.numeric (admin1.bb.res$sd)
       admin1.bb.res$var<-admin1.bb.res$sd^2
-      admin1.bb.res$quant025<-as.numeric (admin1.bb.res$quant025)
-      admin1.bb.res$quant975<-as.numeric (admin1.bb.res$quant975)
+      admin1.bb.res$lower<-as.numeric (admin1.bb.res$lower)
+      admin1.bb.res$upper<-as.numeric (admin1.bb.res$upper)
 
     }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
@@ -195,15 +196,15 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
       post.all.sd <- apply(draw.all, 2, sd)
 
 
-      post.u.ci <- apply(draw.u, 2, quantile, probs = c(0.025,0.975))
-      post.r.ci <- apply(draw.r, 2,  quantile, probs = c(0.025,0.975))
-      post.all.ci <- apply(draw.all, 2,  quantile, probs = c(0.025,0.975))
+      post.u.ci <- apply(draw.u, 2, quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
+      post.r.ci <- apply(draw.r, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
+      post.all.ci <- apply(draw.all, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
 
       admin1.bb.res <- data.frame(value = c(post.u, post.r, post.all),
                                   sd = c(post.u.sd, post.r.sd, post.all.sd),
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
-                                  quant025=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
-                                  quant975=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
+                                  lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
+                                  upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("aggregated", nregion)))
       admin1.bb.res$admin1.name <- rep(admin.info$admin1.name, 3)
@@ -218,8 +219,8 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
                            var = var(post.all),
-                           quant025=quantile(post.all, probs = c(0.025,0.975))[1],
-                           quant975=quantile(post.all, probs = c(0.025,0.975))[2])
+                           lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
+                           upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
 }
 
     if(aggregation==F){
@@ -243,14 +244,14 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
         value= tail(imod$summary.fitted.values,n=nregion)[,1],
         sd= tail(imod$summary.fitted.values,n=nregion)[,2],
         var = tail(imod$summary.fitted.values,n=nregion)[,2]^2,
-        quant025= tail(imod$summary.fitted.values,n=nregion)[,3],
-        quant975= tail(imod$summary.fitted.values,n=nregion)[,5]))
+        lower= tail(imod$summary.fitted.values,n=nregion)[,3],
+        upper= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin2.bb.res$value<-as.numeric (admin2.bb.res$value)
       admin2.bb.res$sd<-as.numeric (admin2.bb.res$sd)
       admin2.bb.res$var <- admin2.bb.res$sd^2
-      admin2.bb.res$quant025<-as.numeric (admin2.bb.res$quant025)
-      admin2.bb.res$quant975<-as.numeric (admin2.bb.res$quant975)
+      admin2.bb.res$lower<-as.numeric (admin2.bb.res$lower)
+      admin2.bb.res$upper<-as.numeric (admin2.bb.res$upper)
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
 
     }else if(stratification){
@@ -263,15 +264,15 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
       post.all.sd <- apply(draw.all, 2, sd)
 
 
-      post.u.ci <- apply(draw.u, 2, quantile, probs = c(0.025,0.975))
-      post.r.ci <- apply(draw.r, 2,  quantile, probs = c(0.025,0.975))
-      post.all.ci <- apply(draw.all, 2,  quantile, probs = c(0.025,0.975))
+      post.u.ci <- apply(draw.u, 2, quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
+      post.r.ci <- apply(draw.r, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
+      post.all.ci <- apply(draw.all, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
 
       admin2.bb.res <- data.frame(value = c(post.u, post.r, post.all),
                                   sd = c(post.u.sd, post.r.sd, post.all.sd),
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
-                                  quant025=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
-                                  quant975=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
+                                  lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
+                                  upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("aggregated", nregion)))
       admin2.bb.res$DistrictName <- rep(admin.info$DistrictName, 3)
@@ -302,8 +303,8 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
     agg.admin1 <- data.frame(value = colMeans(admin1.samp),
                              sd =  apply(admin1.samp, 2, sd),
                              var =  apply(admin1.samp, 2, var),
-                             quant025= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[1,],
-                             quant975= apply(admin1.samp, 2,  quantile, probs = c(0.025,0.975))[2,]
+                             lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
+                             upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
                             )
     agg.admin1$admin1.name=rownames(agg.admin1)
     #agg national
@@ -313,8 +314,8 @@ clusterModel<-function(data,cluster.info, admin.info, admin, model = c("bym2", "
     agg.natl <- data.frame(value = mean(post.all),
                            sd = sd(post.all),
                            var = var(post.all),
-                           quant025=quantile(post.all, probs = c(0.025,0.975))[1],
-                           quant975=quantile(post.all, probs = c(0.025,0.975))[2])
+                           lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
+                           upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
 
 }
 

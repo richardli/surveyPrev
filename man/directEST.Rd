@@ -9,6 +9,7 @@ directEST(
   cluster.info,
   admin,
   strata,
+  CI,
   weight = c("population", "survey")[1],
   admin.info = NULL,
   aggregation = FALSE
@@ -22,6 +23,8 @@ directEST(
 \item{admin}{admin level for the model}
 
 \item{strata}{admin level for the model}
+
+\item{CI}{Credible interval to be used. Default to 0.95.}
 
 \item{weight}{the weight used for aggregating result, "population" or "survey"}
 
