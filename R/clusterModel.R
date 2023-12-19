@@ -31,6 +31,11 @@
 
 clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
 
+  if (sum(is.na(data$value)) > 0) {
+    data <- data[rowSums(is.na(data)) == 0, ]
+    message("Removing NAs in indicator response")
+  }
+
 
   # if(is.null(admin.info) && model != "iid"){
   #   message("No admin.info supplied. Using IID random effects.")
@@ -80,14 +85,14 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
 
 
-
-
   ## MODEL setup
   if(stratification==F){
     if(model=="iid"){
       pc.u = 1
       pc.alpha = 0.01
-      formula <- value ~ 1 + f(sID, model = model,graph = admin.mat, hyper = list(prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha))))
+      formula <- value ~ 1 + f(sID, model = model,graph = admin.mat,
+                               hyper = list(prec = list(prior = "pc.prec",
+                                                        param = c(pc.u , pc.alpha))))
     }else if(model=="bym2"){
 
       pc.u = 1
@@ -102,11 +107,13 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
     }
 
-  }else if(stratification){
+  }else if(stratification){ # + strata
     if(model=="iid"){
       pc.u = 1
       pc.alpha = 0.01
-      formula <- value ~ 1 + strata+ f(sID, model = model,graph = admin.mat, hyper = list(prec = list(prior = "pc.prec", param = c(pc.u , pc.alpha))))
+      formula <- value ~ 1 + strata+ f(sID, model = model,graph = admin.mat,
+                                       hyper = list(prec = list(prior = "pc.prec",
+                                                                param = c(pc.u , pc.alpha))))
     }else if(model=="bym2"){
 
       pc.u = 1
@@ -136,6 +143,17 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
                     Ntrials=n,
                     control.predictor = list(compute=TRUE, link = 1),
                     control.compute = list(config = TRUE))
+
+
+  # control.family <- list(hyper = list(rho = list(param = c(overdisp.mean, overdisp.prec), initial = overdisp.mean)))
+  # fit <- INLA::inla(formula, family = family, control.compute = options, control.family =
+  #                     control.family, data = exdat, control.predictor = list(compute = FALSE, link=1),
+  #                   Ntrials = exdat$total, lincomb = NULL, control.inla = control.inla, verbose = verbose, control.fixed = control.fixed, ...)
+  #
+  #
+
+
+
 
 
   nsamp <- 1000

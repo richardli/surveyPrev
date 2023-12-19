@@ -9,7 +9,7 @@ directEST(
   cluster.info,
   admin,
   strata,
-  CI,
+  CI = 0.95,
   weight = c("population", "survey")[1],
   admin.info = NULL,
   aggregation = FALSE
