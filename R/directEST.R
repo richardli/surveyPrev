@@ -26,7 +26,6 @@
 #' @export
 
 
-
 directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -55,9 +54,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin2_res<-as.data.frame(smoothSurvey_res$HT)
     admin2_res$sd<-sqrt(admin2_res$HT.var)
 
-    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
+    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName' # region is the col name in smoothSurvey_res$HT
     a<-strsplit(admin2_res$DistrictName,"_")
-    # admin2_res$admin1.name<-matrix(unlist(a),ncol =2, byrow =T)[,1]# cause issue when join with admininfo
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
 
@@ -84,7 +82,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
         ##
         ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
-        ##
+        ## 1/8/24: joined use DistrictName which is admin1_admin2
 
 
         ##If J-th admin2 nested within the i-th admin 1, and the k-th region has no data,
@@ -98,7 +96,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         ####aggregation for variance
         if(weight=="population"){
           #weight using worldpop
-          weight_dt<-left_join(dd,distinct(admin.info$admin.info), by="DistrictName")%>%
+          weight_dt<-left_join(dd, distinct(admin.info$admin.info), by="DistrictName")%>%
             group_by(admin1.name)%>%
             mutate(prop=round(population/sum(population),digits = 4))
         }else{
@@ -112,13 +110,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         }
         weight_dt <- weight_dt[match(admin2_res$DistrictName, weight_dt$DistrictName), ]
 
-        ##
-        ## here making weight the same order as draw.all
-        ##
-        ## TODO: Similar to above, the match() does not work when admin2 has duplicated names, need to rewrite this when above is fixed.
-        ##
 
-       admin1.list <- unique(weight_dt$admin1.name)
+
+       admin1.list <- sort(unique(weight_dt$admin1.name))
        admin1.samp <- matrix(NA, 10000, length(admin1.list))
        for(i in 1:length(admin1.list)){
           which.admin2 <- which(weight_dt$admin1.name == admin1.list[i])
@@ -197,7 +191,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                 lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                                 upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
-       res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg, agg.natl=nation_agg)
+       res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
     }
     return(res.admin2)
@@ -211,9 +205,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     # model
     # clusterVar = "~cluster+householdID"
     # design <- survey::svydesign(ids = stats::formula(clusterVar),
-    #                             weights = ~weight , data = modt)
+    #                             weights = ~weight , data = modt,
+    #                             strata=~strata)
     # admin1_res <- survey::svyby(formula = ~value, by = ~admin1.name,
-                                # design = design, survey::svymean, drop.empty.groups = FALSE)
+    # design = design, survey::svymean, drop.empty.groups = FALSE)
+
   #  aggregate results
     smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                  responseType ="binary",
@@ -289,22 +285,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-
-
-
-    #HT.logit.est=mean(logit.nation.samp)
-    #HT.logit.var=var(logit.nation.samp)
-    #CI <- 0.95
-    #lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
-
-
-
-
-    # nation_agg<- left_join(admin.info,admin1_res,by="admin1.name")%>%
-    #   mutate(prop=population/sum(population))%>%
-    #   summarise(weighted_avg = weighted.mean(value, prop))%>%
-    #   mutate(weighted_avg = sprintf("%.5f", weighted_avg))%>%
-    #   mutate_at(c('weighted_avg'), as.numeric)
     admin1_res=list(res.admin1=admin1_res, agg.natl=nation_agg)
 
     }
@@ -324,8 +304,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       modt<-modt%>% filter(., strata == "rural")
     }
 
-
-
     smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
@@ -343,7 +321,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin0_res$lower <- expit(admin0_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin0_res$HT.logit.var))
     admin0_res$upper <- expit(admin0_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$HT.logit.var))
 
-     # lims <- expit(HT.logit.est + stats::qnorm(c((1 - CI) / 2, 1 - (1 - CI) / 2)) * sqrt(HT.logit.var))
 
     colnames(admin0_res)[1:2] <- c("admin0.name","value")
 
