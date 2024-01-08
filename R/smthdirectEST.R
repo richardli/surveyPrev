@@ -25,7 +25,7 @@
 #' @export
 
 fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE){
-  
+
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -123,7 +123,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                   left_join(admin1_agg,by="admin1.name")%>%
                   mutate(prop=population1/sum(population1))%>%
                   summarise(weighted_avg = weighted.mean(value, prop))%>%
-                  mutate(weighted_avg = sprintf("%.4f", weighted_avg))
+                  mutate(value = sprintf("%.4f", weighted_avg))
 
     admin2.res=list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg, model = fit2)
     }
@@ -167,7 +167,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     nation_agg<- left_join(admin1_res,admin.info$admin.info,by="admin1.name")%>%
       mutate(prop=population/sum(population))%>%
       summarise(weighted_avg = weighted.mean(value, prop))%>%
-      mutate(weighted_avg = sprintf("%.4f", weighted_avg))
+      mutate(value = sprintf("%.4f", weighted_avg))
 
 
 

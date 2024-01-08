@@ -10,6 +10,8 @@
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param stratification whether or not to include urban/rural stratum.
 #' @param aggregation whether or not report aggregation results.
+#' @param overdisp.mean prior mean for logit (d).
+#' @param overdisp.prec prior precision for logit (d).
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #'   \item { clusterModel.result
@@ -29,7 +31,7 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE){
+clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE, overdisp.mean=0, overdisp.prec=0.4 ){
 
   if (sum(is.na(data$value)) > 0) {
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -136,24 +138,18 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
 
   ## MODELING:
+  overdisp.mean=overdisp.mean
+  overdisp.prec=overdisp.prec
+  control.family <- list(hyper = list(rho = list(param = c(overdisp.mean, overdisp.prec), initial = overdisp.mean)))
+
 
   imod<- INLA::inla(formula,
                     family="betabinomial",
                     data=c.dat.tmp,
                     Ntrials=n,
                     control.predictor = list(compute=TRUE, link = 1),
-                    control.compute = list(config = TRUE))
-
-
-  # control.family <- list(hyper = list(rho = list(param = c(overdisp.mean, overdisp.prec), initial = overdisp.mean)))
-  # fit <- INLA::inla(formula, family = family, control.compute = options, control.family =
-  #                     control.family, data = exdat, control.predictor = list(compute = FALSE, link=1),
-  #                   Ntrials = exdat$total, lincomb = NULL, control.inla = control.inla, verbose = verbose, control.fixed = control.fixed, ...)
-  #
-  #
-
-
-
+                    control.compute = list(config = TRUE),
+                    control.family = control.family)
 
 
   nsamp <- 1000

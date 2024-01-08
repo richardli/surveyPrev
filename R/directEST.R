@@ -27,7 +27,7 @@
 
 
 
-directEST <- function(data, cluster.info, admin, strata, CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
+directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -62,12 +62,15 @@ directEST <- function(data, cluster.info, admin, strata, CI = 0.95, weight = c("
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
 
 
+    res.admin2=admin2_res
+    res.admin2$lower <- expit(res.admin2$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+    res.admin2$upper <- expit(res.admin2$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+
    if(aggregation==F){
 
-      res.admin2=admin2_res
-      res.admin2$lower <- expit(res.admin2$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
-      res.admin2$upper <- expit(res.admin2$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
    }else{
+
+
 
         if(is.null(weight) || is.null(admin.info)){
           stop("Need admin.info and weight for aggregation")
@@ -229,13 +232,14 @@ directEST <- function(data, cluster.info, admin, strata, CI = 0.95, weight = c("
 
     colnames(admin1_res)[1:2] <- c("admin1.name","value")
 
+    admin1_res<-admin1_res
+    admin1_res$lower <- expit(admin1_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
+    admin1_res$upper <- expit(admin1_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
+
+
     if(aggregation==F){
 
 
-
-      admin1_res<-admin1_res
-      admin1_res$lower <- expit(admin1_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
-      admin1_res$upper <- expit(admin1_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
 
 
     }else{

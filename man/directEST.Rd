@@ -8,7 +8,7 @@ directEST(
   data,
   cluster.info,
   admin,
-  strata,
+  strata = "all",
   CI = 0.95,
   weight = c("population", "survey")[1],
   admin.info = NULL,

@@ -12,7 +12,9 @@ clusterModel(
   CI = 0.95,
   model = c("bym2", "iid"),
   stratification = FALSE,
-  aggregation = FALSE
+  aggregation = FALSE,
+  overdisp.mean = 0,
+  overdisp.prec = 0.4
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ clusterModel(
 \item{stratification}{whether or not to include urban/rural stratum.}
 
 \item{aggregation}{whether or not report aggregation results.}
+
+\item{overdisp.mean}{prior mean for logit (d).}
+
+\item{overdisp.prec}{prior precision for logit (d).}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
