@@ -112,7 +112,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-       admin1.list <- sort(unique(weight_dt$admin1.name))
+       admin1.list <- unique(weight_dt$admin1.name)
        admin1.samp <- matrix(NA, 10000, length(admin1.list))
        for(i in 1:length(admin1.list)){
           which.admin2 <- which(weight_dt$admin1.name == admin1.list[i])
