@@ -37,8 +37,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
-
-
+    modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
     smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
@@ -58,11 +57,12 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     a<-strsplit(admin2_res$DistrictName,"_")
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
-
+    admin2_res$lower <- expit(res.admin2$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+    admin2_res$upper <- expit(res.admin2$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+    admin2_res$admin1.name
 
     res.admin2=admin2_res
-    res.admin2$lower <- expit(res.admin2$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
-    res.admin2$upper <- expit(res.admin2$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+
 
    if(aggregation==F){
 
@@ -77,7 +77,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         ##aggregation
 
         dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
-
         draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
         ##
@@ -112,7 +111,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-       admin1.list <- unique(weight_dt$admin1.name)
+       admin1.list <- sort(unique(weight_dt$admin1.name))
        admin1.samp <- matrix(NA, 10000, length(admin1.list))
        for(i in 1:length(admin1.list)){
           which.admin2 <- which(weight_dt$admin1.name == admin1.list[i])
@@ -191,7 +190,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                 lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                                 upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
-       res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
+       res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
     }
     return(res.admin2)
@@ -201,6 +200,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     modt<- left_join(data,cluster.info$cluster.info,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
+    modt<-  modt[order(modt$admin1.name), ]
 
     # model
     # clusterVar = "~cluster+householdID"

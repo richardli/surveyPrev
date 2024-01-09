@@ -61,7 +61,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
   }
 
 
-  admin.mat <- Amat
+  admin.mat <- Amat# Amat is sorted by admin1.name then admin2.name alphabetically for admin2
   admin.info <- admin.info$admin.info
   modt<- left_join(data,cluster.info$cluster.info,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
@@ -77,7 +77,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
   admin_name_table<-admin.info
   nregion <- dim(admin_name_table)[1]
-  admin_name_table$sID <- 1: dim(admin_name_table)[1]
+  admin_name_table$sID <- 1: dim(admin_name_table)[1] #sID is sorted by admin1.name then admin2.name alphabetically.
 
   # add new rows corresponding to each region
   c.dat.tmp[(dim(c.dat.tmp)[1]+1):(dim(c.dat.tmp)[1]+nregion),paste0("admin",admin,".name")] <- admin_name_table[,which(colnames(admin_name_table)== paste0("admin",admin,".name"))]
@@ -220,7 +220,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
-                                           rep("aggregated", nregion)))
+                                           rep("full", nregion)))
       admin1.bb.res$admin1.name <- rep(admin.info$admin1.name, 3)
 
     }
@@ -288,7 +288,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
-                                           rep("aggregated", nregion)))
+                                           rep("full", nregion)))
       admin2.bb.res$DistrictName <- rep(admin.info$DistrictName, 3)
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
 

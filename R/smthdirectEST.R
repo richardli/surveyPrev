@@ -166,8 +166,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     # aggregate results
     nation_agg<- left_join(admin1_res,admin.info$admin.info,by="admin1.name")%>%
       mutate(prop=population/sum(population))%>%
-      summarise(weighted_avg = weighted.mean(value, prop))%>%
-      mutate(value = sprintf("%.4f", weighted_avg))
+      summarise(value = weighted.mean(value, prop))%>%
+      mutate(value = sprintf("%.4f", value))
 
 
 

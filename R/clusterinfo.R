@@ -89,7 +89,6 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
 
   # return(cluster.info)
   cluster.info<-as.data.frame(cluster.info)
-
   # remove points outside of shapefile
   # TODO: change those to nearest admin if within DHS jittering range
   wrong.points <- c(wrong.points, cluster.info$cluster[which(is.na(cluster.info$admin1.name))])
