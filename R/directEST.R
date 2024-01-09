@@ -57,8 +57,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     a<-strsplit(admin2_res$DistrictName,"_")
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
-    admin2_res$lower <- expit(res.admin2$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
-    admin2_res$upper <- expit(res.admin2$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$HT.logit.var))
+
+     admin2_res$lower <- expit(admin2_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
+    admin2_res$upper <- expit(admin2_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
     admin2_res$admin1.name
 
     res.admin2=admin2_res
