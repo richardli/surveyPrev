@@ -14,11 +14,11 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
-#' dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+#' dhsData <-surveyPrev::getDHSdata(country = "Zambia", 
 #'                                  indicator = "ancvisit4+", 
 #'                                  year = 2018)
 #' 
-#' data <- getDHSindicator(dhsData, indicator = indicator)
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' }
 #'
 #' @export

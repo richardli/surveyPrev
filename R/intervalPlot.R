@@ -21,12 +21,13 @@
 #'                                  indicator = "ancvisit4+", 
 #'                                  year = 2018)
 #' 
-#' data <- getDHSindicator(dhsData, indicator = indicator)
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' admin.info2 <- adminInfo(geo = ZambiaAdm2, 
 #'                         admin = 2,
 #'                         agg.pop =ZambiaPopWomen$admin2_pop,
 #'                         proportion = ZambiaPopWomen$admin2_urban)
-#' cl_res_ad2 <- clusterModel(data = data,
+#  # unstratified model
+#' cl_res_ad2_unstrat <- clusterModel(data = data,
 #'                   cluster.info = cluster.info,
 #'                   admin.info = admin.info2,
 #'                   stratification = FALSE,
@@ -35,6 +36,20 @@
 #'                   aggregation = TRUE,
 #'                   CI = 0.95)
 #'
+#' head(cl_res_ad2_unstrat$res.admin2)
+#' head(cl_res_ad2_unstrat$agg.admin1)
+#' plots <- intervalPlot(cl_res_ad2_unstrat)
+#' plots[["Central"]]
+#' 
+#  # unstratified model
+#' cl_res_ad2 <- clusterModel(data = data,
+#'                   cluster.info = cluster.info,
+#'                   admin.info = admin.info2,
+#'                   stratification = TRUE,
+#'                   model = "bym2",
+#'                   admin = 2, 
+#'                   aggregation = TRUE,
+#'                   CI = 0.95)
 #' head(cl_res_ad2$res.admin2)
 #' head(cl_res_ad2$agg.admin1)
 #' plots <- intervalPlot(cl_res_ad2)
@@ -47,7 +62,7 @@
 #'
 #' @export
 
-intervalPlot<-function(res){
+intervalPlot <- function(res){
 
   # TODO: refer by variable name and make it work with both admin 1 and 2 cases
   data<-res[[1]]
@@ -56,18 +71,24 @@ intervalPlot<-function(res){
 
   plot_fun <- function(dat) {
     line1 = linedata[unique(dat$admin1.name),"value"]
+    g <- ggplot(dat)
 
-    ggplot(dat, aes(x = admin2.name, y = value)) +
+    if("type" %in% colnames(dat)){
+      g <- g + aes(x = admin2.name, y = value, color = type)
+    }else{
+      g <- g + aes(x = admin2.name, y = value)
+    }
+    g <- g +
         geom_point( position = position_dodge(width = 0.5),size = .8) +
-        geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.5,position = position_dodge(width = 0.5), width = 0.2) +
-        scale_color_manual(values = c("red", "blue", "darkgreen"))+
-        geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="royalblue",size = .6) +
-        geom_hline( aes(yintercept =line2, linetype = "solid"),color="royalblue",size = .6) + 
-       # geom_ribbon(data = line2data, aes(x =xx, ymin = yymin, ymax = yymax), fill = "grey70") +
+        geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="#d95f02",linewidth = .8) +
+        geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +         
+        geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.2) +
+        scale_color_brewer(palette = "Set1") +
       labs(title = unique(dat$admin1.name)) +
       xlab("") + ylab("") + 
       scale_linetype_manual(values = c("dashed", "solid"),
                             labels = c("admin1","national")) +
+      theme_bw() + 
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
   }
 

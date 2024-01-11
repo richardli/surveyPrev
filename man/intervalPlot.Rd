@@ -30,12 +30,12 @@ dhsData <-surveyPrev:: getDHSdata(country = "Zambia",
                                  indicator = "ancvisit4+", 
                                  year = 2018)
 
-data <- getDHSindicator(dhsData, indicator = indicator)
+data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 admin.info2 <- adminInfo(geo = ZambiaAdm2, 
                         admin = 2,
                         agg.pop =ZambiaPopWomen$admin2_pop,
                         proportion = ZambiaPopWomen$admin2_urban)
-cl_res_ad2 <- clusterModel(data = data,
+cl_res_ad2_unstrat <- clusterModel(data = data,
                   cluster.info = cluster.info,
                   admin.info = admin.info2,
                   stratification = FALSE,
@@ -44,6 +44,19 @@ cl_res_ad2 <- clusterModel(data = data,
                   aggregation = TRUE,
                   CI = 0.95)
 
+head(cl_res_ad2_unstrat$res.admin2)
+head(cl_res_ad2_unstrat$agg.admin1)
+plots <- intervalPlot(cl_res_ad2_unstrat)
+plots[["Central"]]
+
+cl_res_ad2 <- clusterModel(data = data,
+                  cluster.info = cluster.info,
+                  admin.info = admin.info2,
+                  stratification = TRUE,
+                  model = "bym2",
+                  admin = 2, 
+                  aggregation = TRUE,
+                  CI = 0.95)
 head(cl_res_ad2$res.admin2)
 head(cl_res_ad2$agg.admin1)
 plots <- intervalPlot(cl_res_ad2)

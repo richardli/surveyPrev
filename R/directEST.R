@@ -32,7 +32,7 @@
 #'                                  indicator = "ancvisit4+", 
 #'                                  year = 2018)
 #' 
-#' data <- getDHSindicator(dhsData, indicator = indicator)
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' res_ad1 <- directEST(data = data,
 #'                   cluster.info = cluster.info,
 #'                   admin = 1,
