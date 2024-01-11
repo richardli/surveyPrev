@@ -7,16 +7,18 @@
 #' @param poly.adm2 spatial polygons dataframe for admin 2.
 #'
 #' @return This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' \itemize{
-#'   \item cluster.info
-#' }
 #' @importFrom dplyr select
 #' @import sf
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' geo <- getDHSgeo(country = "Zambia", year = 2018)
+#' data(ZambiaAdm1)
+#' data(ZambiaAdm2)
+#' cluster.info <- clusterInfo(geo = geo, 
+#'                             poly.adm1 = ZambiaAdm1, 
+#'                             poly.adm2 = ZambiaAdm2)
 #' }
-#'
 #' @export
 clusterInfo <- function(geo, poly.adm1, poly.adm2) {
  #  # SpatialPointsDataFrame for point shape file for each cluster

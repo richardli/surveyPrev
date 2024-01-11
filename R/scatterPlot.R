@@ -12,13 +12,61 @@
 #' @param by.res2  by.res2
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level
-#'   \item {plot
-#' }
+
 #' @import ggplot2
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' geo <- getDHSgeo(country = "Zambia", year = 2018)
+#' data(ZambiaAdm1)
+#' data(ZambiaAdm2)
+#' data(ZambiaPopWomen)
+#' cluster.info <- clusterInfo(geo = geo, 
+#'                             poly.adm1 = ZambiaAdm1, 
+#'                             poly.adm2 = ZambiaAdm2)
+#'
+#' dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+#'                                  indicator = "ancvisit4+", 
+#'                                  year = 2018)
+#' 
+#' data <- getDHSindicator(dhsData, indicator = indicator)
+#' admin.info1 <- adminInfo(geo = ZambiaAdm1, 
+#'                         admin = 1,
+#'                         agg.pop =ZambiaPopWomen$admin1_pop,
+#'                         proportion = ZambiaPopWomen$admin1_urban)
+#' smth_res_ad1 <- fhModel(data,
+#'                        cluster.info = cluster.info,
+#'                        admin.info = admin.info1,
+#'                        admin = 1,
+#'                        model = "bym2",
+#'                        aggregation = F)
+#' 
+#' admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+#'                         admin = 2,
+#'                         agg.pop =ZambiaPopWomen$admin2_pop,
+#'                         proportion = ZambiaPopWomen$admin2_urban)
+#' cl_res_ad2 <- clusterModel(data = data,
+#'                   cluster.info = cluster.info,
+#'                   admin.info = admin.info2,
+#'                   stratification = FALSE,
+#'                   model = "bym2",
+#'                   admin = 2, 
+#'                   aggregation = TRUE,
+#'                   CI = 0.95)
+#'
+#' scatterPlot(
+#'      res1 = smth_res_ad1,
+#'      res2 = cl_res_ad2$agg.admin1,
+#'      value1 = "value",
+#'      value2 = "value",
+#'      by.res1 = "admin1.name",
+#'      by.res2 = "admin1.name",
+#'      title = "Aggregated cluster model v.s. Fay–Herriot",
+#'      label1 = "Fay–Herriot",
+#'      label2 = "Aggregated cluster model") 
+#' 
 #' }
+#' 
 #'
 #' @export
 

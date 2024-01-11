@@ -37,7 +37,11 @@ utils::globalVariables(c("admin1.name",
 						".", 
 						"var", 
 						"weight", 
-						"population1"
+						"population1", 
+						"lower", 
+						"upper", 
+						"coordinates<-",
+						"proj4string<-"
 						))
 
  

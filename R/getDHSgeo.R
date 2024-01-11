@@ -6,14 +6,12 @@
 #' @param year Year the survey conducted.
 #'
 #' @return The function returns a spatial point dataset with coordinates for each cluster based on the chosen survey and year.
-#' \itemize{
-#'   \item geo
-#' }
 #' @importFrom rdhs get_datasets
 #' @importFrom stringr str_to_title
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' }
 #'
 #' @export

@@ -6,15 +6,15 @@
 #' @param indicator Indicator of interests. Current list of supported indicators include: "womananemia", "ancvisit4+", "stunting", "wasting", "DPT3".
 #' @param year Year the survey conducted.
 #'
-#' @return This function returns the survey dataset that contains the indicator:
-#' \itemize{
-#'   \item Rdata
-#' }
+#' @return This function returns the survey dataset that contains the indicator.
 #' @importFrom rdhs get_datasets
 #' @importFrom stringr str_to_title
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+#'                                  indicator = "ancvisit4+", 
+#'                                  year = 2018)
 #' }
 #'
 #' @export

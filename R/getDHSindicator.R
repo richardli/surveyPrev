@@ -6,9 +6,6 @@
 #' @param indicator Indicator of interests.
 #'
 #' @return The function returns processed survey data that contains the indicator of interests.
-#' \itemize{
-#'   \item dat.tem
-#' }
 #'
 #' @importFrom naniar replace_with_na
 #' @import dplyr
@@ -17,6 +14,11 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+#'                                  indicator = "ancvisit4+", 
+#'                                  year = 2018)
+#' 
+#' data <- getDHSindicator(dhsData, indicator = indicator)
 #' }
 #'
 #' @export

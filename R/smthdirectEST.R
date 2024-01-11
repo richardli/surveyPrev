@@ -11,8 +11,7 @@
 #' @param aggregation whether or not report aggregation results.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
-#'   \item {
-#' }
+
 #' @import dplyr
 #' @importFrom survey svydesign svyby
 #' @importFrom SUMMER smoothSurvey
@@ -20,6 +19,30 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' geo <- getDHSgeo(country = "Zambia", year = 2018)
+#' data(ZambiaAdm1)
+#' data(ZambiaAdm2)
+#' data(ZambiaPopWomen)
+#' cluster.info <- clusterInfo(geo = geo, 
+#'                             poly.adm1 = ZambiaAdm1, 
+#'                             poly.adm2 = ZambiaAdm2)
+#'
+#' dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+#'                                  indicator = "ancvisit4+", 
+#'                                  year = 2018)
+#' 
+#' data <- getDHSindicator(dhsData, indicator = indicator)
+#' admin.info1 <- adminInfo(geo = ZambiaAdm1, 
+#'                         admin = 1,
+#'                         agg.pop =ZambiaPopWomen$admin1_pop,
+#'                         proportion = ZambiaPopWomen$admin1_urban)
+#' smth_res_ad1 <- fhModel(data,
+#'                        cluster.info = cluster.info,
+#'                        admin.info = admin.info1,
+#'                        admin = 1,
+#'                        model = "bym2",
+#'                        aggregation = F)
+#' smth_res_ad1
 #' }
 #'
 #' @export

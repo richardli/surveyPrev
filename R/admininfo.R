@@ -2,25 +2,36 @@
 #'
 #' This function get admin information including name, character, population and unban/rural proportion.
 #'
-#' @param geo spatial polygons dataframe for admin 1 or admin 2.
+#' @param geo spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.
 #' @param admin admin level
 #' @param agg.pop  data frame of aggregated poplulation from aggPopulation function. It should have two columns: "DistrictName" and "population".
 #' @param proportion data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.
-#' @return This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix
-#' \itemize{
-#'   \item admin.info
-#' }
+#' @return This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix.
 #' @importFrom dplyr left_join
 #' @importFrom spdep poly2nb nb2mat
 #' @author Qianyu Dong
 #' @examples
-#' \dontrun{
-#' }
+#' 
+#' # For sp::SpatialPolygonsDataFrame object
+#' data(ZambiaAdm1)
+#' class(ZambiaAdm1)
+#' info <- adminInfo(ZambiaAdm1, admin = 1)
+#' 
+#' # For sf object
+#' geo.sf <- sf::st_as_sf(ZambiaAdm1)
+#' info <- adminInfo(geo.sf, admin = 1)
 #'
+#' # To include the population information
+#' data(ZambiaPopWomen)
+#' info <- adminInfo(geo = ZambiaAdm1, 
+#'                   admin = 1,
+#'                   agg.pop = ZambiaPopWomen$admin1_pop,
+#'                   proportion = ZambiaPopWomen$admin1_urban)
 #' @export
 adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
 
 
+ if("sf" %in% class(geo)) geo <- sf::as_Spatial(geo)
 
   admin.info <- NULL
 
