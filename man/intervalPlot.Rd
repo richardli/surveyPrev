@@ -10,15 +10,48 @@ intervalPlot(res)
 \item{res}{model result  using surveyPrev}
 }
 \value{
-This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level
-  \item {plot
-}
+This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level.
 }
 \description{
 This function return scatter plot at admin 1 level for any two model results
 }
 \examples{
 \dontrun{
+
+geo <- getDHSgeo(country = "Zambia", year = 2018)
+data(ZambiaAdm1)
+data(ZambiaAdm2)
+data(ZambiaPopWomen)
+cluster.info <- clusterInfo(geo = geo, 
+                            poly.adm1 = ZambiaAdm1, 
+                            poly.adm2 = ZambiaAdm2)
+
+dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+                                 indicator = "ancvisit4+", 
+                                 year = 2018)
+
+data <- getDHSindicator(dhsData, indicator = indicator)
+admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+                        admin = 2,
+                        agg.pop =ZambiaPopWomen$admin2_pop,
+                        proportion = ZambiaPopWomen$admin2_urban)
+cl_res_ad2 <- clusterModel(data = data,
+                  cluster.info = cluster.info,
+                  admin.info = admin.info2,
+                  stratification = FALSE,
+                  model = "bym2",
+                  admin = 2, 
+                  aggregation = TRUE,
+                  CI = 0.95)
+
+head(cl_res_ad2$res.admin2)
+head(cl_res_ad2$agg.admin1)
+plots <- intervalPlot(cl_res_ad2)
+plots[["Central"]]
+
+library(patchwork)
+wrap_plots(plots, ncol = 5)
+
 }
 
 }

@@ -17,14 +17,34 @@ aggPopulation(tiff, fact = 10, SpatialPolygons, varname)
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level
-  \item {agg.pop
-}
 }
 \description{
 This function aggregate population to particular admin levels
 }
 \examples{
 \dontrun{
+library(raster)
+
+# Download and find total population in age group 0 to 12 months 
+pre <- "https://data.worldpop.org/GIS/AgeSex_structures/"
+f <- paste0(pre, "Global_2000_2020/2018/ZMB/zmb_f_0_2018.tif")
+m <- paste0(pre, "Global_2000_2020/2018/ZMB/zmb_m_0_2018.tif")
+pop_f_0 <- raster(f)
+pop_m_0 <- raster(m)
+
+pop_raster <- pop_f_0 + pop_m_0
+
+# admin1 population
+agg.pop1 <- aggPopulation(
+  tiff = pop_raster,
+  SpatialPolygons = ZambiaAdm1,
+  varname = "NAME_1")
+
+# admin2 population
+agg.pop2 <- aggPopulation(
+  tiff = ZambiaPopWomen_raster,
+  SpatialPolygons = ZambiaAdm2,
+  varname = "NAME_2")
 }
 
 }

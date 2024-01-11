@@ -4,17 +4,35 @@
 \alias{get_api_table}
 \title{Function to obtain subnational estimates from DHS API}
 \usage{
-get_api_table(coutry, survey, indicator, simplify = TRUE)
+get_api_table(country, survey, indicator, simplify = TRUE)
 }
 \arguments{
-\item{survey}{keys at: https://api.dhsprogram.com/rest/dhs/surveys?returnFields=SurveyId,SurveyYearLabel,SurveyType,CountryName&f=html}
+\item{country}{A character string of keys at: https://api.dhsprogram.com/rest/dhs/countries?returnFields=CountryName,DHS_CountryCode&f=html}
 
-\item{indicator}{keys at: https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html}
+\item{survey}{A character string of keys at: https://api.dhsprogram.com/rest/dhs/surveys?returnFields=SurveyId,SurveyYearLabel,SurveyType,CountryName&f=html}
+
+\item{indicator}{A character string of keys at: https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html}
 
 \item{simplify}{if TRUE only the value and region index is returned.}
-
-\item{country}{keys at: https://api.dhsprogram.com/rest/dhs/countries?returnFields=CountryName,DHS_CountryCode&f=html}
+}
+\value{
+a data frame of the DHS indicator estimates
 }
 \description{
 Function to obtain subnational estimates from DHS API
+}
+\examples{
+\dontrun{
+# country:  Zambia
+# survey: 2018 DHS
+# indicator: Percentage of children stunted 
+#             (below -2 SD of height for age 
+#              according to the WHO standard)
+dhs_table <- get_api_table(country = "ZM", 
+                           survey = "ZM2018DHS", 
+                           indicator = "CN_NUTS_C_HA2", 
+                           simplify = TRUE)
+dhs_table
+}
+
 }

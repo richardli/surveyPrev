@@ -40,14 +40,46 @@ clusterModel(
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
-  \item { clusterModel.result
-}
 }
 \description{
 This function calculate smoothed direct estimates at given admin level.
 }
 \examples{
 \dontrun{
+geo <- getDHSgeo(country = "Zambia", year = 2018)
+data(ZambiaAdm1)
+data(ZambiaAdm2)
+data(ZambiaPopWomen)
+cluster.info <- clusterInfo(geo = geo, 
+                            poly.adm1 = ZambiaAdm1, 
+                            poly.adm2 = ZambiaAdm2)
+
+dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+                                 indicator = "ancvisit4+", 
+                                 year = 2018)
+
+data <- getDHSindicator(dhsData, indicator = indicator)
+admin.info1 <- adminInfo(geo = ZambiaAdm1, 
+                        admin = 1,
+                        agg.pop =ZambiaPopWomen$admin1_pop,
+                        proportion = ZambiaPopWomen$admin1_urban)
+cl_res_ad1 <- clusterModel(data=data,
+                  cluster.info = cluster.info,
+                  admin.info = admin.info1,
+                  stratification = FALSE,
+                  model = "bym2",
+                  admin = 1, 
+                  aggregation = TRUE,
+                  CI = 0.95)
+cl_res_ad1$res.admin1
+
+# compare with the DHS direct estimates
+dhs_table <- get_api_table(country = "ZM", 
+                           survey = "ZM2018DHS", 
+                           indicator = "RH_ANCN_W_N4P", 
+                           simplify = TRUE)
+subset(dhs_table, ByVariableLabel == "Five years preceding the survey")
+
 }
 
 }

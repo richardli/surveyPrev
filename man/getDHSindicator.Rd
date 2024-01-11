@@ -13,15 +13,17 @@ getDHSindicator(Rdata, indicator)
 }
 \value{
 The function returns processed survey data that contains the indicator of interests.
-\itemize{
-  \item dat.tem
-}
 }
 \description{
 This function processes DHS data from getDHSdata function.
 }
 \examples{
 \dontrun{
+dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+                                 indicator = "ancvisit4+", 
+                                 year = 2018)
+
+data <- getDHSindicator(dhsData, indicator = indicator)
 }
 
 }

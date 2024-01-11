@@ -14,16 +14,16 @@ getDHSdata(country, indicator, year)
 \item{year}{Year the survey conducted.}
 }
 \value{
-This function returns the survey dataset that contains the indicator:
-\itemize{
-  \item Rdata
-}
+This function returns the survey dataset that contains the indicator.
 }
 \description{
 This function downloads DHS data for a particular country and survey.
 }
 \examples{
 \dontrun{
+dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+                                 indicator = "ancvisit4+", 
+                                 year = 2018)
 }
 
 }

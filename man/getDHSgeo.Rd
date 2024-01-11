@@ -13,15 +13,13 @@ getDHSgeo(country, year)
 }
 \value{
 The function returns a spatial point dataset with coordinates for each cluster based on the chosen survey and year.
-\itemize{
-  \item geo
-}
 }
 \description{
 This function downloads cluster's coordinate data for country and survey.
 }
 \examples{
 \dontrun{
+geo <- getDHSgeo(country = "Zambia", year = 2018)
 }
 
 }
