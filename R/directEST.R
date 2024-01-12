@@ -28,7 +28,7 @@
 #'                             poly.adm1 = ZambiaAdm1, 
 #'                             poly.adm2 = ZambiaAdm2)
 #'
-#' dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+#' dhsData <- getDHSdata(country = "Zambia", 
 #'                                  indicator = "ancvisit4+", 
 #'                                  year = 2018)
 #' 
