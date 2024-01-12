@@ -4,12 +4,14 @@
 \alias{getDHSindicator}
 \title{Process DHS data}
 \usage{
-getDHSindicator(Rdata, indicator)
+getDHSindicator(Rdata, indicator = NULL, FUN = NULL)
 }
 \arguments{
 \item{Rdata}{Result from getDHSdata function, the raw DHS survry data from get_datasets.}
 
 \item{indicator}{Indicator of interests.}
+
+\item{FUN}{a function to process the DHS data into a binary indicator if not using one of the implemented indicators. See surveyPrev:::AN_ANEM_W_ANY for an example function to obtain the indicator for women classified as having any anemia.}
 }
 \value{
 The function returns processed survey data that contains the indicator of interests.
@@ -19,11 +21,25 @@ This function processes DHS data from getDHSdata function.
 }
 \examples{
 \dontrun{
-dhsData <-surveyPrev::getDHSdata(country = "Zambia", 
+dhsData1 <- getDHSdata(country = "Zambia", 
                                  indicator = "ancvisit4+", 
                                  year = 2018)
+data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
 
-data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
+
+# User-specified function to process the data
+# For example see the internal function surveyPrev:::AN_ANEM_W_ANY
+dhsData2 <- getDHSdata(country = "Zambia", 
+                                 indicator = NULL, 
+                                 year = 2018) 
+data2 <- getDHSindicator(dhsData2, indicator = NULL, 
+                         FUN = surveyPrev:::AN_ANEM_W_ANY)
+# which should be identical to the following
+dhsData3 <- getDHSdata(country = "Zambia", 
+                                 indicator = "womananemia", 
+                                 year = 2018) 
+data3 <- getDHSindicator(dhsData3, indicator = "womananemia")
+
 }
 
 }

@@ -4,6 +4,7 @@
 #'
 #' @param Rdata Result from getDHSdata function, the raw DHS survry data from get_datasets.
 #' @param indicator Indicator of interests.
+#' @param FUN a function to process the DHS data into a binary indicator if not using one of the implemented indicators. See surveyPrev:::AN_ANEM_W_ANY for an example function to obtain the indicator for women classified as having any anemia.
 #'
 #' @return The function returns processed survey data that contains the indicator of interests.
 #'
@@ -14,33 +15,51 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
-#' dhsData <-surveyPrev::getDHSdata(country = "Zambia", 
+#' dhsData1 <- getDHSdata(country = "Zambia", 
 #'                                  indicator = "ancvisit4+", 
 #'                                  year = 2018)
+#' data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
 #' 
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
+#' 
+#' # User-specified function to process the data
+#' # For example see the internal function surveyPrev:::AN_ANEM_W_ANY
+#' dhsData2 <- getDHSdata(country = "Zambia", 
+#'                                  indicator = NULL, 
+#'                                  year = 2018) 
+#' data2 <- getDHSindicator(dhsData2, indicator = NULL, 
+#'                          FUN = surveyPrev:::AN_ANEM_W_ANY)
+#' # which should be identical to the following
+#' dhsData3 <- getDHSdata(country = "Zambia", 
+#'                                  indicator = "womananemia", 
+#'                                  year = 2018) 
+#' data3 <- getDHSindicator(dhsData3, indicator = "womananemia")
+#' 
 #' }
 #'
 #' @export
-getDHSindicator <- function(Rdata, indicator) {
+getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
   Rdata<-Rdata
-  if (indicator == "womananemia")
+
+  if(is.null(indicator)){
+    raw.dat.tmp <- FUN(Rdata)
+  }else if (indicator == "womananemia")
   {IRdata <- Rdata %>%
       mutate(wt = v005/1000000)
     #
     # *** Anemia indicators ***
     #
     # //Any anemia
-    IRdata <- IRdata %>%
-      mutate(nt_wm_any_anem =
-               case_when(
-                 v042==1 & v457<4 ~ 1 ,
-                 v042==1 &  v455==0 ~ 0)) %>%
-      set_value_labels(nt_wm_any_anem = c("Yes" = 1, "No"=0  )) %>%
-      set_variable_labels(nt_wm_any_anem = "Any anemia - women")
+    # IRdata <- IRdata %>%
+    #   mutate(nt_wm_any_anem =
+    #            case_when(
+    #              v042==1 & v457<4 ~ 1 ,
+    #              v042==1 &  v455==0 ~ 0)) %>%
+    #   set_value_labels(nt_wm_any_anem = c("Yes" = 1, "No"=0  )) %>%
+    #   set_variable_labels(nt_wm_any_anem = "Any anemia - women")
 
-     raw.dat.tmp<-IRdata
-      colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'nt_wm_any_anem'] <- "value"
+    #  raw.dat.tmp<-IRdata
+    #   colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'nt_wm_any_anem'] <- "value"
+    raw.dat.tmp <- AN_ANEM_W_ANY(list(IRdata = IRdata))
 
   }else if(indicator == "unmet_family")
   {
@@ -103,6 +122,8 @@ getDHSindicator <- function(Rdata, indicator) {
       set_variable_labels(rh_anc_4vs = "Attended 4+ ANC visits")
     raw.dat.tmp<-IRdata
     colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'rh_anc_4vs'] <- "value"
+
+    raw.dat.tmp <- raw.dat.tmp %>% filter( age<60)
 
 
   }else if(indicator == "wasting")
@@ -254,45 +275,23 @@ getDHSindicator <- function(Rdata, indicator) {
 
 
 
-
-  if (indicator == "ancvisit4+")
-  {
-    strat <- attr(raw.dat.tmp$v025,which='labels')
-    names(strat) <- tolower(names(strat))
-    raw.dat.tmp$v025 <- ifelse(raw.dat.tmp$v025 == strat["urban"][[1]],'urban','rural')
-    raw.dat.tmp$v025 <- factor(raw.dat.tmp$v025, levels = c('urban','rural'))
-    raw.dat.tmp$v024 <- factor(labelled::unlabelled(raw.dat.tmp$v024))
-
-    dat.tmp<-  raw.dat.tmp %>%
-     filter( age<60)%>%#for indiviudal file
-    #filter( b19<=60)%>% #for birth file
-    dplyr::  select(c(cluster="v001", householdID= "v002",region="v024", weight="v005", strata="v025", value="value"))
+  if("hv001" %in% colnames(raw.dat.tmp)){
+    pre <- "h"
+  }else if("v001" %in% colnames(raw.dat.tmp)){
+    pre <- ""
   }
-  else if(indicator %in%  c("wasting","stunting","sanitation"))  {
-    strat <- attr(raw.dat.tmp$hv025,which='labels')
-    names(strat) <- tolower(names(strat))
-    raw.dat.tmp$hv025 <- ifelse(raw.dat.tmp$hv025 == strat["urban"][[1]],'urban','rural')
-    raw.dat.tmp$hv025 <- factor(raw.dat.tmp$hv025, levels = c('urban','rural'))
-    raw.dat.tmp$hv024 <- factor(unlabelled(raw.dat.tmp$hv024))
-
-    dat.tmp<-  raw.dat.tmp %>%
-      dplyr::  select(c(cluster="hv001", householdID= "hv002",region="hv024", weight="hv005", strata="hv025",
+  strat <- attr(raw.dat.tmp[, paste0(pre, "v025")], which='labels')
+  names(strat) <- tolower(names(strat))
+  raw.dat.tmp[, paste0(pre, "v025")] <- ifelse(raw.dat.tmp[, paste0(pre, "v025")] == strat["urban"][[1]],'urban','rural')
+  raw.dat.tmp[, paste0(pre, "v025")] <- factor(raw.dat.tmp[, paste0(pre, "v025")], levels = c('urban','rural'))
+  raw.dat.tmp[, paste0(pre, "v024")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v024")]))
+  dat.tmp<-  raw.dat.tmp %>%
+      dplyr::  select(c(cluster= paste0(pre, "v001"), 
+                        householdID= paste0(pre, "v002"),
+                        region= paste0(pre, "v024"), 
+                        weight= paste0(pre, "v005"), 
+                        strata= paste0(pre, "v025"),
                         value="value"))
-
-  }else{
-    strat <- attr(raw.dat.tmp$v025,which='labels')
-    names(strat) <- tolower(names(strat))
-    raw.dat.tmp$v025 <- ifelse(raw.dat.tmp$v025 == strat["urban"][[1]],'urban','rural')
-    raw.dat.tmp$v025 <- factor(raw.dat.tmp$v025, levels = c('urban','rural'))
-    raw.dat.tmp$v024 <- factor(labelled::unlabelled(raw.dat.tmp$v024))
-
-    dat.tmp<-  raw.dat.tmp %>%
-      # filter( age<60)%>%#for indiviudal file
-      #filter( b19<=60)%>% #for birth file
-      dplyr::  select(c(cluster="v001", householdID= "v002",region="v024", weight="v005", strata="v025", value="value"))
-
-  }
-
 
 
   return(dat.tmp)
