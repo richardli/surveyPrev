@@ -4,7 +4,7 @@
 \alias{getDHSdata}
 \title{Download DHS survey data}
 \usage{
-getDHSdata(country, indicator, year)
+getDHSdata(country, indicator = NULL, year)
 }
 \arguments{
 \item{country}{Country name.}
@@ -21,9 +21,16 @@ This function downloads DHS data for a particular country and survey.
 }
 \examples{
 \dontrun{
-dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
+# When indicator is known, download only the relevant file
+dhsData <- getDHSdata(country = "Zambia", 
                                  indicator = "ancvisit4+", 
                                  year = 2018)
+
+# When indicator is NULL or not recognized, download all files
+dhsData <- getDHSdata(country = "Zambia", 
+                                 indicator = NULL, 
+                                 year = 2018) 
+names(dhsData)
 }
 
 }
