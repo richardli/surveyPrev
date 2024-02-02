@@ -24,14 +24,14 @@
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
 #' data(ZambiaPopWomen)
-#' cluster.info <- clusterInfo(geo = geo, 
-#'                             poly.adm1 = ZambiaAdm1, 
+#' cluster.info <- clusterInfo(geo = geo,
+#'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #'
-#' dhsData <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "ancvisit4+", 
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' 
+#'
 #' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' res_ad1 <- directEST(data = data,
 #'                   cluster.info = cluster.info,
@@ -39,12 +39,12 @@
 #'                   aggregation = FALSE)
 #' res_ad1
 #' # compare with the DHS direct estimates
-#' dhs_table <- get_api_table(country = "ZM", 
-#'                            survey = "ZM2018DHS", 
-#'                            indicator = "RH_ANCN_W_N4P", 
+#' dhs_table <- get_api_table(country = "ZM",
+#'                            survey = "ZM2018DHS",
+#'                            indicator = "RH_ANCN_W_N4P",
 #'                            simplify = TRUE)
 #' subset(dhs_table, ByVariableLabel == "Five years preceding the survey")
-#' 
+#'
 #' }
 #'
 #' @export
@@ -82,7 +82,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
 
-     admin2_res$lower <- expit(admin2_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
+    admin2_res$lower <- expit(admin2_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
     admin2_res$upper <- expit(admin2_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
     admin2_res$admin1.name
 
@@ -100,6 +100,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         }
 
         ##aggregation
+        admin2_res<-na.omit(admin2_res)#exclude NA when weighted mean to admin1
 
         dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
         draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
@@ -183,7 +184,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        ### ### ### ### ### ### ### ### ### ###
 
        if(weight=="population"){
-          #for variance
+           #for variance
            admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
            weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
            nation.samp<- admin1.samp%*%weight_dt
@@ -215,7 +216,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                 lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                                 upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
-       res.admin2<-list(res.admin2=admin2_res,agg.admin1=admin1_agg, agg.natl=nation_agg)
+       res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
     }
     return(res.admin2)

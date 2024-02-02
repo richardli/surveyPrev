@@ -13,14 +13,14 @@
 #' @examples
 #' \dontrun{
 #' # When indicator is known, download only the relevant file
-#' dhsData <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "ancvisit4+", 
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
 #'
 #' # When indicator is NULL or not recognized, download all files
-#' dhsData <- getDHSdata(country = "Zambia", 
-#'                                  indicator = NULL, 
-#'                                  year = 2018) 
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = NULL,
+#'                                  year = 2018)
 #' names(dhsData)
 #' }
 #'
@@ -73,9 +73,17 @@ getDHSdata <- function(country, indicator = NULL, year) {
     for(i in 1:length(list)){
       Type <- list[i]
       surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
-      data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, clear_cache = T)
-      Rdata<-readRDS(paste0(data.paths.tmp))
-      all[[listname[i]]] <- Rdata
+
+      if( dim(surveys)[1]==0){}
+      else{
+
+        data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear ==
+                                                 year, ]$FileName, clear_cache = T)
+        Rdata <- readRDS(paste0(data.paths.tmp))
+        all[[listname[i]]] <- Rdata
+      }
+
+
     }
     return(all)
   }

@@ -44,12 +44,12 @@ geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
 data(ZambiaPopWomen)
-cluster.info <- clusterInfo(geo = geo, 
-                            poly.adm1 = ZambiaAdm1, 
+cluster.info <- clusterInfo(geo = geo,
+                            poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
 
-dhsData <-surveyPrev:: getDHSdata(country = "Zambia", 
-                                 indicator = "ancvisit4+", 
+dhsData <- getDHSdata(country = "Zambia",
+                                 indicator = "ancvisit4+",
                                  year = 2018)
 
 data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
@@ -59,9 +59,9 @@ res_ad1 <- directEST(data = data,
                   aggregation = FALSE)
 res_ad1
 # compare with the DHS direct estimates
-dhs_table <- get_api_table(country = "ZM", 
-                           survey = "ZM2018DHS", 
-                           indicator = "RH_ANCN_W_N4P", 
+dhs_table <- get_api_table(country = "ZM",
+                           survey = "ZM2018DHS",
+                           indicator = "RH_ANCN_W_N4P",
                            simplify = TRUE)
 subset(dhs_table, ByVariableLabel == "Five years preceding the survey")
 

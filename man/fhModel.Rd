@@ -45,11 +45,11 @@ cluster.info <- clusterInfo(geo = geo,
                             poly.adm1 = ZambiaAdm1, 
                             poly.adm2 = ZambiaAdm2)
 
-dhsData <-surveyPrev::getDHSdata(country = "Zambia", 
+dhsData <- getDHSdata(country = "Zambia", 
                                  indicator = "ancvisit4+", 
                                  year = 2018)
 
-data <- getDHSindicator(dhsData, indicator = indicator)
+data <- getDHSindicator(dhsData, indicator = "ancvisit4")
 admin.info1 <- adminInfo(geo = ZambiaAdm1, 
                         admin = 1,
                         agg.pop =ZambiaPopWomen$admin1_pop,

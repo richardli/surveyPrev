@@ -22,14 +22,14 @@ This function downloads DHS data for a particular country and survey.
 \examples{
 \dontrun{
 # When indicator is known, download only the relevant file
-dhsData <- getDHSdata(country = "Zambia", 
-                                 indicator = "ancvisit4+", 
+dhsData <- getDHSdata(country = "Zambia",
+                                 indicator = "ancvisit4+",
                                  year = 2018)
 
 # When indicator is NULL or not recognized, download all files
-dhsData <- getDHSdata(country = "Zambia", 
-                                 indicator = NULL, 
-                                 year = 2018) 
+dhsData <- getDHSdata(country = "Zambia",
+                                 indicator = NULL,
+                                 year = 2018)
 names(dhsData)
 }
 
