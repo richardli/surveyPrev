@@ -21,23 +21,23 @@ This function processes DHS data from getDHSdata function.
 }
 \examples{
 \dontrun{
-dhsData1 <- getDHSdata(country = "Zambia", 
-                                 indicator = "ancvisit4+", 
+dhsData1 <- getDHSdata(country = "Zambia",
+                                 indicator = "ancvisit4+",
                                  year = 2018)
 data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
 
 
 # User-specified function to process the data
 # For example see the internal function surveyPrev:::AN_ANEM_W_ANY
-dhsData2 <- getDHSdata(country = "Zambia", 
-                                 indicator = NULL, 
-                                 year = 2018) 
-data2 <- getDHSindicator(dhsData2, indicator = NULL, 
+dhsData2 <- getDHSdata(country = "Zambia",
+                                 indicator = NULL,
+                                 year = 2018)
+data2 <- getDHSindicator(dhsData2, indicator = NULL,
                          FUN = surveyPrev:::AN_ANEM_W_ANY)
 # which should be identical to the following
-dhsData3 <- getDHSdata(country = "Zambia", 
-                                 indicator = "womananemia", 
-                                 year = 2018) 
+dhsData3 <- getDHSdata(country = "Zambia",
+                                 indicator = "womananemia",
+                                 year = 2018)
 data3 <- getDHSindicator(dhsData3, indicator = "womananemia")
 
 }

@@ -23,16 +23,16 @@
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
 #' data(ZambiaPopWomen)
-#' cluster.info <- clusterInfo(geo = geo, 
-#'                             poly.adm1 = ZambiaAdm1, 
+#' cluster.info <- clusterInfo(geo = geo,
+#'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #'
-#' dhsData <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "ancvisit4+", 
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' 
+#'
 #' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
-#' admin.info1 <- adminInfo(geo = ZambiaAdm1, 
+#' admin.info1 <- adminInfo(geo = ZambiaAdm1,
 #'                         admin = 1,
 #'                         agg.pop =ZambiaPopWomen$admin1_pop,
 #'                         proportion = ZambiaPopWomen$admin1_urban)
@@ -60,6 +60,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
   }
   if(model == "bym2"){
     Amat <- admin.info$admin.mat
+    colnames(Amat)=rownames(Amat)=admin.info2$admin.info$DistrictName
+
   }else{
     Amat <- NULL
   }
@@ -89,6 +91,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     # vector2<-unique(modt$admin2.name)
     # missing_admin2 <- vector1[!(vector1 %in% vector2)]
 
+
+
     #model
     fit2 <- smoothSurvey(as.data.frame(modt),
                          responseType ="binary",
@@ -109,7 +113,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     if(aggregation==F){
-      res.admin2=admin2_res
+      admin2.res=admin2_res
     }else{
 
 

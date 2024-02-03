@@ -15,25 +15,25 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
-#' dhsData1 <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "ancvisit4+", 
+#' dhsData1 <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
 #' data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
-#' 
-#' 
+#'
+#'
 #' # User-specified function to process the data
 #' # For example see the internal function surveyPrev:::AN_ANEM_W_ANY
-#' dhsData2 <- getDHSdata(country = "Zambia", 
-#'                                  indicator = NULL, 
-#'                                  year = 2018) 
-#' data2 <- getDHSindicator(dhsData2, indicator = NULL, 
+#' dhsData2 <- getDHSdata(country = "Zambia",
+#'                                  indicator = NULL,
+#'                                  year = 2018)
+#' data2 <- getDHSindicator(dhsData2, indicator = NULL,
 #'                          FUN = surveyPrev:::AN_ANEM_W_ANY)
 #' # which should be identical to the following
-#' dhsData3 <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "womananemia", 
-#'                                  year = 2018) 
+#' dhsData3 <- getDHSdata(country = "Zambia",
+#'                                  indicator = "womananemia",
+#'                                  year = 2018)
 #' data3 <- getDHSindicator(dhsData3, indicator = "womananemia")
-#' 
+#'
 #' }
 #'
 #' @export
@@ -122,7 +122,6 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
       set_variable_labels(rh_anc_4vs = "Attended 4+ ANC visits")
     raw.dat.tmp<-IRdata
     colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'rh_anc_4vs'] <- "value"
-
     raw.dat.tmp <- raw.dat.tmp %>% filter( age<60)
 
 
@@ -286,10 +285,10 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
   raw.dat.tmp[, paste0(pre, "v025")] <- factor(raw.dat.tmp[, paste0(pre, "v025")], levels = c('urban','rural'))
   raw.dat.tmp[, paste0(pre, "v024")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v024")]))
   dat.tmp<-  raw.dat.tmp %>%
-      dplyr::  select(c(cluster= paste0(pre, "v001"), 
+      dplyr::  select(c(cluster= paste0(pre, "v001"),
                         householdID= paste0(pre, "v002"),
-                        region= paste0(pre, "v024"), 
-                        weight= paste0(pre, "v005"), 
+                        region= paste0(pre, "v024"),
+                        weight= paste0(pre, "v005"),
                         strata= paste0(pre, "v025"),
                         value="value"))
 
