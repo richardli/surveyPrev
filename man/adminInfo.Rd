@@ -34,7 +34,7 @@ info <- adminInfo(geo.sf, admin = 1)
 
 # To include the population information
 data(ZambiaPopWomen)
-info <- adminInfo(geo = ZambiaAdm1, 
+info <- adminInfo(geo = ZambiaAdm1,
                   admin = 1,
                   agg.pop = ZambiaPopWomen$admin1_pop,
                   proportion = ZambiaPopWomen$admin1_urban)

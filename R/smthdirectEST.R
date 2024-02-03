@@ -60,7 +60,6 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
   }
   if(model == "bym2"){
     Amat <- admin.info$admin.mat
-    colnames(Amat)=rownames(Amat)=admin.info2$admin.info$DistrictName
 
   }else{
     Amat <- NULL

@@ -11,19 +11,19 @@
 #' @importFrom spdep poly2nb nb2mat
 #' @author Qianyu Dong
 #' @examples
-#' 
+#'
 #' # For sp::SpatialPolygonsDataFrame object
 #' data(ZambiaAdm1)
 #' class(ZambiaAdm1)
 #' info <- adminInfo(ZambiaAdm1, admin = 1)
-#' 
+#'
 #' # For sf object
 #' geo.sf <- sf::st_as_sf(ZambiaAdm1)
 #' info <- adminInfo(geo.sf, admin = 1)
 #'
 #' # To include the population information
 #' data(ZambiaPopWomen)
-#' info <- adminInfo(geo = ZambiaAdm1, 
+#' info <- adminInfo(geo = ZambiaAdm1,
 #'                   admin = 1,
 #'                   agg.pop = ZambiaPopWomen$admin1_pop,
 #'                   proportion = ZambiaPopWomen$admin1_urban)
@@ -140,7 +140,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
     poly.adm2<-geo
     admin.mat <- spdep::poly2nb(sp::SpatialPolygons(poly.adm2@polygons))
     admin.mat <- spdep::nb2mat(admin.mat, zero.policy = TRUE)
-    colnames(admin.mat) <- rownames(admin.mat) <-  poly.adm2$NAME_2
+    colnames(admin.mat) <- rownames(admin.mat) <-  paste0(geo$NAME_1,"_",geo$NAME_2)
 
     }
 
