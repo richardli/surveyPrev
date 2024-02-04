@@ -31,7 +31,7 @@
 #'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
 #'
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' admin.info1 <- adminInfo(geo = ZambiaAdm1,
 #'                         admin = 1,
 #'                         agg.pop =ZambiaPopWomen$admin1_pop,
