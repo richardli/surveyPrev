@@ -176,13 +176,12 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
-    colnames(admin1_res)[colnames(admin1_res) == 'mean'] <- 'value'
+    colnames(admin1_res)[colnames(admin1_res) == 'mean'] <- 'mean'
     admin1_res$sd<-sqrt(admin1_res$var)
 
 
 
     if(aggregation==F){
-      admin1.res=admin1_res
     }else{
 
       if(is.null(admin.info)){
@@ -190,14 +189,20 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
       }
 
     # aggregate results
-    nation_agg<- left_join(admin1_res,admin.info$admin.info,by="admin1.name")%>%
-      mutate(prop=population/sum(population))%>%
-      summarise(value = weighted.mean(value, prop))%>%
-      mutate(value = sprintf("%.4f", value))
+      draw.all=expit(t(fit1$draws.est[,-c(1,2)]))
+
+      post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
+      agg.natl <- data.frame(mean = mean(post.all),
+                             median=median(post.all),
+                             sd = sd(post.all),
+                             var = var(post.all),
+                             lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
+                             upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
 
 
 
-    admin1.res=list(res.admin1 = admin1_res, agg.natl=nation_agg, model = fit1)
+
+      admin1.res=list(res.admin1 = admin1_res, agg.natl= agg.natl, model = fit1)
 
     }
 
