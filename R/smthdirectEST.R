@@ -16,6 +16,7 @@
 #' @importFrom survey svydesign svyby
 #' @importFrom SUMMER smoothSurvey
 #' @importFrom stats weighted.mean var
+#' @importFrom data.table data.table
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -119,7 +120,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     }else{
 
 
-      if(is.null(weight) || is.null(admin.info$population)==T){
+      if( is.null(admin.info$population)==T){
         stop("Need population for aggregation")
       }
 
