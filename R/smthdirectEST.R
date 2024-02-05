@@ -114,6 +114,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     if(aggregation==F){
+      admin2.res=admin2_res
 
     }else{
 
@@ -198,6 +199,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     if(aggregation==F){
+      admin1.res=admin1_res
     }else{
 
       if(is.null(admin.info)){
