@@ -64,6 +64,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
   }else{
     Amat <- NULL
   }
+  admin.info <- admin.info$admin.info
 
 
 
@@ -102,7 +103,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                          strataVar = "strata.full",
                          Amat =Amat,
                          CI = CI,
-                         smooth=T)
+                         smooth=T,
+                         save.draws = TRUE)
 
 
     admin2_res <- fit2$smooth
@@ -112,49 +114,62 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     if(aggregation==F){
-      admin2.res=admin2_res
+
     }else{
 
 
-      if(is.null(weight) || is.null(admin.info)==T){
-        stop("Need admin.info and weight for aggregation")
+      if(is.null(weight) || is.null(admin.info$population)==T){
+        stop("Need population for aggregation")
       }
 
-    # admin2_res$value<-1:115
-    # admin2_res$var<-0.6
 
 
-    ##
-    ## TODO: also need to deal with duplicated admin2 names
-    ##       the below codes computes only overall proportion?
-    # The group_by call needs to be before mutate? same results
+      #aggregate results
 
-    #aggregate results
-    admin1_agg<- left_join(admin2_res,admin.info$admin.info,by="DistrictName")%>%
-      group_by(admin1.name) %>%
-      mutate(prop=population/sum(population))%>%
-      summarise(value = stats::weighted.mean(value, prop))
-
-    #code used for agg direct est
-    # weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="DistrictName")%>%
-    #   group_by(admin1.name)%>%
-    #   mutate(prop=round(population/sum(population),digits = 4))%>%
-    #   mutate(value1=prop*value)
-    # admin1_agg<-aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum)
+      # draw.all=expit(t(fit2$draws.est[,-c(1,2)]))
+      draw.all=expit((fit2$draws.est[,-c(1,2)]))
 
 
+      weight=admin.info$population/admin.info$population1
 
-    nation_agg<- admin.info$admin.info%>%
-                  distinct(admin1.name,.keep_all = TRUE)%>%
-                  left_join(admin1_agg,by="admin1.name")%>%
-                  mutate(prop=population1/sum(population1))%>%
-                  summarise(weighted_avg = weighted.mean(value, prop))%>%
-                  mutate(value = sprintf("%.4f", weighted_avg))
+      post.all <-  data.table(t(weight*draw.all))
+      # post.all <-  (data.table(weight*draw.all))
 
-    admin2.res=list(res.admin2=admin2_res,agg.admin1=admin1_agg,agg.natl=nation_agg, model = fit2)
+      colnames(post.all) <- admin.info$admin1.name
+
+      subgroups<-split.default(post.all, names(post.all))
+
+      sums_list <- lapply(subgroups, function(subgroup) {
+        rowSums(subgroup)
+      })
+      admin1.samp <- do.call(cbind, sums_list)
+
+
+      agg.admin1 <- data.frame(mean = colMeans(admin1.samp),
+                               median = apply(admin1.samp, 2, median),
+                               sd =  apply(admin1.samp, 2, sd),
+                               var =  apply(admin1.samp, 2, var),
+                               lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
+                               upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
+      )
+      agg.admin1$admin1.name=rownames(agg.admin1)
+      #agg national
+      unique( admin.info$population1)/sum(unique( admin.info$population1))
+
+      post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
+      agg.natl <- data.frame(mean = mean(post.all),
+                             median = median(post.all),
+                             sd = sd(post.all),
+                             var = var(post.all),
+                             lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
+                             upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
+
+
+      admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2)
     }
 
     return(admin2.res)
+
 
     }else if(admin==1){
 
@@ -172,7 +187,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                          weightVar = "weight",
                          strataVar = "strata.full",
                          Amat =Amat,
-                         CI = CI)
+                         CI = CI,
+                         save.draws = TRUE)
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
