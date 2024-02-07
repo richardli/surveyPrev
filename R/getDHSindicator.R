@@ -177,7 +177,8 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
     raw.dat.tmp<-PRdata
     colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'nt_ch_stunt'] <- "value"
 
-  }else if(indicator == "DPT3"){
+  }else if(indicator == "DPT3")
+  {
     KRdata <- Rdata %>%
       mutate(wt = v005/1000000)
 
@@ -267,6 +268,12 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
       colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'ch_pent3_either'] <- "value"
 
 
+  }else if(indicator == "nmr")
+  {
+    BRdata <- Rdata %>%
+     mutate(wt = v005/1000000)
+     BRdata$value<- ifelse(BRdata$b7==0, 1, 0)
+     raw.dat.tmp=BRdata
   }
 
 

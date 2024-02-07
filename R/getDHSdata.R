@@ -37,6 +37,8 @@ getDHSdata <- function(country, indicator = NULL, year) {
     Type <- c("Household Member Recode")
   } else if (indicator %in% c("DPT3")) {
     Type <- c("Children's Recode")
+  }else if (indicator %in% c("nmr")) {
+    Type <- c("Births Recode")
   }else{
     Type <- NULL
   }
