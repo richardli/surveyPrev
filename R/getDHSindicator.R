@@ -270,13 +270,11 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
 
   }else if(indicator == "nmr")
   {
-    BRdata <- Rdata %>%
+     BRdata <- Rdata %>%
      mutate(wt = v005/1000000)
      BRdata$value<- ifelse(BRdata$b7==0, 1, 0)
      raw.dat.tmp=BRdata
   }
-
-
 
 
 

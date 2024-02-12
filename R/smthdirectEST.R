@@ -99,6 +99,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                          responseType ="binary",
                          responseVar= "value",
                          regionVar = "DistrictName",
+                         region.list = unique(admin.info$DistrictName),
                          clusterVar = "~cluster+householdID",#+householdID same result
                          weightVar = "weight",
                          strataVar = "strata.full",
@@ -186,6 +187,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                          responseVar= "value",
                          regionVar = "admin1.name",
                          clusterVar = "~cluster+householdID",
+                         region.list = unique(admin.info$admin1.name),
                          weightVar = "weight",
                          strataVar = "strata.full",
                          Amat =Amat,

@@ -100,7 +100,25 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         }
 
         ##aggregation
-        admin2_res<-na.omit(admin2_res)#exclude NA when weighted mean to admin1
+        # admin2_res<-na.omit(admin2_res)# exclude NA when weighted mean to admin1
+
+     # make HT.logit.est to 36 or -36 for HT=1 or 0.
+        for (i in 1:dim(admin2_res)[1]) {
+
+          if(is.na(admin2_res[i,]$HT.logit.est)&& round(admin2_res[i,]$value,digits = 8)==1 ){
+            admin2_res[i,]$HT.logit.est=36
+          }
+          if(is.na(admin2_res[i,]$HT.logit.est)&&admin2_res[i,]$value==0 ){
+            admin2_res[i,]$HT.logit.est=-36
+          }
+
+          if(is.na(admin2_res[i,]$HT.logit.var)){
+            admin2_res[i,]$HT.logit.var=0
+          }
+}
+
+
+
 
         dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
         draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
