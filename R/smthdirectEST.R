@@ -111,19 +111,25 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
     admin2_res <- fit2$smooth
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
-    colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
-    admin2_res$sd<-sqrt(admin2_res$var)
+    # colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
+    admin2_res$se<-sqrt(admin2_res$var)
+
+
+    ####message for aggregation=T but missing some components and return results without aggregation
+    if(aggregation==F){
+    }else{
+      if(is.null(admin.info)||sum(is.na(admin.info$population))>0){
+        message("Need population information for aggregation")
+        aggregation=F
+      }
+    }
 
 
     if(aggregation==F){
       admin2.res=admin2_res
+      colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
 
     }else{
-
-
-      if( is.null(admin.info$population)==T){
-        stop("Need population for aggregation")
-      }
 
 
 
@@ -149,8 +155,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
       agg.admin1 <- data.frame(mean = colMeans(admin1.samp),
-                               median = apply(admin1.samp, 2, median),
-                               sd =  apply(admin1.samp, 2, sd),
+                               # median = apply(admin1.samp, 2, median),
+                               se =  apply(admin1.samp, 2, sd),
                                var =  apply(admin1.samp, 2, var),
                                lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
                                upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
@@ -161,11 +167,14 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
       post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
       agg.natl <- data.frame(mean = mean(post.all),
-                             median = median(post.all),
-                             sd = sd(post.all),
+                             # median = median(post.all),
+                             se = sd(post.all),
                              var = var(post.all),
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
+
+
+      colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
 
 
       admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2)
@@ -197,28 +206,36 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     colnames(admin1_res)[colnames(admin1_res) == 'mean'] <- 'mean'
-    admin1_res$sd<-sqrt(admin1_res$var)
+    admin1_res$se<-sqrt(admin1_res$var)
 
+
+    ####message for aggregation=T but missing some components and return results without aggregation
+    if(aggregation==F){
+    }else{
+      if(is.null(admin.info)||sum(is.na(admin.info$population))>0){
+        message("Need population information for aggregation")
+        aggregation=F
+      }
+    }
 
 
     if(aggregation==F){
       admin1.res=admin1_res
     }else{
 
-      if(is.null(admin.info)){
-        stop("Need admin.info for aggregation")
-      }
 
     # aggregate results
       draw.all=expit(t(fit1$draws.est[,-c(1,2)]))
 
       post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
       agg.natl <- data.frame(mean = mean(post.all),
-                             median=median(post.all),
-                             sd = sd(post.all),
+                             # median=median(post.all),
+                             se = sd(post.all),
                              var = var(post.all),
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
+
+
 
 
 
