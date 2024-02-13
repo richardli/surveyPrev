@@ -236,7 +236,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        }
 
 
-       nation_agg <- data.frame(admin0.name="country",
+       nation_agg <- data.frame(
+         # admin0.name="country",
                                 mean =weight_dt_mean,
                                 #meanfromsample =mean(nation.samp),
                                 se = sd(nation.samp),
@@ -351,7 +352,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     nation.samp<-draw.all%*%weight_dt
 
     nation_agg <- data.frame(
-                             admin1.name= "country",
+                             # admin1.name= "country",
                              mean=weight_dt_mean,
                              # meanFROMsample =mean(nation.samp),
                              se = sd(nation.samp),
@@ -404,10 +405,10 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin0_res$direct.upper <- expit(admin0_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
 
 
-    colnames(admin0_res)[1] <- c("admin0.name")
+    # colnames(admin0_res)[1] <- c("admin0.name")
 
 
-   return(res.admin0=admin0_res)
+   return(res.admin0=admin0_res[,-1])
 
   }
 
