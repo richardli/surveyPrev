@@ -75,52 +75,62 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                    is.unit.level=FALSE,
                                    smooth=FALSE)
     admin2_res<-as.data.frame(smoothSurvey_res$HT)
-    admin2_res$sd<-sqrt(admin2_res$HT.var)
+    admin2_res$direct.se<-sqrt(admin2_res$HT.var)
 
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName' # region is the col name in smoothSurvey_res$HT
     a<-strsplit(admin2_res$DistrictName,"_")
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
-    colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'value'
+    colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'direct.est'
+    colnames(admin2_res)[colnames(admin2_res) == 'HT.var'] <- 'direct.var'
+    colnames(admin2_res)[colnames(admin2_res) == 'HT.logit.est'] <- 'direct.logit.est'
+    colnames(admin2_res)[colnames(admin2_res) == 'HT.logit.var'] <- 'direct.logit.var'
+    colnames(admin2_res)[colnames(admin2_res) == 'HT.logit.prec'] <- 'direct.logit.prec'
 
-    admin2_res$lower <- expit(admin2_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
-    admin2_res$upper <- expit(admin2_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$HT.logit.var))
-    admin2_res$admin1.name
+
+    admin2_res$direct.lower <- expit(admin2_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
+    admin2_res$direct.upper <- expit(admin2_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
+    # admin2_res$admin1.name
 
     res.admin2=admin2_res
 
+    ####message for aggregation=T but missing some components and return results without aggregation
+    if(aggregation==F){
+    }else{
+      if(is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0){
+        message("Need population information for aggregation")
+        aggregation=F
+      }
+    }
+
 
    if(aggregation==F){
+     colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
 
    }else{
 
 
-
-        if(is.null(weight) || is.null(admin.info)){
-          stop("Need admin.info and weight for aggregation")
-        }
-
         ##aggregation
         # admin2_res<-na.omit(admin2_res)# exclude NA when weighted mean to admin1
 
-     # make HT.logit.est to 36 or -36 for HT=1 or 0.
+     # make direct.logit.est to 36 or -36 for HT=1 or 0.
         for (i in 1:dim(admin2_res)[1]) {
 
-          if(is.na(admin2_res[i,]$HT.logit.est)&& round(admin2_res[i,]$value,digits = 8)==1 ){
-            admin2_res[i,]$HT.logit.est=36
+          if(is.na(admin2_res[i,]$direct.logit.est)&& round(admin2_res[i,]$direct.est,digits = 8)==1 ){
+            admin2_res[i,]$direct.logit.est=36
           }
-          if(is.na(admin2_res[i,]$HT.logit.est)&&admin2_res[i,]$value==0 ){
-            admin2_res[i,]$HT.logit.est=-36
+          if(is.na(admin2_res[i,]$direct.logit.est)&&admin2_res[i,]$direct.est==0 ){
+            admin2_res[i,]$direct.logit.est=-36
           }
 
-          if(is.na(admin2_res[i,]$HT.logit.var)){
-            admin2_res[i,]$HT.logit.var=0
+          if(is.na(admin2_res[i,]$direct.logit.var)){
+            admin2_res[i,]$direct.logit.var=0
           }
 }
 
 
 
 
-        dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$HT.logit.est,sd=sqrt(admin2_res$HT.logit.var))   #dd$value has <0 bc it's HT.logit.est
+        dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$direct.logit.est,sd=sqrt(admin2_res$direct.logit.var))   #dd$value has <0 bc it's direct.logit.est
         draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
         ##
@@ -171,7 +181,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
          weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="DistrictName")%>%
            group_by(admin1.name)%>%
            mutate(prop=round(population/sum(population),digits = 4))%>%
-           mutate(value1=prop*value)
+           mutate(value1=prop*direct.est)
        }else{
          #weight using dhs sampling weight (modt$weight
          weight_dt_mean<- modt%>%group_by(DistrictName)%>%
@@ -180,21 +190,21 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            group_by(admin1.name)%>%
            mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
            left_join(admin2_res, by="DistrictName")%>%
-           mutate(value1=prop*value)
+           mutate(value1=prop*direct.est)
 
        }
 
 
 
        admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
-                                sd =  apply(admin1.samp, 2, sd),
+                                se =  apply(admin1.samp, 2, sd),
                                 lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[1,],
                                 upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[2,]
        )
 
        admin1_agg <- admin1_agg%>% left_join( aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum), by="admin1.name")%>%
-       rename( value = value1)#admin1_agg: admin2toadmin1 result
-       admin1_agg <- admin1_agg[, c("admin1.name", "value", "sd", "lower", "upper")]
+       rename( mean = value1)#admin1_agg: admin2toadmin1 result
+       admin1_agg <- admin1_agg[, c("admin1.name", "mean", "se", "lower", "upper")]
 
 
        ### ### ### ### ### ### ### ### ### ###
@@ -208,7 +218,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            nation.samp<- admin1.samp%*%weight_dt
 
            #for mean
-           weight_dt_mean<-weight_dt%*%admin1_agg$value
+           weight_dt_mean<-weight_dt%*%admin1_agg$mean
 
        }else{
          admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
@@ -221,18 +231,23 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
          nation.samp<- admin1.samp%*%weight_dt$prop  #for variance
-         weight_dt_mean<-weight_dt$prop%*%admin1_agg$value #for mean
+         weight_dt_mean<-weight_dt$prop%*%admin1_agg$mean #for mean
 
        }
 
 
-
-
-       nation_agg <- data.frame(value =weight_dt_mean,
-                                sd = sd(nation.samp),
+       nation_agg <- data.frame(admin0.name="country",
+                                mean =weight_dt_mean,
+                                #meanfromsample =mean(nation.samp),
+                                se = sd(nation.samp),
                                 var = var(nation.samp),
                                 lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                                 upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
+
+
+       #cleaning up colnames
+       colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
+
 
        res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
@@ -268,30 +283,44 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                  smooth=FALSE)
 
     admin1_res<-smoothSurvey_res$HT
-    admin1_res$sd<-sqrt(admin1_res$HT.var)
+    admin1_res$direct.se<-sqrt(admin1_res$HT.var)
 
-    colnames(admin1_res)[1:2] <- c("admin1.name","value")
 
     admin1_res<-admin1_res
-    admin1_res$lower <- expit(admin1_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
-    admin1_res$upper <- expit(admin1_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$HT.logit.var))
+    colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
+    colnames(admin1_res)[colnames(admin1_res) == 'HT.est'] <- 'direct.est'
+    colnames(admin1_res)[colnames(admin1_res) == 'HT.est'] <- 'direct.est'
+    colnames(admin1_res)[colnames(admin1_res) == 'HT.var'] <- 'direct.var'
+    colnames(admin1_res)[colnames(admin1_res) == 'HT.logit.est'] <- 'direct.logit.est'
+    colnames(admin1_res)[colnames(admin1_res) == 'HT.logit.var'] <- 'direct.logit.var'
+    colnames(admin1_res)[colnames(admin1_res) == 'HT.logit.prec'] <- 'direct.logit.prec'
+
+
+    admin1_res$direct.lower <- expit(admin1_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
+    admin1_res$direct.upper <- expit(admin1_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
+
+
+
+
+    ####message for aggregation=T but missing some components and return results without aggregation
+    if(aggregation==F){
+    }else{
+      if(is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0){
+        message("Need population information for aggregation")
+        aggregation=F
+      }
+    }
 
 
     if(aggregation==F){
-
-
-
-
     }else{
 
-      if(is.null(weight) || is.null(admin.info)==T){
-        stop("Need admin.info and weight for aggregation")
-      }
+
       ### ### ### ### ### ### ### ### ### ###
       ### admin1 to national for admin1 result
       ### ### ### ### ### ### ### ### ### ###
 
-    dd=data.frame(mean=admin1_res$HT.logit.est,sd=sqrt(admin1_res$HT.logit.var))
+    dd=data.frame(mean=admin1_res$direct.logit.est,sd=sqrt(admin1_res$direct.logit.var))
     draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
    if(weight=="population"){
@@ -300,7 +329,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       weight_dt=admin1.distinct$population[match(admin1_res$admin1.name, admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
       nation.samp<- draw.all%*%weight_dt
       #for mean
-      weight_dt_mean<-weight_dt%*%admin1_res$value
+      weight_dt_mean<-weight_dt%*%admin1_res$direct.est
 
 
     }else{
@@ -311,7 +340,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))
 
       nation.samp<- draw.all%*%weight_dt$prop  #for variance
-      weight_dt_mean<-weight_dt$prop%*%admin1_res$value #for mean
+      weight_dt_mean<-weight_dt$prop%*%admin1_res$direct.est #for mean
 
     }
 
@@ -321,8 +350,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     nation.samp<-draw.all%*%weight_dt
 
-    nation_agg <- data.frame(value =mean(nation.samp),
-                             sd = sd(nation.samp),
+    nation_agg <- data.frame(
+                             admin1.name= "country",
+                             mean=weight_dt_mean,
+                             # meanFROMsample =mean(nation.samp),
+                             se = sd(nation.samp),
                              var = var(nation.samp),
                              lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                              upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
@@ -360,13 +392,19 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                    is.unit.level=FALSE,
                                    smooth=FALSE)
     admin0_res<-smoothSurvey_res$HT
-    admin0_res$sd<-sqrt(admin0_res$HT.var)
+    admin0_res$direct.se<-sqrt(admin0_res$HT.var)
+    colnames(admin0_res)[colnames(admin0_res) == 'HT.est'] <- 'direct.est'
+    colnames(admin0_res)[colnames(admin0_res) == 'HT.var'] <- 'direct.var'
+    colnames(admin0_res)[colnames(admin0_res) == 'HT.logit.est'] <- 'direct.logit.est'
+    colnames(admin0_res)[colnames(admin0_res) == 'HT.logit.var'] <- 'direct.logit.var'
+    colnames(admin0_res)[colnames(admin0_res) == 'HT.logit.prec'] <- 'direct.logit.prec'
 
-    admin0_res$lower <- expit(admin0_res$HT.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin0_res$HT.logit.var))
-    admin0_res$upper <- expit(admin0_res$HT.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$HT.logit.var))
+
+    admin0_res$direct.lower <- expit(admin0_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
+    admin0_res$direct.upper <- expit(admin0_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
 
 
-    colnames(admin0_res)[1:2] <- c("admin0.name","value")
+    colnames(admin0_res)[1] <- c("admin0.name")
 
 
    return(res.admin0=admin0_res)
