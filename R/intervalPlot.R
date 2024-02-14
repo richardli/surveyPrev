@@ -174,34 +174,41 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
 
 
     if(group){
-      ggplot(dt, aes(x = admin1.name, y = mean, group = model, color = model,shape=group)) +
-        geom_point( position = position_dodge(width = 0.7)) +
+
+      ggplot(dt, aes(x = admin1.name, y = mean, group = model, color = group  ,shape=model)) +
+        geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:19)) +
         geom_errorbar(aes(ymin = lower,
-                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.7))+
-        # scale_color_brewer(palette="Set3") +
+                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8))+
+        # scale_color_manual(values = pal_npg("nrc")(10) )+
+        # scale_color_manual(values = pal_npg("nrc")(10) )+
+        scale_color_brewer(palette="Set1") +
+
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         labs(title = "", x = "Region", y = "value")+
         theme(legend.title = element_text(size=10), # Increase legend title size
-              legend.text = element_text(size=12), # Increase legend text size
+              legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
-              axis.text.x = element_text(size=12), # Increase x axis text size
-              axis.text.y = element_text(size=12))
+              axis.text.x = element_text(size=10), # Increase x axis text size
+              axis.text.y = element_text(size=10))
+
+
+
 
     }else{
       ggplot(dt, aes(x = admin1.name, y = mean, group = model, color = model)) +
-        geom_point( position = position_dodge(width = 0.7)) +
+        geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:19)) +
         geom_errorbar(aes(ymin = lower,
-                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.7))+
-        # scale_color_brewer(palette="Set3") +
+                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8))+
+        scale_color_brewer(palette="Set1") +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         labs(title = "", x = "Region", y = "value")+
         theme(legend.title = element_text(size=10), # Increase legend title size
-              legend.text = element_text(size=12), # Increase legend text size
+              legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
-              axis.text.x = element_text(size=12), # Increase x axis text size
-              axis.text.y = element_text(size=12))
+              axis.text.x = element_text(size=10), # Increase x axis text size
+              axis.text.y = element_text(size=10))
 
     }
 
