@@ -112,7 +112,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     admin2_res <- fit2$smooth
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
     # colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
-    admin2_res$se<-sqrt(admin2_res$var)
+    admin2_res$sd<-sqrt(admin2_res$var)
 
 
     ####message for aggregation=T but missing some components and return results without aggregation
@@ -206,7 +206,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     colnames(admin1_res)[colnames(admin1_res) == 'mean'] <- 'mean'
-    admin1_res$se<-sqrt(admin1_res$var)
+    admin1_res$sd<-sqrt(admin1_res$var)
 
 
     ####message for aggregation=T but missing some components and return results without aggregation

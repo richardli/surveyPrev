@@ -4,7 +4,8 @@
 #'
 #' @param model  list of model results  using surveyPrev
 #' @param admin  level of plot
-#' @param  group plot by group or not
+#' @param group plot by group or not
+#' @param compare plot for compare multiple plot or not
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level.
 #' @import ggplot2
 #' @author Qianyu Dong
@@ -66,10 +67,10 @@
 #'
 
 
-intervalPlot <- function(admin= 0, model=list( list("name 1"= fit1, "name 1"= fit2)), group=F){
+intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "name 1"= fit2)), group=F){
 
 
-
+  if(compare){
 
   if(admin==0){
 
@@ -215,6 +216,46 @@ intervalPlot <- function(admin= 0, model=list( list("name 1"= fit1, "name 1"= fi
   }
 
 
+  }else{
+
+
+     res=model[[1]]
+     data<-res[[1]]
+     linedata<-res[[2]]
+     line2<-res[[3]]$mean
+
+     plot_fun <- function(dat) {
+       line1 = linedata[unique(dat$admin1.name),"mean"]
+       g <- ggplot(dat)
+
+       if("type" %in% colnames(dat)){
+         g <- g + aes(x = admin2.name, y = mean, color = type)
+       }else{
+         g <- g + aes(x = admin2.name, y = mean)
+       }
+       g <- g +
+           geom_point( position = position_dodge(width = 0.5),size = .8) +
+           geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="#d95f02",linewidth = .8) +
+           geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +
+           geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.2) +
+           scale_color_brewer(palette = "Set1") +
+         labs(title = unique(dat$admin1.name)) +
+         xlab("") + ylab("") +
+         scale_linetype_manual(values = c("dashed", "solid"),
+                               labels = c("admin1","national")) +
+         theme_bw() +
+         theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+     }
+
+    plots <- NULL
+    for (adm1 in unique(data$admin1.name)){
+     g <- plot_fun(subset(data, admin1.name == adm1))
+     plots[[adm1]] <- g
+    }
+
+     return(plots)
+
+  }
 
 
 
@@ -224,43 +265,6 @@ intervalPlot <- function(admin= 0, model=list( list("name 1"= fit1, "name 1"= fi
 
 
 
-
- #
- #
- #  data<-res[[1]]
- #  linedata<-res[[2]]
- #  line2<-res[[3]]$mean
- #
- #  plot_fun <- function(dat) {
- #    line1 = linedata[unique(dat$admin1.name),"mean"]
- #    g <- ggplot(dat)
- #
- #    if("type" %in% colnames(dat)){
- #      g <- g + aes(x = admin2.name, y = mean, color = type)
- #    }else{
- #      g <- g + aes(x = admin2.name, y = mean)
- #    }
- #    g <- g +
- #        geom_point( position = position_dodge(width = 0.5),size = .8) +
- #        geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="#d95f02",linewidth = .8) +
- #        geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +
- #        geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.2) +
- #        scale_color_brewer(palette = "Set1") +
- #      labs(title = unique(dat$admin1.name)) +
- #      xlab("") + ylab("") +
- #      scale_linetype_manual(values = c("dashed", "solid"),
- #                            labels = c("admin1","national")) +
- #      theme_bw() +
- #      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
- #  }
- #
- # plots <- NULL
- # for (adm1 in unique(data$admin1.name)){
- #  g <- plot_fun(subset(data, admin1.name == adm1))
- #  plots[[adm1]] <- g
- # }
- #
- #  return(plots)
 
 }
 
