@@ -4,12 +4,14 @@
 \alias{getDHSdata}
 \title{Download DHS survey data}
 \usage{
-getDHSdata(country, indicator = NULL, year)
+getDHSdata(country, indicator = NULL, Recode = NULL, year)
 }
 \arguments{
 \item{country}{Country name.}
 
 \item{indicator}{Indicator of interests. Current list of supported indicators include: "womananemia", "ancvisit4+", "stunting", "wasting", "DPT3".}
+
+\item{Recode}{Types of dhs Recode}
 
 \item{year}{Year the survey conducted.}
 }

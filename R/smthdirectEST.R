@@ -156,7 +156,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
       agg.admin1 <- data.frame(mean = colMeans(admin1.samp),
                                # median = apply(admin1.samp, 2, median),
-                               se =  apply(admin1.samp, 2, sd),
+                               sd =  apply(admin1.samp, 2, sd),
                                var =  apply(admin1.samp, 2, var),
                                lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
                                upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
@@ -168,7 +168,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
       post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
       agg.natl <- data.frame(mean = mean(post.all),
                              # median = median(post.all),
-                             se = sd(post.all),
+                             sd = sd(post.all),
                              var = var(post.all),
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
@@ -230,7 +230,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
       post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
       agg.natl <- data.frame(mean = mean(post.all),
                              # median=median(post.all),
-                             se = sd(post.all),
+                            sd = sd(post.all),
                              var = var(post.all),
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])

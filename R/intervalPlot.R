@@ -8,21 +8,21 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
-#' 
+#'
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
 #' data(ZambiaPopWomen)
-#' cluster.info <- clusterInfo(geo = geo, 
-#'                             poly.adm1 = ZambiaAdm1, 
+#' cluster.info <- clusterInfo(geo = geo,
+#'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #'
-#' dhsData <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "ancvisit4+", 
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' 
+#'
 #' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
-#' admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+#' admin.info2 <- adminInfo(geo = ZambiaAdm2,
 #'                         admin = 2,
 #'                         agg.pop =ZambiaPopWomen$admin2_pop,
 #'                         proportion = ZambiaPopWomen$admin2_urban)
@@ -32,7 +32,7 @@
 #'                   admin.info = admin.info2,
 #'                   stratification = FALSE,
 #'                   model = "bym2",
-#'                   admin = 2, 
+#'                   admin = 2,
 #'                   aggregation = TRUE,
 #'                   CI = 0.95)
 #'
@@ -40,21 +40,21 @@
 #' head(cl_res_ad2_unstrat$agg.admin1)
 #' plots <- intervalPlot(cl_res_ad2_unstrat)
 #' plots[["Central"]]
-#' 
+#'
 #  # unstratified model
 #' cl_res_ad2 <- clusterModel(data = data,
 #'                   cluster.info = cluster.info,
 #'                   admin.info = admin.info2,
 #'                   stratification = TRUE,
 #'                   model = "bym2",
-#'                   admin = 2, 
+#'                   admin = 2,
 #'                   aggregation = TRUE,
 #'                   CI = 0.95)
 #' head(cl_res_ad2$res.admin2)
 #' head(cl_res_ad2$agg.admin1)
 #' plots <- intervalPlot(cl_res_ad2)
 #' plots[["Central"]]
-#' 
+#'
 #' library(patchwork)
 #' wrap_plots(plots, ncol = 5)
 #'
@@ -67,28 +67,28 @@ intervalPlot <- function(res){
   # TODO: refer by variable name and make it work with both admin 1 and 2 cases
   data<-res[[1]]
   linedata<-res[[2]]
-  line2<-res[[3]]$value
+  line2<-res[[3]]$mean
 
   plot_fun <- function(dat) {
-    line1 = linedata[unique(dat$admin1.name),"value"]
+    line1 = linedata[unique(dat$admin1.name),"mean"]
     g <- ggplot(dat)
 
     if("type" %in% colnames(dat)){
-      g <- g + aes(x = admin2.name, y = value, color = type)
+      g <- g + aes(x = admin2.name, y = mean, color = type)
     }else{
-      g <- g + aes(x = admin2.name, y = value)
+      g <- g + aes(x = admin2.name, y = mean)
     }
     g <- g +
         geom_point( position = position_dodge(width = 0.5),size = .8) +
         geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="#d95f02",linewidth = .8) +
-        geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +         
+        geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +
         geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.2) +
         scale_color_brewer(palette = "Set1") +
       labs(title = unique(dat$admin1.name)) +
-      xlab("") + ylab("") + 
+      xlab("") + ylab("") +
       scale_linetype_manual(values = c("dashed", "solid"),
                             labels = c("admin1","national")) +
-      theme_bw() + 
+      theme_bw() +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
   }
 

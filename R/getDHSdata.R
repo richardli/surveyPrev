@@ -4,6 +4,7 @@
 #'
 #' @param country Country name.
 #' @param indicator Indicator of interests. Current list of supported indicators include: "womananemia", "ancvisit4+", "stunting", "wasting", "DPT3".
+#' @param Recode Types of dhs Recode
 #' @param year Year the survey conducted.
 #'
 #' @return This function returns the survey dataset that contains the indicator.
@@ -25,12 +26,14 @@
 #' }
 #'
 #' @export
-getDHSdata <- function(country, indicator = NULL, year) {
+getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
 
 
   indicator<-indicator
-  if(is.null(indicator)){
+  if(is.null(indicator) & is.null(Recode)){
     Type <- NULL
+  }else if (!is.null(Recode)){
+    Type=Recode
   }else if (indicator %in% c("womananemia", "ancvisit4+", "unmet_family")) {
     Type <- c("Individual Recode")
   } else if (indicator %in% c("stunting", "wasting", "sanitation")) {
@@ -42,6 +45,8 @@ getDHSdata <- function(country, indicator = NULL, year) {
   }else{
     Type <- NULL
   }
+
+
   if(!is.null(Type)){
     message(paste(Type, "is used.\n\n"))
   }else{
@@ -62,6 +67,10 @@ getDHSdata <- function(country, indicator = NULL, year) {
 
   # if null then download all and process later
   }else{
+
+
+
+
     all <- NULL
     # remove HIV data for now. TODO: use try catch to download all with permission
     list <- c("Men's Recode"     , "Household Member Recode",

@@ -5,7 +5,7 @@
 #'
 
 AN_ANEM_W_ANY <- function(RData){
-	 IRdata <- RData$IRdata %>%
+	 IRdata <- RData %>%
       mutate(nt_wm_any_anem =
                case_when(
                  v042==1 & v457<4 ~ 1 ,

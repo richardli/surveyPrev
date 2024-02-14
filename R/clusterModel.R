@@ -223,14 +223,14 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
         admin1.name=admin.info$admin1.name[tail(c.dat.tmp$sID,n=nregion)],
         mean= tail(imod$summary.fitted.values,n=nregion)[,1],
         median=colMedians(draw.all),
-        se= tail(imod$summary.fitted.values,n=nregion)[,2],
+       sd= tail(imod$summary.fitted.values,n=nregion)[,2],
         var = tail(imod$summary.fitted.values,n=nregion)[,2]^2,
         lower= tail(imod$summary.fitted.values,n=nregion)[,3],
         upper= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin1.bb.res$mean<-as.numeric (admin1.bb.res$mean)
-      admin1.bb.res$se<-as.numeric (admin1.bb.res$se)
-      admin1.bb.res$var<-admin1.bb.res$se^2
+      admin1.bb.res$sd<-as.numeric (admin1.bb.res$sd)
+      admin1.bb.res$var<-admin1.bb.res$sd^2
       admin1.bb.res$lower<-as.numeric (admin1.bb.res$lower)
       admin1.bb.res$upper<-as.numeric (admin1.bb.res$upper)
 
@@ -254,7 +254,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
       admin1.bb.res <- data.frame(mean = c(post.u, post.r, post.all),
                                   median = c(post.u.median, post.r.median, post.all.median),
-                                  se = c(post.u.sd, post.r.sd, post.all.sd),
+                                 sd= c(post.u.sd, post.r.sd, post.all.sd),
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
@@ -271,7 +271,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
     post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
     agg.natl <- data.frame(mean = mean(post.all),
                            median = median(post.all),
-                           se = sd(post.all),
+                          sd= sd(post.all),
                            var = var(post.all),
                            lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                            upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
@@ -297,14 +297,14 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
         DistrictName=admin.info$DistrictName[tail(c.dat.tmp$sID,n=nregion)],
         mean= tail(imod$summary.fitted.values,n=nregion)[,1],
         median=colMedians(draw.all),
-        se= tail(imod$summary.fitted.values,n=nregion)[,2],
+       sd= tail(imod$summary.fitted.values,n=nregion)[,2],
         var = tail(imod$summary.fitted.values,n=nregion)[,2]^2,
         lower= tail(imod$summary.fitted.values,n=nregion)[,3],
         upper= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin2.bb.res$mean<-as.numeric (admin2.bb.res$mean)
-      admin2.bb.res$se<-as.numeric (admin2.bb.res$se)
-      admin2.bb.res$var <- admin2.bb.res$se^2
+      admin2.bb.res$sd<-as.numeric (admin2.bb.res$sd)
+      admin2.bb.res$var <- admin2.bb.res$sd^2
       admin2.bb.res$lower<-as.numeric (admin2.bb.res$lower)
       admin2.bb.res$upper<-as.numeric (admin2.bb.res$upper)
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
@@ -328,7 +328,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
       admin2.bb.res <- data.frame(mean = c(post.u, post.r, post.all),
                                   median = c(post.u.median, post.r.median, post.all.median),
-                                  se = c(post.u.sd, post.r.sd, post.all.sd),
+                                 sd= c(post.u.sd, post.r.sd, post.all.sd),
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
@@ -361,7 +361,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
     agg.admin1 <- data.frame(mean = colMeans(admin1.samp),
                              median=colMedians(admin1.samp),
-                             se =  apply(admin1.samp, 2, sd),
+                            sd=  apply(admin1.samp, 2, sd),
                              var =  apply(admin1.samp, 2, var),
                              lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
                              upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
@@ -373,7 +373,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
     post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
     agg.natl <- data.frame(mean = mean(post.all),
                            median=median(post.all),
-                           se = sd(post.all),
+                          sd= sd(post.all),
                            var = var(post.all),
                            lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                            upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])

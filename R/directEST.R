@@ -197,14 +197,15 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
        admin1_agg <- data.frame(admin1.name= colnames(admin1.samp),
-                                se =  apply(admin1.samp, 2, sd),
-                                lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[1,],
-                                upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[2,]
+                                direct.se =  apply(admin1.samp, 2, sd),
+                                direct.lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[1,],
+                                direct.upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI)/2, 1 - (1 - CI)/2))[2,]
        )
 
        admin1_agg <- admin1_agg%>% left_join( aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum), by="admin1.name")%>%
-       rename( mean = value1)#admin1_agg: admin2toadmin1 result
-       admin1_agg <- admin1_agg[, c("admin1.name", "mean", "se", "lower", "upper")]
+       rename( direct.est = value1)#admin1_agg: admin2toadmin1 result
+
+       admin1_agg <- admin1_agg[, c("admin1.name", "direct.est", "direct.se", "direct.lower", "direct.upper")]
 
 
        ### ### ### ### ### ### ### ### ### ###
@@ -218,7 +219,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            nation.samp<- admin1.samp%*%weight_dt
 
            #for mean
-           weight_dt_mean<-weight_dt%*%admin1_agg$mean
+           weight_dt_mean<-weight_dt%*%admin1_agg$direct.est
 
        }else{
          admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
@@ -231,19 +232,19 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
          nation.samp<- admin1.samp%*%weight_dt$prop  #for variance
-         weight_dt_mean<-weight_dt$prop%*%admin1_agg$mean #for mean
+         weight_dt_mean<-weight_dt$prop%*%admin1_agg$direct.est #for mean
 
        }
 
 
        nation_agg <- data.frame(
          # admin0.name="country",
-                                mean =weight_dt_mean,
+                               direct.est=weight_dt_mean,
                                 #meanfromsample =mean(nation.samp),
-                                se = sd(nation.samp),
-                                var = var(nation.samp),
-                                lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
-                                upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
+                               direct.se = sd(nation.samp),
+                               direct.var = var(nation.samp),
+                               direct.lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
+                               direct.upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
 
        #cleaning up colnames
@@ -353,12 +354,12 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     nation_agg <- data.frame(
                              # admin1.name= "country",
-                             mean=weight_dt_mean,
+                             direct.est=weight_dt_mean,
                              # meanFROMsample =mean(nation.samp),
-                             se = sd(nation.samp),
-                             var = var(nation.samp),
-                             lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
-                             upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
+                             direct.se = sd(nation.samp),
+                             direct.var = var(nation.samp),
+                             direct.lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
+                             direct.upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
 
 

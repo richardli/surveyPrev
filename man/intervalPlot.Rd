@@ -22,16 +22,16 @@ geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
 data(ZambiaPopWomen)
-cluster.info <- clusterInfo(geo = geo, 
-                            poly.adm1 = ZambiaAdm1, 
+cluster.info <- clusterInfo(geo = geo,
+                            poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
 
-dhsData <- getDHSdata(country = "Zambia", 
-                                 indicator = "ancvisit4+", 
+dhsData <- getDHSdata(country = "Zambia",
+                                 indicator = "ancvisit4+",
                                  year = 2018)
 
 data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
-admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+admin.info2 <- adminInfo(geo = ZambiaAdm2,
                         admin = 2,
                         agg.pop =ZambiaPopWomen$admin2_pop,
                         proportion = ZambiaPopWomen$admin2_urban)
@@ -40,7 +40,7 @@ cl_res_ad2_unstrat <- clusterModel(data = data,
                   admin.info = admin.info2,
                   stratification = FALSE,
                   model = "bym2",
-                  admin = 2, 
+                  admin = 2,
                   aggregation = TRUE,
                   CI = 0.95)
 
@@ -54,7 +54,7 @@ cl_res_ad2 <- clusterModel(data = data,
                   admin.info = admin.info2,
                   stratification = TRUE,
                   model = "bym2",
-                  admin = 2, 
+                  admin = 2,
                   aggregation = TRUE,
                   CI = 0.95)
 head(cl_res_ad2$res.admin2)
