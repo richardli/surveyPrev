@@ -104,13 +104,14 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
     if(group){
       ggplot(dt, aes(y = model, x = mean,group = group)) +
         geom_point(aes(shape=group)) +
-        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 0.5)
+        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 0.5)+
+        theme_bw()
 
     }else{
       ggplot(dt, aes(y = model, x = mean)) +
         geom_point(aes()) +
-        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 0.5)
-
+        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 0.5)+
+        theme_bw()
     }
 
 
@@ -183,9 +184,10 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
         # scale_color_manual(values = pal_npg("nrc")(10) )+
         # scale_color_manual(values = pal_npg("nrc")(10) )+
         scale_color_brewer(palette="Set1") +
-
+        theme_bw() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         labs(title = "", x = "Region", y = "value")+
+
         theme(legend.title = element_text(size=10), # Increase legend title size
               legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
@@ -202,8 +204,10 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
         geom_errorbar(aes(ymin = lower,
                           ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8))+
         scale_color_brewer(palette="Set1") +
+        theme_bw() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         labs(title = "", x = "Region", y = "value")+
+
         theme(legend.title = element_text(size=10), # Increase legend title size
               legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
