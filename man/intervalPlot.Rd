@@ -4,10 +4,18 @@
 \alias{intervalPlot}
 \title{Get scatter plot for any two model results}
 \usage{
-intervalPlot(res)
+intervalPlot(
+  admin = 0,
+  model = list(list(`name 1` = fit1, `name 1` = fit2)),
+  group = F
+)
 }
 \arguments{
-\item{res}{model result  using surveyPrev}
+\item{admin}{level of plot}
+
+\item{model}{list of model results  using surveyPrev}
+
+\item{group}{plot by group or not}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level.
