@@ -273,6 +273,8 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
      BRdata <- Rdata %>%
      mutate(wt = v005/1000000)
      BRdata$value<- ifelse(BRdata$b7==0, 1, 0)
+     BRdata$value[is.na( BRdata$value)] <- 0
+
      raw.dat.tmp=BRdata
   }
 
@@ -292,7 +294,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
   dat.tmp<-  raw.dat.tmp %>%
       dplyr::  select(c(cluster= paste0(pre, "v001"),
                         householdID= paste0(pre, "v002"),
-                        region= paste0(pre, "v024"),
+                        v024= paste0(pre, "v024"),
                         weight= paste0(pre, "v005"),
                         strata= paste0(pre, "v025"),
                         value="value"))

@@ -127,7 +127,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
     if(aggregation==F){
       admin2.res=admin2_res
-      colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
+      colnames(admin2.res)[colnames(admin2.res) == 'DistrictName'] <- 'admin2.name.full'
+      admin2.res=list(res.admin2=admin2.res)
 
     }else{
 
@@ -174,9 +175,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
 
 
-      colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
-
-
+      colnames(admin2_res)[colnames(admin2_res) == 'DistrictName'] <- 'admin2.name.full'
       admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2)
     }
 
@@ -220,7 +219,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     if(aggregation==F){
-      admin1.res=admin1_res
+      admin1.res=list(res.admin1 =admin1_res)
     }else{
 
 

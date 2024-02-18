@@ -105,7 +105,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
    if(aggregation==F){
      colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
-
+     res.admin2=list(res.admin2=res.admin2)
    }else{
 
 
@@ -315,6 +315,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
     if(aggregation==F){
+      admin1_res=list(res.admin1=admin1_res)
     }else{
 
 
@@ -409,7 +410,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     # colnames(admin0_res)[1] <- c("admin0.name")
 
 
-   return(res.admin0=admin0_res[,-1])
+   return(list(res.admin0=admin0_res[,-1]))
 
   }
 

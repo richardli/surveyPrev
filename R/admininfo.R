@@ -4,7 +4,7 @@
 #'
 #' @param geo spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.
 #' @param admin admin level
-#' @param agg.pop  data frame of aggregated poplulation from aggPopulation function. It should have two columns: "DistrictName" and "population".
+#' @param agg.weight  data frame of aggregated poplulation from aggPopulation function. It should have two columns: "DistrictName" and "population".
 #' @param proportion data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.
 #' @return This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix.
 #' @importFrom dplyr left_join
@@ -25,10 +25,10 @@
 #' data(ZambiaPopWomen)
 #' info <- adminInfo(geo = ZambiaAdm1,
 #'                   admin = 1,
-#'                   agg.pop = ZambiaPopWomen$admin1_pop,
+#'                   agg.weight = ZambiaPopWomen$admin1_pop,
 #'                   proportion = ZambiaPopWomen$admin1_urban)
 #' @export
-adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
+adminInfo <- function(geo, admin, agg.weight = NULL, proportion = NULL) {
 
 
  if("sf" %in% class(geo)) geo <- sf::as_Spatial(geo)
@@ -36,8 +36,8 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
   admin.info <- NULL
 
   if (admin==1) {
-    # colnames(agg.pop)[colnames(agg.pop) == 'DistrictName'] <- 'admin1.name'
-    if (is.null(agg.pop)&is.null(proportion)){
+    # colnames(agg.weight)[colnames(agg.weight) == 'DistrictName'] <- 'admin1.name'
+    if (is.null(agg.weight)&is.null(proportion)){
 
       # admininfo$population and admininfo$urban are cols of NA
 
@@ -47,7 +47,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
       admin.info= as.data.frame(admininfo)
 
 
-      }else if(is.null(agg.pop)& !is.null(proportion)){
+      }else if(is.null(agg.weight)& !is.null(proportion)){
 
       # Needed for cluster model when stratification=T and aggregation=F.
       admininfo<-data.frame(admin1.name=geo$NAME_1)
@@ -56,9 +56,9 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
       admininfo$population<-NA
       admin.info= as.data.frame(admininfo)
 
-      }else if(!is.null(agg.pop)&is.null(proportion)){
+      }else if(!is.null(agg.weight)&is.null(proportion)){
       admininfo<-data.frame(admin1.name=geo$NAME_1)
-      admininfo <- dplyr::left_join(admininfo, agg.pop[, c("admin1.name","population")])
+      admininfo <- dplyr::left_join(admininfo, agg.weight[, c("admin1.name","population")])
       admin.info= as.data.frame(admininfo)
       admininfo$urban<-NA
       admin.info= as.data.frame(admininfo)
@@ -67,7 +67,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
 
       }else{
 
-      admininfo <- agg.pop
+      admininfo <- agg.weight
       admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "urban")])
       admin.info= as.data.frame(admininfo)
 
@@ -84,7 +84,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
   }
   else if(admin==2){
 
-    if (is.null(agg.pop)&is.null(proportion)){
+    if (is.null(agg.weight)&is.null(proportion)){
 
       # admininfo$population and admininfo$urban are cols of NA
 
@@ -97,7 +97,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
 
 
 
-    }else if(is.null(agg.pop)& !is.null(proportion)){
+    }else if(is.null(agg.weight)& !is.null(proportion)){
 
       # Needed for cluster model when stratification=T and aggregation=F.
       admininfo<-data.frame(admin1.name=geo$NAME_1,admin2.name=geo$NAME_2,
@@ -109,10 +109,10 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
       admin.info= as.data.frame(admininfo)
 
 
-    }else if(!is.null(agg.pop)&is.null(proportion)){
+    }else if(!is.null(agg.weight)&is.null(proportion)){
       admininfo<-data.frame(admin1.name=geo$NAME_1,admin2.name=geo$NAME_2,
                             DistrictName=paste0(geo$NAME_1,"_",geo$NAME_2))
-      admininfo <- dplyr::left_join(admininfo, agg.pop[, c("DistrictName","population")])
+      admininfo <- dplyr::left_join(admininfo, agg.weight[, c("DistrictName","population")])
       admin.info= as.data.frame(admininfo)
       admininfo$urban<-NA
       admininfo<-admininfo%>%
@@ -124,7 +124,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
 
     }else{
 
-      admininfo <- agg.pop
+      admininfo <- agg.weight
       admininfo<-admininfo%>%
         dplyr::group_by(admin1.name)%>%
         dplyr::mutate(population1=sum(population))

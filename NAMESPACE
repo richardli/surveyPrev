@@ -2,6 +2,7 @@
 
 export(adminInfo)
 export(aggPopulation)
+export(aggSurveyWeight)
 export(clusterInfo)
 export(clusterModel)
 export(directEST)
