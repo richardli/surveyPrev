@@ -24,8 +24,8 @@ This function add admin 1 and admin2 information to a paticular DHS survey.
 geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
-cluster.info <- clusterInfo(geo = geo, 
-                            poly.adm1 = ZambiaAdm1, 
+cluster.info <- clusterInfo(geo = geo,
+                            poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
 }
 }

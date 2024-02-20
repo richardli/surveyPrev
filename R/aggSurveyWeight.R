@@ -30,10 +30,10 @@ aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
     #
 
   weight_dt<- modt%>%group_by(admin1.name)%>%
-    mutate(SurveyWeight=sum(weight),digits = 4)%>%
-    distinct(admin1.name,SurveyWeight)%>%
+    mutate(surveyWeight=sum(weight),digits = 4)%>%
+    distinct(admin1.name,surveyWeight)%>%
     ungroup()
-
+  weight_dt=as.data.frame(weight_dt)
   return(weight_dt)
   }else{
 
@@ -41,31 +41,30 @@ aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
-    weight_dt<- modt%>%group_by(DistrictName)%>%
-      mutate(sumweight=sum(weight))%>%
-      distinct(DistrictName,sumweight,admin1.name,admin2.name)%>%
+    weight_dt<- modt%>%group_by(admin2.name.full)%>%
+      mutate(surveyWeight=sum(weight))%>%
+      distinct(admin2.name.full,surveyWeight,admin1.name,admin2.name)%>%
       group_by(admin1.name)%>%
-      mutate(sumweight1=sum(sumweight))
+      mutate(surveyWeight1=sum(surveyWeight))
 
     if(!is.null(admin2.name.full)){
-      missing=admin2.name.full[!admin2.name.full %in% weight_dt$DistrictName]
+      missing=admin2.name.full[!admin2.name.full %in% weight_dt$admin2.name.full]
 
       # strsplit(missing, "_")
 
 
-      hh= data.frame(DistrictName=missing,
-         sumweight=rep(0,length(missing)),
+      hh= data.frame(admin2.name.full=missing,
+         surveyWeight=rep(0,length(missing)),
          admin1.name=sapply(strsplit(missing, "_"), `[`, 1),
          admin2.name=sapply(strsplit(missing, "_"), `[`, 2))
 
-      dd=unique(weight_dt[weight_dt$admin1.name %in% sapply(strsplit(missing, "_"), `[`, 1),c("admin1.name","sumweight1")])
-
+      dd=unique(weight_dt[weight_dt$admin1.name %in% sapply(strsplit(missing, "_"), `[`, 1),c("admin1.name","surveyWeight1")])
       weight_dt[(nrow(weight_dt)+1): (nrow(weight_dt)+length(missing)),]<-  left_join(hh,dd,by="admin1.name")
 
 
     }
 
-
+    weight_dt=as.data.frame(weight_dt)
       return(weight_dt)
   }
 }

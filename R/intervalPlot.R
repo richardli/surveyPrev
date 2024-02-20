@@ -239,7 +239,7 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
   }else{
 
 
-    if( length(length(model[[1]]))<5 ){
+    if( is.null(cl_res_ad2_T$agg.natl) ){
       res=model[[1]]$res.admin2
       data<-res
       # linedata<-res[[2]]

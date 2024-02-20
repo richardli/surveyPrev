@@ -47,16 +47,16 @@ geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
 data(ZambiaPopWomen)
-cluster.info <- clusterInfo(geo = geo, 
-                            poly.adm1 = ZambiaAdm1, 
+cluster.info <- clusterInfo(geo = geo,
+                            poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
 
-dhsData <- getDHSdata(country = "Zambia", 
-                                 indicator = "ancvisit4+", 
+dhsData <- getDHSdata(country = "Zambia",
+                                 indicator = "ancvisit4+",
                                  year = 2018)
 
 data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
-admin.info1 <- adminInfo(geo = ZambiaAdm1, 
+admin.info1 <- adminInfo(geo = ZambiaAdm1,
                         admin = 1,
                         agg.pop =ZambiaPopWomen$admin1_pop,
                         proportion = ZambiaPopWomen$admin1_urban)
@@ -67,7 +67,7 @@ smth_res_ad1 <- fhModel(data,
                        model = "bym2",
                        aggregation = F)
 
-admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+admin.info2 <- adminInfo(geo = ZambiaAdm2,
                         admin = 2,
                         agg.pop =ZambiaPopWomen$admin2_pop,
                         proportion = ZambiaPopWomen$admin2_urban)
@@ -76,7 +76,7 @@ cl_res_ad2 <- clusterModel(data = data,
                   admin.info = admin.info2,
                   stratification = FALSE,
                   model = "bym2",
-                  admin = 2, 
+                  admin = 2,
                   aggregation = TRUE,
                   CI = 0.95)
 
@@ -89,7 +89,7 @@ scatterPlot(
      by.res2 = "admin1.name",
      title = "Aggregated cluster model v.s. Fay–Herriot",
      label1 = "Fay–Herriot",
-     label2 = "Aggregated cluster model") 
+     label2 = "Aggregated cluster model")
 
 }
 

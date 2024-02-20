@@ -66,7 +66,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
-                                   regionVar = "DistrictName",
+                                   regionVar = "admin2.name.full",
                                    clusterVar = "~cluster+householdID",
                                    weightVar = "weight",
                                    strataVar = "strata.full",
@@ -77,8 +77,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin2_res<-as.data.frame(smoothSurvey_res$HT)
     admin2_res$direct.se<-sqrt(admin2_res$HT.var)
 
-    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName' # region is the col name in smoothSurvey_res$HT
-    a<-strsplit(admin2_res$DistrictName,"_")
+    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name.full' # region is the col name in smoothSurvey_res$HT
+    a<-strsplit(admin2_res$admin2.name.full,"_")
     admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'direct.est'
     colnames(admin2_res)[colnames(admin2_res) == 'HT.var'] <- 'direct.var'
@@ -104,7 +104,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
    if(aggregation==F){
-     colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
+     colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
      res.admin2=list(res.admin2=res.admin2)
    }else{
 
@@ -130,12 +130,12 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-        dd=data.frame(DistrictName=admin2_res$DistrictName,value=admin2_res$direct.logit.est,sd=sqrt(admin2_res$direct.logit.var))   #dd$value has <0 bc it's direct.logit.est
+        dd=data.frame(admin2.name.full=admin2_res$admin2.name.full,value=admin2_res$direct.logit.est,sd=sqrt(admin2_res$direct.logit.var))   #dd$value has <0 bc it's direct.logit.est
         draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
         ##
         ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
-        ## 1/8/24: joined use DistrictName which is admin1_admin2
+        ## 1/8/24: joined use admin2.name.full which is admin1_admin2
 
 
         ##If J-th admin2 nested within the i-th admin 1, and the k-th region has no data,
@@ -149,19 +149,19 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         ####aggregation for variance
         if(weight=="population"){
           #weight using worldpop
-          weight_dt<-left_join(dd, distinct(admin.info$admin.info), by="DistrictName")%>%
+          weight_dt<-left_join(dd, distinct(admin.info$admin.info), by="admin2.name.full")%>%
             group_by(admin1.name)%>%
             mutate(prop=round(population/sum(population),digits = 4))
         }else{
           #weight using dhs sampling weight (modt$weight
-          weight_dt<- modt%>%group_by(DistrictName)%>%
+          weight_dt<- modt%>%group_by(admin2.name.full)%>%
             mutate(sumweight2=sum(weight),digits = 4)%>%
-            distinct(DistrictName,sumweight2,admin1.name,admin2.name)%>%
+            distinct(admin2.name.full,sumweight2,admin1.name,admin2.name)%>%
             group_by(admin1.name)%>%
             mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
-            left_join(dd, by="DistrictName")
+            left_join(dd, by="admin2.name.full")
         }
-        weight_dt <- weight_dt[match(admin2_res$DistrictName, weight_dt$DistrictName), ]
+        weight_dt <- weight_dt[match(admin2_res$admin2.name.full, weight_dt$admin2.name.full), ]
 
 
 
@@ -178,18 +178,18 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        ## aggregation for mean
        if(weight=="population"){
          #weight using worldpop
-         weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="DistrictName")%>%
+         weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="admin2.name.full")%>%
            group_by(admin1.name)%>%
            mutate(prop=round(population/sum(population),digits = 4))%>%
            mutate(value1=prop*direct.est)
        }else{
          #weight using dhs sampling weight (modt$weight
-         weight_dt_mean<- modt%>%group_by(DistrictName)%>%
+         weight_dt_mean<- modt%>%group_by(admin2.name.full)%>%
            mutate(sumweight2=sum(weight),digits = 4)%>%
-           distinct(DistrictName,sumweight2,admin1.name,admin2.name)%>%
+           distinct(admin2.name.full,sumweight2,admin1.name,admin2.name)%>%
            group_by(admin1.name)%>%
            mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
-           left_join(admin2_res, by="DistrictName")%>%
+           left_join(admin2_res, by="admin2.name.full")%>%
            mutate(value1=prop*direct.est)
 
        }
@@ -248,7 +248,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
        #cleaning up colnames
-       colnames(res.admin2)[colnames(res.admin2) == 'DistrictName'] <- 'admin2.name.full'
+       # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
 
 
        res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)

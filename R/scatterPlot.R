@@ -21,16 +21,16 @@
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
 #' data(ZambiaPopWomen)
-#' cluster.info <- clusterInfo(geo = geo, 
-#'                             poly.adm1 = ZambiaAdm1, 
+#' cluster.info <- clusterInfo(geo = geo,
+#'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #'
-#' dhsData <- getDHSdata(country = "Zambia", 
-#'                                  indicator = "ancvisit4+", 
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' 
+#'
 #' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
-#' admin.info1 <- adminInfo(geo = ZambiaAdm1, 
+#' admin.info1 <- adminInfo(geo = ZambiaAdm1,
 #'                         admin = 1,
 #'                         agg.pop =ZambiaPopWomen$admin1_pop,
 #'                         proportion = ZambiaPopWomen$admin1_urban)
@@ -40,8 +40,8 @@
 #'                        admin = 1,
 #'                        model = "bym2",
 #'                        aggregation = F)
-#' 
-#' admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+#'
+#' admin.info2 <- adminInfo(geo = ZambiaAdm2,
 #'                         admin = 2,
 #'                         agg.pop =ZambiaPopWomen$admin2_pop,
 #'                         proportion = ZambiaPopWomen$admin2_urban)
@@ -50,7 +50,7 @@
 #'                   admin.info = admin.info2,
 #'                   stratification = FALSE,
 #'                   model = "bym2",
-#'                   admin = 2, 
+#'                   admin = 2,
 #'                   aggregation = TRUE,
 #'                   CI = 0.95)
 #'
@@ -63,17 +63,15 @@
 #'      by.res2 = "admin1.name",
 #'      title = "Aggregated cluster model v.s. Fay–Herriot",
 #'      label1 = "Fay–Herriot",
-#'      label2 = "Aggregated cluster model") 
-#' 
+#'      label2 = "Aggregated cluster model")
+#'
 #' }
-#' 
+#'
 #'
 #' @export
 
+scatterPlot<-function(res1,value1,res2,value2,label1,label2,by.res1,by.res2,title){
 
-
-scatterPlot<-function(res1,value1,res2,value2,label1,label2,by.res1, by.res2,title){
- 
   ## TODO: add a better check for consistency, as sometimes estimates can be missing rows
   # if(dim(res1)[1]!=dim(res2)[1]){
     # stop("Two results are not in the same area level")  }
@@ -84,16 +82,42 @@ scatterPlot<-function(res1,value1,res2,value2,label1,label2,by.res1, by.res2,tit
 
     df<- merge(res1, res2, by.x =by.res1, by.y =by.res2)
 
-    # print(df)
+    if(length(res1$value_x)<length(res2$value_y)){
+    missing <- subset(res2, !res2$admin2.name.full %in% res1$admin2.name.full)
+      missing$value_x=rep(min(c(df$value_x, df$value_y)),dim(missing)[1])
+    }else if( length( res1$value_x)>length(res2$value_y)){
+      missing<-subset(res1, !res1$admin2.name.full %in% res2$admin2.name.full)
+      missing$value_y=rep(min(c(df$value_x, df$value_y)),dim(missing)[1])
+    }else if(length(res1$value_x)==length(res2$value_y)){
 
-    lim <- range(c(df$value_x, df$value_y), na.rm = TRUE)
-    ggplot(df, aes(x=value_x,y=value_y)) +
-      geom_abline(slope = 1, intercept = 0, linetype = "dashed")+
-      geom_point(alpha = 0.5, color = "royalblue") +
-      labs(title = title)+
-      xlab(label1)+
-      ylab(label2)+
-    xlim(lim) + ylim(lim) + theme_bw()
+    }
+    if(length(res1$value_x)==length(res2$value_y)){
+      lim <- range(c(df$value_x, df$value_y), na.rm = TRUE)
+      ggplot(df, aes(x=value_x,y=value_y)) +
+        geom_abline(slope = 1, intercept = 0, linetype = "dashed")+
+        geom_point(alpha = 0.5, color = "royalblue") +
+        # geom_point(data = missing, aes(x=value_x,y=value_y), color = "red", shape=17)+
+        labs(title = title)+
+        xlab(label1)+
+        ylab(label2)+
+        xlim(lim) + ylim(lim) + theme_bw()
+
+    }else{
+      lim <- range(c(df$value_x, df$value_y), na.rm = TRUE)
+      ggplot(df, aes(x=value_x,y=value_y)) +
+        geom_abline(slope = 1, intercept = 0, linetype = "dashed")+
+        geom_point(alpha = 0.5, color = "royalblue") +
+        # annotate("text", x = 5, y = 0, label = "This is a text box", size = 5, hjust = 0, vjust = 0, color = "red")
+        geom_point(data = missing, aes(x=value_x,y=value_y), color = "red", shape=17)+
+        labs(title = title)+
+        xlab(label1)+
+        ylab(label2)+
+        xlim(lim) + ylim(lim) + theme_bw()
+
+    }
+
+
+
 
 
 # if(admin==1){

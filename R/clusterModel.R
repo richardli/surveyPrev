@@ -76,10 +76,26 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
   #   message("No admin.info supplied. Using IID random effects.")
   #   model <- "iid"
   # }
+
+  # for using survey weight
+  if(!is.null(admin.info$admin.info$surveyWeight1)&!is.null(admin.info$admin.info$surveyWeight1)){
+    admin.info$admin.info$population=admin.info$admin.info$surveyWeight
+    admin.info$admin.info$population1=admin.info$admin.info$surveyWeight1
+  }else{}
+
+  if(!is.null(admin.info$admin.info$surveyWeight)){
+    admin.info$admin.info$population=admin.info$admin.info$surveyWeight
+  }else{}
+
+
+
   if( unique(is.na(admin.info$admin.info$urban)) && stratification==T){
     message("No urban/rural proportion found")
     stratification = F
   }
+
+
+
 
   if( unique(is.na(admin.info$admin.info$population)) && aggregation==T){
     message("No population found")
@@ -294,7 +310,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
     if(stratification==F){
 
       admin2.bb.res<- data.frame(cbind(
-        DistrictName=admin.info$DistrictName[tail(c.dat.tmp$sID,n=nregion)],
+      admin2.name.full=admin.info$admin2.name.full[tail(c.dat.tmp$sID,n=nregion)],
         mean= tail(imod$summary.fitted.values,n=nregion)[,1],
         median=colMedians(draw.all),
        sd= tail(imod$summary.fitted.values,n=nregion)[,2],
@@ -307,7 +323,8 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
       admin2.bb.res$var <- admin2.bb.res$sd^2
       admin2.bb.res$lower<-as.numeric (admin2.bb.res$lower)
       admin2.bb.res$upper<-as.numeric (admin2.bb.res$upper)
-      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
+
+      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
 
     }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
@@ -334,8 +351,8 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("full", nregion)))
-      admin2.bb.res$DistrictName <- rep(admin.info$DistrictName, 3)
-      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="DistrictName")
+      admin2.bb.res$admin2.name.full <- rep(admin.info$admin2.name.full, 3)
+      admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
 
     }
 
@@ -343,9 +360,6 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
     if(aggregation==T){
     #agg admin1
-
-
-
     weight=admin.info$population/admin.info$population1
 
     # post.all <-  data.table(weight*draw.all)
@@ -381,7 +395,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 }
 
 
-    colnames(admin2.bb.res)[colnames(admin2.bb.res) == 'DistrictName'] <- 'admin2.name.full'
+    colnames(admin2.bb.res)[colnames(admin2.bb.res) == 'admin2.name.full'] <- 'admin2.name.full'
 
 
     if(aggregation==F){

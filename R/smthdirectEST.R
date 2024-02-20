@@ -67,8 +67,6 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
   }
   admin.info <- admin.info$admin.info
 
-
-
   if(admin==2){
 
     #prepare data
@@ -77,7 +75,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
 
-    # modt1<- left_join(admin.info2$admin.info,modt,by="DistrictName")
+    # modt1<- left_join(admin.info2$admin.info,modt,by="admin2.name.full")
     # modt2<- modt1%>%
     #   filter(is.na( value)) %>%
     #   mutate(cluster=c(546,547,548),householdID=c(1,1,1),
@@ -98,8 +96,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     fit2 <- smoothSurvey(as.data.frame(modt),
                          responseType ="binary",
                          responseVar= "value",
-                         regionVar = "DistrictName",
-                         region.list = unique(admin.info$DistrictName),
+                         regionVar = "admin2.name.full",
+                         region.list = unique(admin.info$admin2.name.full),
                          clusterVar = "~cluster+householdID",#+householdID same result
                          weightVar = "weight",
                          strataVar = "strata.full",
@@ -110,7 +108,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     admin2_res <- fit2$smooth
-    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'DistrictName'
+    colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name.full'
     # colnames(admin2_res)[colnames(admin2_res) == 'mean'] <- 'value'
     admin2_res$sd<-sqrt(admin2_res$var)
 
@@ -118,16 +116,23 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
     }else{
+
+      if(!is.null(admin.info$surveyWeight1)&!is.null(admin.info$surveyWeight1)){
+        admin.info$population=admin.info$surveyWeight
+        admin.info$population1=admin.info$surveyWeight1
+        }else{}
+
       if(is.null(admin.info)||sum(is.na(admin.info$population))>0){
-        message("Need population information for aggregation")
+        message("Need population or survey weight information for aggregation")
         aggregation=F
       }
+
     }
 
 
     if(aggregation==F){
       admin2.res=admin2_res
-      colnames(admin2.res)[colnames(admin2.res) == 'DistrictName'] <- 'admin2.name.full'
+      # colnames(admin2.res)[colnames(admin2.res) == 'admin2.name.full'] <- 'admin2.name.full'
       admin2.res=list(res.admin2=admin2.res)
 
     }else{
@@ -175,7 +180,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
 
 
-      colnames(admin2_res)[colnames(admin2_res) == 'DistrictName'] <- 'admin2.name.full'
+      # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
       admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2)
     }
 
@@ -211,10 +216,17 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
     }else{
+
+      if(!is.null(admin.info$surveyWeight)){
+        admin.info$population=admin.info$surveyWeight
+      }else{}
+
       if(is.null(admin.info)||sum(is.na(admin.info$population))>0){
-        message("Need population information for aggregation")
+        message("Need population or survey weight information for aggregation")
         aggregation=F
       }
+
+
     }
 
 
@@ -225,7 +237,6 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
     # aggregate results
       draw.all=expit(t(fit1$draws.est[,-c(1,2)]))
-
       post.all <- draw.all%*% admin.info$population/sum(admin.info$population)
       agg.natl <- data.frame(mean = mean(post.all),
                              # median=median(post.all),
