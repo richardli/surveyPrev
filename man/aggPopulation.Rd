@@ -25,7 +25,7 @@ This function aggregate population to particular admin levels
 \dontrun{
 library(raster)
 
-# Download and find total population in age group 0 to 12 months 
+# Download and find total population in age group 0 to 12 months
 pre <- "https://data.worldpop.org/GIS/AgeSex_structures/"
 f <- paste0(pre, "Global_2000_2020/2018/ZMB/zmb_f_0_2018.tif")
 m <- paste0(pre, "Global_2000_2020/2018/ZMB/zmb_m_0_2018.tif")

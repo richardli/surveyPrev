@@ -15,8 +15,8 @@
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
-#' cluster.info <- clusterInfo(geo = geo, 
-#'                             poly.adm1 = ZambiaAdm1, 
+#' cluster.info <- clusterInfo(geo = geo,
+#'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #' }
 #' @export
@@ -50,7 +50,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
  #  # cluster.info$admin2 <- admin2.key
  #  # cluster.info$admin2.char <- paste0("admin2_", admin2.key)
  #  cluster.info$admin2.name <- as.character(eval(str2lang("poly.adm2@data$NAME_2")))[admin2.key]
- #  cluster.info$DistrictName <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
+ #  cluster.info$ admin2.name.full <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
  #
  #
  # # return(cluster.info)
@@ -81,7 +81,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
 
   # Add admin2 name to cluster.info
   cluster.info$admin2.name <- admin2.sf$NAME_2
-   cluster.info$DistrictName <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
+   cluster.info$ admin2.name.full <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
 
 
    #removing wrong.points that has no admin 1 name

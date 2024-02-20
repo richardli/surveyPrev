@@ -4,10 +4,21 @@
 \alias{intervalPlot}
 \title{Get scatter plot for any two model results}
 \usage{
-intervalPlot(res)
+intervalPlot(
+  admin = 0,
+  compare = F,
+  model = list(list(`name 1` = fit1, `name 1` = fit2)),
+  group = F
+)
 }
 \arguments{
-\item{res}{model result  using surveyPrev}
+\item{admin}{level of plot}
+
+\item{compare}{plot for compare multiple plot or not}
+
+\item{model}{list of model results  using surveyPrev}
+
+\item{group}{plot by group or not}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level.
@@ -22,16 +33,16 @@ geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
 data(ZambiaPopWomen)
-cluster.info <- clusterInfo(geo = geo, 
-                            poly.adm1 = ZambiaAdm1, 
+cluster.info <- clusterInfo(geo = geo,
+                            poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
 
-dhsData <- getDHSdata(country = "Zambia", 
-                                 indicator = "ancvisit4+", 
+dhsData <- getDHSdata(country = "Zambia",
+                                 indicator = "ancvisit4+",
                                  year = 2018)
 
 data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
-admin.info2 <- adminInfo(geo = ZambiaAdm2, 
+admin.info2 <- adminInfo(geo = ZambiaAdm2,
                         admin = 2,
                         agg.pop =ZambiaPopWomen$admin2_pop,
                         proportion = ZambiaPopWomen$admin2_urban)
@@ -40,7 +51,7 @@ cl_res_ad2_unstrat <- clusterModel(data = data,
                   admin.info = admin.info2,
                   stratification = FALSE,
                   model = "bym2",
-                  admin = 2, 
+                  admin = 2,
                   aggregation = TRUE,
                   CI = 0.95)
 
@@ -54,7 +65,7 @@ cl_res_ad2 <- clusterModel(data = data,
                   admin.info = admin.info2,
                   stratification = TRUE,
                   model = "bym2",
-                  admin = 2, 
+                  admin = 2,
                   aggregation = TRUE,
                   CI = 0.95)
 head(cl_res_ad2$res.admin2)
