@@ -54,7 +54,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
 
       admininfo<-data.frame(admin1.name=geo$NAME_1)
       admininfo$population<-NA
-      admininfo$surveyweight<-NA
+       admininfo$surveyWeight<-NA
       admininfo$urban<-NA
       admin.info= as.data.frame(admininfo)
 
@@ -66,7 +66,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
       admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name","urban")])
       admin.info= as.data.frame(admininfo)
       admininfo$population<-NA
-      admininfo$surveyweight<-NA
+      admininfo$surveyWeight<-NA
       admin.info= as.data.frame(admininfo)
 
       }else if(is.null(proportion)&!is.null(agg.pop)&is.null(agg.survey) ){
@@ -74,7 +74,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
       admininfo<-data.frame(admin1.name=geo$NAME_1)
       admininfo <- dplyr::left_join(admininfo, agg.pop[, c("admin1.name","population")])
       admin.info= as.data.frame(admininfo)
-      admininfo$surveyweight<-NA
+       admininfo$surveyWeight<-NA
       admininfo$urban<-NA
       admin.info= as.data.frame(admininfo)
 
@@ -92,7 +92,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
         #5proportion+pop
         admininfo <- agg.pop
         admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "urban")])
-        admininfo$surveyweight<-NA
+        admininfo$surveyWeight<-NA
         admin.info= as.data.frame(admininfo)
 
       }else if(!is.null(proportion)&is.null(agg.pop)&!is.null(agg.survey) ){
@@ -136,7 +136,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
       admininfo<-data.frame(admin1.name=geo$NAME_1,admin2.name=geo$NAME_2,
                             admin2.name.full=paste0(geo$NAME_1,"_",geo$NAME_2))
       admininfo$population<-NA
-      admininfo$surveyweight<-NA
+      admininfo$surveyWeight<-NA
       admininfo$urban<-NA
       admin.info= as.data.frame(admininfo)
 
@@ -149,7 +149,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
                             admin2.name.full=paste0(geo$NAME_1,"_",geo$NAME_2))
       admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name","urban")])
       admininfo$population<-NA
-      admininfo$surveyweight<-NA
+      admininfo$surveyWeight<-NA
       admin.info= as.data.frame(admininfo)
 
 
@@ -180,7 +180,7 @@ adminInfo <- function(geo, admin, agg.pop = NULL, agg.survey = NULL, proportion 
                             admin2.name.full=paste0(geo$NAME_1,"_",geo$NAME_2))
       admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name","urban")])
       admininfo <- dplyr::left_join(admininfo, agg.pop[, c("admin2.name.full","population")])
-      admininfo$surveyweight<-NA
+      admininfo$surveyWeight<-NA
       admininfo<-admininfo%>%
         dplyr::group_by(admin1.name)%>%
         dplyr::mutate(population1=sum(population))

@@ -14,14 +14,14 @@
 #' @examples
 #' \dontrun{
 #' library(raster)
-#' 
-#' # Download and find total population in age group 0 to 12 months 
+#'
+#' # Download and find total population in age group 0 to 12 months
 #' pre <- "https://data.worldpop.org/GIS/AgeSex_structures/"
 #' f <- paste0(pre, "Global_2000_2020/2018/ZMB/zmb_f_0_2018.tif")
 #' m <- paste0(pre, "Global_2000_2020/2018/ZMB/zmb_m_0_2018.tif")
 #' pop_f_0 <- raster(f)
 #' pop_m_0 <- raster(m)
-#' 
+#'
 #' pop_raster <- pop_f_0 + pop_m_0
 #'
 #' # admin1 population
@@ -59,18 +59,18 @@ aggPopulation <- function(tiff, fact = 10, SpatialPolygons, varname){
   loc_df <- data.frame(x = pop_aggre.df$x, y = pop_aggre.df$y)
   sp::coordinates(loc_df) <- ~x+y
   sp::proj4string(loc_df) <- proj4string(SpatialPolygons)
-  DistrictName<-(over(loc_df, SpatialPolygons)[, varname])
+  admin2.name.full<-(over(loc_df, SpatialPolygons)[, varname])
 
-  pop_dt <- cbind(pop_aggre.df, DistrictName)
-  pop_dt <- pop_dt[!is.na(pop_dt$DistrictName), ]
+  pop_dt <- cbind(pop_aggre.df, admin2.name.full)
+  pop_dt <- pop_dt[!is.na(pop_dt$admin2.name.full), ]
   pop_dt[is.na(pop_dt$population), "population"] <- 0
-  tab <- aggregate(population ~ DistrictName, data = pop_dt, FUN = sum)
+  tab <- aggregate(population ~ admin2.name.full, data = pop_dt, FUN = sum)
 
 
   if(varname=="fullname"){
-    tab$admin1.name<-do.call(cbind, strsplit(tab$DistrictName, "_"))[1,]
-    tab$admin2.name<-do.call(cbind, strsplit(tab$DistrictName, "_"))[2,]
-    # tab$DistrictName<-NULL
+    tab$admin1.name<-do.call(cbind, strsplit(tab$admin2.name.full, "_"))[1,]
+    tab$admin2.name<-do.call(cbind, strsplit(tab$admin2.name.full, "_"))[2,]
+    # tab$admin2.name.full<-NULL
   }
 
   return(tab)
