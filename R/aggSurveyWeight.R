@@ -47,7 +47,7 @@ aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
       group_by(admin1.name)%>%
       mutate(surveyWeight1=sum(surveyWeight))
 
-    if(!is.null(admin2.name.full)){
+    if(!is.null(admin2.name.full)& dim(weight_dt)[1]<length(admin2.name.full)){
       missing=admin2.name.full[!admin2.name.full %in% weight_dt$admin2.name.full]
 
       # strsplit(missing, "_")
