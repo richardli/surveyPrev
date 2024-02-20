@@ -217,7 +217,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     if(aggregation==F){
     }else{
 
-      if(!is.null(admin.info$surveyWeight)){
+      if(!is.null(admin.info$surveyWeight)&sum(is.na(admin.info$population))>0){
         admin.info$population=admin.info$surveyWeight
       }else{}
 
