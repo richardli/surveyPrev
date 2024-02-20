@@ -78,12 +78,12 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
   # }
 
   # for using survey weight
-  if(!is.null(admin.info$admin.info$surveyWeight1)&!is.null(admin.info$admin.info$surveyWeight1)){
+  if(!is.null(admin.info$admin.info$surveyWeight)&!is.null(admin.info$admin.info$surveyWeight1)&sum(is.na(admin.info$admin.info$population))>0){
     admin.info$admin.info$population=admin.info$admin.info$surveyWeight
     admin.info$admin.info$population1=admin.info$admin.info$surveyWeight1
   }else{}
 
-  if(!is.null(admin.info$admin.info$surveyWeight)){
+  if(!is.null(admin.info$admin.info$surveyWeight)& sum(is.na(admin.info$admin.info$population))>0){
     admin.info$admin.info$population=admin.info$admin.info$surveyWeight
   }else{}
 
