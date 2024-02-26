@@ -44,8 +44,9 @@ aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
     weight_dt<- modt%>%group_by(admin2.name.full)%>%
       mutate(surveyWeight=sum(weight))%>%
       distinct(admin2.name.full,surveyWeight,admin1.name,admin2.name)%>%
-      group_by(admin1.name)%>%
-      mutate(surveyWeight1=sum(surveyWeight))
+      group_by(admin1.name)
+    # %>%
+    #   mutate(surveyWeight.admin1=sum(surveyWeight))
 
     if(!is.null(admin2.name.full)& dim(weight_dt)[1]<length(admin2.name.full)){
       missing=admin2.name.full[!admin2.name.full %in% weight_dt$admin2.name.full]
@@ -58,7 +59,7 @@ aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
          admin1.name=sapply(strsplit(missing, "_"), `[`, 1),
          admin2.name=sapply(strsplit(missing, "_"), `[`, 2))
 
-      dd=unique(weight_dt[weight_dt$admin1.name %in% sapply(strsplit(missing, "_"), `[`, 1),c("admin1.name","surveyWeight1")])
+      dd=unique(weight_dt[weight_dt$admin1.name %in% sapply(strsplit(missing, "_"), `[`, 1),c("admin1.name")])
       weight_dt[(nrow(weight_dt)+1): (nrow(weight_dt)+length(missing)),]<-  left_join(hh,dd,by="admin1.name")
 
 

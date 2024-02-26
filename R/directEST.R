@@ -215,7 +215,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
        if(weight=="population"){
            #for variance
-           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
+           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population.admin1))
            weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
            nation.samp<- admin1.samp%*%weight_dt
 
@@ -223,7 +223,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            weight_dt_mean<-weight_dt%*%admin1_agg$direct.est
 
        }else{
-         # admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
+         # admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population.admin1))
          # weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
          weight_dt<- modt%>%group_by(admin1.name)%>%
            mutate(sumweight2=sum(weight),digits = 4)%>%
