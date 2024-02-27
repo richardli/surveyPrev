@@ -175,7 +175,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
       # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
-      admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2)
+      admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2,
+                      admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all)
     }
 
     return(admin2.res)
@@ -244,7 +245,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
 
-      admin1.res=list(res.admin1 = admin1_res, agg.natl= agg.natl, model = fit1)
+      admin1.res=list(res.admin1 = admin1_res, agg.natl= agg.natl, model = fit1,
+                      admin1_post=draw.all,nation_post=post.all)
 
     }
 
