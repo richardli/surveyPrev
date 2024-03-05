@@ -114,20 +114,14 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
     ####message for aggregation=T but missing some components and return results without aggregation
-    if(aggregation==F){
-    }else{
 
-      if(!is.null(admin.info$surveyWeight)&!is.null(admin.info$surveyWeight1)&sum(is.na(admin.info$population))>0){
-        admin.info$population=admin.info$surveyWeight
-        admin.info$population1=admin.info$surveyWeight1
-        }else{}
+
 
       if(is.null(admin.info)||sum(is.na(admin.info$population))>0){
         message("Need population or survey weight information for aggregation")
         aggregation=F
       }
 
-    }
 
 
     if(aggregation==F){
@@ -145,7 +139,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
       draw.all=expit((fit2$draws.est[,-c(1,2)]))
 
 
-      weight=admin.info$population/admin.info$population1
+      weight=admin.info$population/admin.info$population.admin1
 
       post.all <-  data.table(t(weight*draw.all))
       # post.all <-  (data.table(weight*draw.all))
@@ -169,9 +163,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
       )
       agg.admin1$admin1.name=rownames(agg.admin1)
       #agg national
-      unique( admin.info$population1)/sum(unique( admin.info$population1))
+      unique( admin.info$population.admin1)/sum(unique( admin.info$population.admin1))
 
-      post.all <- admin1.samp%*% unique( admin.info$population1)/sum(unique( admin.info$population1))
+      post.all <- admin1.samp%*% unique( admin.info$population.admin1)/sum(unique( admin.info$population.admin1))
       agg.natl <- data.frame(mean = mean(post.all),
                              # median = median(post.all),
                              sd = sd(post.all),
@@ -181,7 +175,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
       # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
-      admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2)
+      admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2,
+                      admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all)
     }
 
     return(admin2.res)
@@ -250,7 +245,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
 
 
 
-      admin1.res=list(res.admin1 = admin1_res, agg.natl= agg.natl, model = fit1)
+      admin1.res=list(res.admin1 = admin1_res, agg.natl= agg.natl, model = fit1,
+                      admin1_post=draw.all,nation_post=post.all)
 
     }
 

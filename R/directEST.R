@@ -96,15 +96,16 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
     }else{
-      if(is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0){
+      if((is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0)& is.null(weight=="population")){
         message("Need population information for aggregation")
         aggregation=F
       }
+
     }
 
 
    if(aggregation==F){
-     colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
+     # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
      res.admin2=list(res.admin2=res.admin2)
    }else{
 
@@ -214,7 +215,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
        if(weight=="population"){
            #for variance
-           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
+           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population.admin1))
            weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
            nation.samp<- admin1.samp%*%weight_dt
 
@@ -222,7 +223,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            weight_dt_mean<-weight_dt%*%admin1_agg$direct.est
 
        }else{
-         admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population1))
+         # admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population.admin1))
          # weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
          weight_dt<- modt%>%group_by(admin1.name)%>%
            mutate(sumweight2=sum(weight),digits = 4)%>%
@@ -307,7 +308,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
     }else{
-      if(is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0){
+      if((is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0)& is.null(weight=="population") ){
         message("Need population information for aggregation")
         aggregation=F
       }
@@ -348,10 +349,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     }
 
 
-
-    weight_dt=admin.info$admin.info$population[match(admin1_res$admin1.name, admin.info$admin.info$admin1.name)]/sum(admin.info$admin.info$population)
-
-    nation.samp<-draw.all%*%weight_dt
 
     nation_agg <- data.frame(
                              # admin1.name= "country",
