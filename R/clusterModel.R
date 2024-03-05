@@ -20,7 +20,7 @@
 #' @importFrom utils tail
 #' @importFrom stats sd quantile rnorm
 #' @importFrom matrixStats colMedians
-#'
+#' @importFrom stats median na.omit 
 #' @importFrom SUMMER smoothSurvey
 #' @author Qianyu Dong
 #' @examples

@@ -41,7 +41,13 @@ utils::globalVariables(c("admin1.name",
 						"lower", 
 						"upper", 
 						"coordinates<-",
-						"proj4string<-"
+						"proj4string<-", 
+						"surveyWeight", 
+						"admin2.name.full", 
+						"direct.est", 
+						"fit1", 
+						"fit2",
+						"cl_res_ad2_T", 
 						))
 
  
