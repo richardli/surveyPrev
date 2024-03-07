@@ -47,7 +47,7 @@ utils::globalVariables(c("admin1.name",
 						"direct.est", 
 						"fit1", 
 						"fit2",
-						"cl_res_ad2_T", 
+						"cl_res_ad2_T"
 						))
 
  
