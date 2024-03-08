@@ -145,7 +145,7 @@ The `clusterInfo()` function extracts Admin1 and Admin2 area information for eac
 
 ```{r}
 cluster.info <- clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2)
-head(cluster.info$cluster.info)
+head(cluster.info$data)
 head(cluster.info$wrong.points)
 ```
 
@@ -153,9 +153,9 @@ head(cluster.info$wrong.points)
 The `adminInfo()` function computes the spatial adjacency matrix, and if supplied with additional information on population, combines needed information for each administrative area, including the name, population, and urban population fractions of each administrative area. We will ignore the population information for now and focus on only information from the DHS data. The `admin.mat` object stores adjacency matrix for spatial models. 
 
 ```{r}
-admin.info1 <- adminInfo(geo = poly.adm1, admin = 1)
-admin.info2 <- adminInfo(geo = poly.adm2, admin = 2)
-head(admin.info2$admin.info)
+admin.info1 <- adminInfo(poly.adm = poly.adm1, admin = 1)
+admin.info2 <- adminInfo(poly.adm = poly.adm2, admin = 2)
+head(admin.info2$data)
 ```
 
 
@@ -234,14 +234,14 @@ smth_res_ad1_bym2 <- fhModel(data,
                         admin.info = admin.info1,
                         admin = 1,
                         model = "bym2",
-                        aggregation = F)
+                        aggregation =FALSE)
 
 smth_res_ad1_iid <- fhModel(data, 
                         cluster.info = cluster.info, 
                         admin.info = admin.info1,
                         admin = 1, 
                         model = "iid",
-                        aggregation = F)
+                        aggregation =FALSE)
 head(smth_res_ad1_bym2$res.admin1) 
 
 ```
@@ -274,19 +274,19 @@ We first fit the non-stratified model in both admin1 and admin2 below.
 cl_res_ad1 <- clusterModel(data=data,
                    cluster.info=cluster.info,
                    admin.info  = admin.info1,
-                   stratification = T,
+                   stratification = TRUE,
                    model = "bym2",
                    admin = 1,
-                   aggregation = F,
+                   aggregation =FALSE,
                    CI = 0.95)
 
 cl_res_ad2 <- clusterModel(data=data,
                    cluster.info= cluster.info,
                    admin.info = admin.info2,
                    model = "bym2",
-                   stratification = F,
+                   stratification =FALSE,
                    admin = 2,
-                   aggregation = F,
+                   aggregation =FALSE,
                    CI = 0.95)
 ```
 
@@ -415,7 +415,7 @@ smth_res_ad2 <- fhModel(subset(data, !cluster %in% problem_clusters),
                     admin.info = admin.info2,
                     admin = 2,
                     model = "bym2",
-                    aggregation = F)
+                    aggregation = FALSE)
 head(smth_res_ad2$res.admin2)
 ```
 
@@ -450,14 +450,14 @@ cl_res_ad2_T <- clusterModel(data=data,
                    model = "bym2",
                    stratification = TRUE,
                    admin = 2, 
-                   aggregation = F,
+                   aggregation = FALSE,
                    CI = 0.95)
 ```
 
 The `compare=F` in `intervalPlot()`is specifically designed for cluster models with urban/rural stratification. It presents a comparison of Admin2 estimates with credible intervals within an Admin 1 region. 
 
 ```{r,fig.show='hold', fig.height = 15, fig.width = 10}
-plots <- intervalPlot(compare = F, model = list("model"=cl_res_ad2_T))
+plots <- intervalPlot(compare = FALSE, model = list("model"=cl_res_ad2_T))
 wrap_plots(plots, ncol = 2)
 ```
 
@@ -834,7 +834,7 @@ smth_res_ad2_agg <- fhModel(subset(data, !cluster %in% problem_clusters),
                     admin.info = admin.info2,
                     admin = 2,
                     model = "bym2",
-                    aggregation = T)
+                    aggregation = TRUE)
 
 
 smth_res_ad2_agg.survey <- fhModel(subset(data, !cluster %in% problem_clusters),
@@ -842,7 +842,7 @@ smth_res_ad2_agg.survey <- fhModel(subset(data, !cluster %in% problem_clusters),
                     admin.info = admin.info2.survey,
                     admin = 2,
                     model = "bym2",
-                    aggregation = T)
+                    aggregation = TRUE)
 
 ```
 
@@ -855,7 +855,7 @@ head(smth_res_ad2_agg$agg.natl)
 
 
 ```{r}
-intervalPlot(admin = 0, group=F, compare=T, model = list(
+intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
             "Admin 0 FH model"=res_ad0,
             "Aggregated Admin2 FH model by survey"=smth_res_ad2_agg.survey,
             "Aggregated Admin1 FH model by survey"=smth_res_ad1_spatial.survey,
@@ -951,7 +951,7 @@ cl_res_ad2$agg.natl
 
 
 ```{r}
-intervalPlot(admin = 0, group=F, compare=T, model = list(
+intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
             "Admin 0 FH model"=res_ad0,
              "Aggregated Admin2 cluster model by survey"=cl_res_ad2.suevey,
              "Aggregated Admin1 FH cluster by survey"=cl_res_ad1.survey,
@@ -1008,7 +1008,7 @@ smth_res_ad1_spatial$group="fh"
 smth_res_ad2_agg$group="fh"
 res_ad0$group="direct est"
 
-intervalPlot(admin = 0, group=T, compare=T, model = list(
+intervalPlot(admin = 0, group=TRUE, compare=TRUE, model = list(
             "Admin 0 direct estimate model"=res_ad0,
       "Aggregated Admin2 cluster-level model, stratified"=cl_res_ad2_T,
       "Aggregated Admin2 cluster-level model, not stratified"=cl_res_ad2,
@@ -1027,7 +1027,7 @@ intervalPlot(admin = 0, group=T, compare=T, model = list(
 
 ```{r,fig.show='hold',fig.dim = c(12, 5),tidy = FALSE}
 
-intervalPlot(admin = 1, group=T, compare=T, model = list(
+intervalPlot(admin = 1, group=TRUE, compare=TRUE, model = list(
                   "Ad2 cls strat bym2"=cl_res_ad2_T,
                   "Ad2 cls not strat bym2"=cl_res_ad2,
                   "Ad1 cls strat bym2"=cl_res_ad1_T,
@@ -1045,7 +1045,7 @@ intervalPlot(admin = 1, group=T, compare=T, model = list(
 The `compare = FALSE` in `intervalPlot()`is specifically designed for cluster models with urban/rural stratification. It presents a comparison of Admin2 estimates with credible intervals within an Admin1 region.
 
 ```{r,fig.show='hold', fig.height = 15, fig.width = 10}
-plots<-intervalPlot(compare = F,model = list("model"=cl_res_ad2_T))
+plots<-intervalPlot(compare = FALSE,model = list("model"=cl_res_ad2_T))
 wrap_plots(plots, ncol = 2)
 ```
 

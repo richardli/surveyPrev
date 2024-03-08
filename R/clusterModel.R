@@ -2,7 +2,7 @@
 #'
 #' This function calculate smoothed direct estimates at given admin level.
 #'
-#' @param data  dataframe that contains the indicator of interests
+#' @param data dataframe that contains the indicator of interests, output of getDHSindicator function
 #' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
@@ -20,7 +20,7 @@
 #' @importFrom utils tail
 #' @importFrom stats sd quantile rnorm
 #' @importFrom matrixStats colMedians
-#' @importFrom stats median na.omit 
+#' @importFrom stats median na.omit
 #' @importFrom SUMMER smoothSurvey
 #' @author Qianyu Dong
 #' @examples
@@ -80,7 +80,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
 
 
-  if( unique(is.na(admin.info$admin.info$urban)) && stratification==T){
+  if( unique(is.na(admin.info$data$urban)) && stratification==T){
     message("No urban/rural proportion found")
     stratification = F
   }
@@ -88,22 +88,22 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
 
 
-  if( unique(is.na(admin.info$admin.info$population)) && aggregation==T){
+  if( unique(is.na(admin.info$data$population)) && aggregation==T){
     message("No population found")
     aggregation = F
   }
 
 
   if(model == "bym2"){
-    Amat <- admin.info$admin.mat
+    Amat <- admin.info$mat
   }else{
     Amat <- NULL
   }
 
 
   admin.mat <- Amat# Amat is sorted by admin1.name then admin2.name alphabetically for admin2
-  admin.info <- admin.info$admin.info
-  modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+  admin.info <- admin.info$data
+  modt<- left_join(data,cluster.info$data,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
 

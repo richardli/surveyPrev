@@ -16,19 +16,19 @@ directEST(
 )
 }
 \arguments{
-\item{data}{dataframe that contains the indicator of interests}
+\item{data}{dataframe that contains the indicator of interests, output of getDHSindicator function}
 
-\item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
+\item{cluster.info}{list contains data and wrong.points. data contains admin 1 and admin 2 information and coordinates for each cluster. wrong.points. contains cluster id for cluster without coordinates or admin 1 information. Output of getDHSindicator function}
 
-\item{admin}{admin level for the model}
+\item{admin}{admin level for the model.}
 
-\item{strata}{admin level for the model}
+\item{strata}{use only urban or rural data, only for national level model}
 
 \item{CI}{Credible interval to be used. Default to 0.95.}
 
 \item{weight}{the weight used for aggregating result, "population" or "survey"}
 
-\item{admin.info}{list from the output of adminInfo function}
+\item{admin.info}{list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function}
 
 \item{aggregation}{whether or not report aggregation results.}
 }

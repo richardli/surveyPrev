@@ -15,11 +15,11 @@ fhModel(
 )
 }
 \arguments{
-\item{data}{dataframe that contains the indicator of interests}
+\item{data}{dataframe that contains the indicator of interests, output of getDHSindicator function}
 
-\item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
+\item{cluster.info}{list contains data and wrong.points. data contains admin 1 and admin 2 information and coordinates for each cluster. wrong.points. contains cluster id for cluster without coordinates or admin 1 information. Output of getDHSindicator function}
 
-\item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
+\item{admin.info}{list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function}
 
 \item{admin}{admin level for the model}
 
@@ -49,7 +49,7 @@ dhsData <- getDHSdata(country = "Zambia",
                                  indicator = "ancvisit4+",
                                  year = 2018)
 
-data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 admin.info1 <- adminInfo(geo = ZambiaAdm1,
                         admin = 1,
                         agg.pop =ZambiaPopWomen$admin1_pop,

@@ -18,7 +18,7 @@ clusterModel(
 )
 }
 \arguments{
-\item{data}{dataframe that contains the indicator of interests}
+\item{data}{dataframe that contains the indicator of interests, output of getDHSindicator function}
 
 \item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 

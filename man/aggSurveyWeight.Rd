@@ -4,20 +4,32 @@
 \alias{aggSurveyWeight}
 \title{Get survey weight by admin levels}
 \usage{
-aggSurveyWeight(data, cluster.info, admin, admin2.name.full = NULL)
+aggSurveyWeight(data, cluster.info, admin, poly.adm = NULL)
 }
 \arguments{
-\item{data}{factor to aggregate pixels. Default to be 10, i.e., the population estimates will be saved on 1km by 1km grids if the input is 100m by 100m tiff. Larger values of aggregation factor improves the computation speed, but can introduce more errors when the regions defined by the polygon are small in size.}
+\item{data}{dataframe that contains the indicator of interests, output of getDHSindicator function}
 
-\item{cluster.info}{outcome from clusterinfo}
+\item{cluster.info}{list that contains admin 1 and admin 2 information and coordinates for each cluster, output of clusterinfo function}
 
-\item{admin.info}{outcome from admininfo}
+\item{admin}{desired admin level for aggregation}
+
+\item{poly.adm}{spatial polygons dataframe}
 }
 \value{
 This function returns the dataset that contain admin name and survey weight.
 }
 \description{
 This function aggregate survey weight to particular admin levels
+}
+\examples{
+\dontrun{
+
+# admin1 population
+agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
+agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
+                             poly.adm = poly.adm2)
+}
+
 }
 \author{
 Qianyu Dong

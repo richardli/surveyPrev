@@ -2,11 +2,11 @@
 #'
 #' This function calculate direct estimates at given admin level.
 #'
-#' @param data  dataframe that contains the indicator of interests
-#' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @param admin.info list from the output of adminInfo function
-#' @param admin admin level for the model
-#' @param strata admin level for the model
+#' @param data dataframe that contains the indicator of interests, output of getDHSindicator function
+#' @param cluster.info list contains data and wrong.points. data contains admin 1 and admin 2 information and coordinates for each cluster. wrong.points. contains cluster id for cluster without coordinates or admin 1 information. Output of getDHSindicator function
+#' @param admin.info list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function
+#' @param admin admin level for the model.
+#' @param strata use only urban or rural data, only for national level model
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param weight the weight used for aggregating result, "population" or "survey"
 #' @param aggregation whether or not report aggregation results.
@@ -56,9 +56,13 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     message("Removing NAs in indicator response")
   }
 
+ if(!is.null(admin.info)){
+   admin.info=admin.info$data
+ }
+
   if(admin==2){
     #prepare data
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
@@ -96,7 +100,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
     }else{
-      if((is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0)& is.null(weight=="population")){
+      if((is.null(admin.info)||sum(is.na(admin.info$population))>0)& is.null(weight=="population")){
         message("Need population information for aggregation")
         aggregation=F
       }
@@ -150,7 +154,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         ####aggregation for variance
         if(weight=="population"){
           #weight using worldpop
-          weight_dt<-left_join(dd, distinct(admin.info$admin.info), by="admin2.name.full")%>%
+          weight_dt<-left_join(dd, distinct(admin.info), by="admin2.name.full")%>%
             group_by(admin1.name)%>%
             mutate(prop=round(population/sum(population),digits = 4))
         }else{
@@ -179,7 +183,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        ## aggregation for mean
        if(weight=="population"){
          #weight using worldpop
-         weight_dt_mean<-left_join(admin2_res,distinct(admin.info$admin.info), by="admin2.name.full")%>%
+         weight_dt_mean<-left_join(admin2_res,distinct(admin.info), by="admin2.name.full")%>%
            group_by(admin1.name)%>%
            mutate(prop=round(population/sum(population),digits = 4))%>%
            mutate(value1=prop*direct.est)
@@ -215,7 +219,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
        if(weight=="population"){
            #for variance
-           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population.admin1))
+           admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin1.name, population=admin.info$population.admin1))
            weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
            nation.samp<- admin1.samp%*%weight_dt
 
@@ -223,7 +227,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            weight_dt_mean<-weight_dt%*%admin1_agg$direct.est
 
        }else{
-         # admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population.admin1))
+         # admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin1.name, population=admin.info$population.admin1))
          # weight_dt=admin1.distinct$population[match(colnames(admin1.samp), admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
          weight_dt<- modt%>%group_by(admin1.name)%>%
            mutate(sumweight2=sum(weight),digits = 4)%>%
@@ -259,7 +263,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
   }else if(admin==1){
 
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
     modt<-  modt[order(modt$admin1.name), ]
@@ -308,7 +312,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
     }else{
-      if((is.null(admin.info)||sum(is.na(admin.info$admin.info$population))>0)& is.null(weight=="population") ){
+      if((is.null(admin.info)||sum(is.na(admin.info$population))>0)& is.null(weight=="population") ){
         message("Need population information for aggregation")
         aggregation=F
       }
@@ -329,7 +333,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
    if(weight=="population"){
       #for variance
-      admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin.info$admin1.name, population=admin.info$admin.info$population))
+      admin1.distinct=distinct(data.frame(admin1.name=admin.info$admin1.name, population=admin.info$population))
       weight_dt=admin1.distinct$population[match(admin1_res$admin1.name, admin1.distinct$admin1.name)]/sum(admin1.distinct$population)
       nation.samp<- draw.all%*%weight_dt
       #for mean
@@ -368,7 +372,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 }else if(admin==0){
     data$admin0.name="country"
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 

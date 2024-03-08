@@ -2,9 +2,9 @@
 #'
 #' This function calculate smoothed direct estimates at given admin level.
 #'
-#' @param data  dataframe that contains the indicator of interests
-#' @param cluster.info dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
+#' @param data dataframe that contains the indicator of interests, output of getDHSindicator function
+#' @param cluster.info list contains data and wrong.points. data contains admin 1 and admin 2 information and coordinates for each cluster. wrong.points. contains cluster id for cluster without coordinates or admin 1 information. Output of getDHSindicator function
+#' @param admin.info list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function
 #' @param admin admin level for the model
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
@@ -60,17 +60,17 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     model <- "iid"
   }
   if(model == "bym2"){
-    Amat <- admin.info$admin.mat
+    Amat <- admin.info$mat
 
   }else{
     Amat <- NULL
   }
-  admin.info <- admin.info$admin.info
+  admin.info <- admin.info$data
 
   if(admin==2){
 
     #prepare data
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -185,7 +185,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     }else if(admin==1){
 
     #prepare data
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 

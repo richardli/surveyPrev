@@ -3,27 +3,37 @@
 #' This function aggregate survey weight to particular admin levels
 #'
 #'
-#' @param data factor to aggregate pixels. Default to be 10, i.e., the population estimates will be saved on 1km by 1km grids if the input is 100m by 100m tiff. Larger values of aggregation factor improves the computation speed, but can introduce more errors when the regions defined by the polygon are small in size.
-#' @param cluster.info outcome from clusterinfo
-#' @param admin TODO
-#' @param admin2.name.full TODO
+#' @param data dataframe that contains the indicator of interests, output of getDHSindicator function
+#' @param cluster.info list that contains admin 1 and admin 2 information and coordinates for each cluster, output of clusterinfo function
+#' @param admin desired admin level for aggregation
+#' @param poly.adm spatial polygons dataframe
 #'
 #' @return This function returns the dataset that contain admin name and survey weight.
 #' @importFrom raster as.data.frame coordinates
 #' @importFrom sp coordinates proj4string over
 #' @author Qianyu Dong
 #' @examples
-#' # TODO
+#' \dontrun{
+#'
+#' # admin1 population
+#' agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
+#' agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
+#'                              poly.adm = poly.adm2)
+#' }
 #'
 #' @export
 
 
-aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
+aggSurveyWeight <- function(data, cluster.info, admin, poly.adm=NULL){
 
 
+  #make admin2.name.full from poly.adm2
+  if(!is.null(poly.adm)){
+    admin2.name.full=paste0(poly.adm$NAME_1,"_",poly.adm$NAME_2)
+  }
   if(admin==1)
   {
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     # modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
     #
@@ -36,7 +46,7 @@ aggSurveyWeight <- function(data, cluster.info, admin,admin2.name.full=NULL){
   return(weight_dt)
   }else{
 
-    modt<- left_join(data,cluster.info$cluster.info,by="cluster")
+    modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 

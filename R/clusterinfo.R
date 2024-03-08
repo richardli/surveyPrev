@@ -68,7 +68,6 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   wrong.points <- which(points_sf$LATNUM < 0.0000001 & points_sf$LONGNUM < 0.0000001)
 
 
-  cluster.info <- cluster.info[!(cluster.info$cluster %in% points_sf$DHSCLUST[wrong.points]),]
 
   admin1.sf <- st_join(cluster.info, poly.adm1) %>%
     sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
@@ -80,22 +79,24 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
     sf::st_transform(st_crs(poly.adm2)) # Transform CRS if needed
 
   # Add admin2 name to cluster.info
-  cluster.info$admin2.name <- admin2.sf$NAME_2
-   cluster.info$ admin2.name.full <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
+   cluster.info$admin2.name <- admin2.sf$NAME_2
+   cluster.info$admin2.name.full <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
+
+   #removing wrong.points that has no coordinates
+   cluster.info <- cluster.info[!(cluster.info$cluster %in% points_sf$DHSCLUST[wrong.points]),]
 
 
    #removing wrong.points that has no admin 1 name
    wrong.points <- c(wrong.points, which(is.na(cluster.info$admin1.name)))
    cluster.info <- cluster.info[!(cluster.info$cluster %in% wrong.points),]
 
-
   # return(cluster.info)
-  cluster.info<-as.data.frame(cluster.info)
+   cluster.info<-as.data.frame(cluster.info)
   # remove points outside of shapefile
   # TODO: change those to nearest admin if within DHS jittering range
-  wrong.points <- c(wrong.points, cluster.info$cluster[which(is.na(cluster.info$admin1.name))])
-  cluster.info <- subset(cluster.info, !is.na(admin1.name))
-  return(list(cluster.info=cluster.info, wrong.points = wrong.points))
+
+
+    return(list(data=cluster.info, wrong.points = wrong.points))
 
 
 }

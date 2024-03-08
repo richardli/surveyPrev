@@ -26,12 +26,11 @@
 #' info <- adminInfo(geo = ZambiaAdm1,
 #'                   admin = 1,
 #'                   agg.pop = ZambiaPopWomen$admin1_pop,
-#'                   proportion = ZambiaPopWomen$admin1_urban,
-#'                   agg.survey = agg.survey1)
+#'                   proportion = ZambiaPopWomen$admin1_urban )
 #' @export
-adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
+adminInfo <- function(poly.adm, admin, agg.pop = NULL, proportion = NULL) {
 
-
+  geo=poly.adm
  if("sf" %in% class(geo)) geo <- sf::as_Spatial(geo)
 
   admin.info <- NULL
@@ -155,8 +154,8 @@ adminInfo <- function(geo, admin, agg.pop = NULL, proportion = NULL) {
     }
 
 
-  return(list(admin.info=admin.info,
-              admin.mat=as.matrix(as.data.frame(admin.mat))))
+  return(list(data=admin.info,
+              mat=as.matrix(as.data.frame(admin.mat))))
 
 }
 
