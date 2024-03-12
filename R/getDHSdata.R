@@ -29,19 +29,63 @@
 getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
 
 
+  IR_Individual<-c("ancvisit4+"
+                     ,"RH_ANCN_W_N4P"
+                     ,"womananemia"
+                     ,"AN_ANEM_W_ANY"
+                     ,"unmet_family"
+                     ,"FP_NADA_W_UNT"
+                     ,"FP_CUSM_W_MOD"
+                     ,"AN_NUTS_W_THN")
+ PR_Household_Member<-c(
+   "CN_ANMC_C_ANY"
+   ,"CN_NUTS_C_WH2"
+   ,"wasting"
+   ,"CN_NUTS_C_HA2"
+   ,"stunting"
+   ,"ML_PMAL_C_RDT"
+   ,"WS_TLET_H_IMP"
+   ,"WS_TLET_P_BAS"
+   ,"WS_SRCE_P_BAS"
+ )
+
+ KR_Children<-c(
+    "CH_DIAT_C_ORT"
+   ,"DPT3"
+   ,"CH_VACC_C_DP3"
+   ,"CH_VACC_C_DP1"
+   ,"CH_VACC_C_BAS"
+   ,"CH_VACC_C_NON"
+   ,"CN_BRFS_C_EXB"
+   ,"CH_VACC_C_MSL"
+   ,"PCV3"
+   ,"RotaC1"
+ )
+ BRdata_Birth<-c(
+   "RH_DELA_C_SKP"
+   ,"CM_ECMR_C_NNR"#"nmr"
+   ,"nmr"
+ )
+
+ HRdata_Household<-c(
+   "ML_ITNA_P_ACC"
+ )
+
   indicator<-indicator
   if(is.null(indicator) & is.null(Recode)){
     Type <- NULL
   }else if (!is.null(Recode)){
     Type=Recode
-  }else if (indicator %in% c("womananemia", "ancvisit4+", "unmet_family")) {
+  }else if (indicator %in% IR_Individual) {
     Type <- c("Individual Recode")
-  } else if (indicator %in% c("stunting", "wasting", "sanitation")) {
+  } else if (indicator %in% PR_Household_Member) {
     Type <- c("Household Member Recode")
-  } else if (indicator %in% c("DPT3")) {
+  } else if (indicator %in% KR_Children) {
     Type <- c("Children's Recode")
-  }else if (indicator %in% c("nmr")) {
+  }else if (indicator %in% BRdata_Birth) {
     Type <- c("Births Recode")
+  }else if (indicator %in% HRdata_Household) {
+  Type <- c("Household Recode")
   }else{
     Type <- NULL
   }
