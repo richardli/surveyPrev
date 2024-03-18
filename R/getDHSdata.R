@@ -35,7 +35,7 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
                      ,"AN_ANEM_W_ANY"
                      ,"unmet_family"
                      ,"FP_NADA_W_UNT"
-                     ,"FP_CUSM_W_MOD"
+                     ,"FP_CUSA_W_MOD"
                      ,"AN_NUTS_W_THN")
  PR_Household_Member<-c(
    "CN_ANMC_C_ANY"
@@ -68,14 +68,18 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
  )
 
  HRdata_Household<-c(
-   "ML_ITNA_P_ACC"
+   "ML_NETP_H_IT2"
+ )
+
+ HIV<-c(
+   "HA_HIVP_B_HIV"
  )
 
   indicator<-indicator
   if(is.null(indicator) & is.null(Recode)){
     Type <- NULL
   }else if (!is.null(Recode)){
-    Type=Recode
+    Type= Recode
   }else if (indicator %in% IR_Individual) {
     Type <- c("Individual Recode")
   } else if (indicator %in% PR_Household_Member) {
@@ -86,6 +90,8 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
     Type <- c("Births Recode")
   }else if (indicator %in% HRdata_Household) {
   Type <- c("Household Recode")
+  }else if (indicator %in% HIV) {
+    Type <- c("Individual Recode", "Men's Recode","HIV Test Results Recode")
   }else{
     Type <- NULL
   }
@@ -102,15 +108,26 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
   potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
     dplyr::filter( FileFormat=='Stata dataset (.dta)')
 
-  # single file download
-  if(!is.null(Type)){
+  # file download
+
+  if(length(Type)==1){
+    #if(!is.null(Type)){
     surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
     data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, clear_cache = T)
     Rdata<-readRDS(paste0(data.paths.tmp))
     return(Rdata)
+  }else if(length(Type)>1){
+    surveys <- potential_surveys %>% dplyr::filter(FileType %in% c(Type))
+    data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, clear_cache = T)
+    all=list()
+    listname=surveys$FileType
+    for (i in 1:length(Type)){
+      all[[listname[i]]] <-  readRDS(paste0(data.paths.tmp[i]))
+    }
+    return(all)
 
-  # if null then download all and process later
-  }else{
+  }else if (is.null(Type)){
+    # if null then download all and process later
 
 
 
@@ -142,5 +159,6 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
     }
     return(all)
   }
+
 }
 

@@ -328,6 +328,28 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       ### admin1 to national for admin1 result
       ### ### ### ### ### ### ### ### ### ###
 
+
+
+
+     # make direct.logit.est to 36 or -36 for HT=1 or 0.
+
+      for (i in 1:dim(admin1_res)[1]) {
+
+        if(is.na(admin1_res[i,]$direct.logit.est)&& round(admin1_res[i,]$direct.est,digits = 8)==1 ){
+          admin1_res[i,]$direct.logit.est=36
+        }
+        if(is.na(admin1_res[i,]$direct.logit.est)&&admin1_res[i,]$direct.est==0 ){
+          admin1_res[i,]$direct.logit.est=-36
+        }
+
+        if(is.na(admin1_res[i,]$direct.logit.var)){
+          admin1_res[i,]$direct.logit.var=0
+        }
+      }
+
+
+
+
     dd=data.frame(mean=admin1_res$direct.logit.est,sd=sqrt(admin1_res$direct.logit.var))
     draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 

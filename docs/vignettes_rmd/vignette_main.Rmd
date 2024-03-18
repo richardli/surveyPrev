@@ -2,6 +2,7 @@
 title: "Spatial smoothing of DHS indicators using the **surveyPrev** package"
 author: "Qianyu Dong, Zehang Richard Li, Andrea Boskovic, Jon Wakefield"
 date: "`r Sys.Date()`"
+bibliography: main.bib
 output: 
   bookdown::pdf_book:
     number_sections: true
@@ -11,7 +12,7 @@ output:
     toc: true
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE, eval=TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=TRUE)
 ```
 
 # Overview
@@ -22,8 +23,9 @@ In this vignette, we describe how prevalence mapping using DHS data can be carri
 2. Area-level (Fay-Herriot) estimates (Section \@ref(sec:area-level))
 3. Cluster-level estimates (Section \@ref(sec:cluster-level))
 
-In Section \@ref(sec:model)
-Section \@ref(sec:vis) provides some tools to visualize and compare estimates.
+In Section \@ref(sec:model2), we describe additional models for estimating prevalence at Admin 2 level. Section \@ref(sec:aggregation) is about aggregation model results to higher admin levels.
+
+
 
 
 # Data Preparation {#sec:data}
@@ -54,7 +56,7 @@ library(surveyPrev)
 ```
 
 
-In particular, one of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following codes.
+In particular, one of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following codes [@rue2009inla].
 
 ```{r pkg, eval = FALSE, tidy = FALSE}
 install.packages("INLA", repos=c(getOption("repos"), 
@@ -115,7 +117,7 @@ dhsData <- getDHSdata(country = country, indicator = indicator, year = year)
 If the DHS download using the API fails, you may also manually download the file from the DHS website and read into R. The `getDHSdata()` function returns a message specifying which file is used (e.g., Individual Record file for the ANC visit example).
 
 
-We then use `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package
+We then use `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package.
 
 ```{r}
 data <- getDHSindicator(dhsData, indicator = indicator)
@@ -168,7 +170,7 @@ For $y_j$ be the $j^{\text{th}}$ individual result and $w_j$ denote the design w
 
 $$ \hat p^{HT}_{i}=\frac {\sum_{j \in S_i} y_j w_j}{\sum_{j \in S_i} w_j}$$
 
-The `directEST()` function calculates direct estimates at different Admin levels using the `SUMMER::smoothSurvey()` function in the **SUMMER** package internally.  The output of the function includes the direct estimates and their variance, standard error, and lower and upper confidence intervals based on the specified confidence level. The confidence intervals are computed on the logit scale, i.e., if we use $D_i$ to denote the design-based variance of $\hat p^{HT}_i$, then the asymptotic design-based variance of $\mbox{logit}(\hat p^{HT}_i)$ is
+The `directEST()` function calculates direct estimates at different Admin levels using the `SUMMER::smoothSurvey()` function in the **SUMMER** package internally [@li2020summer].  The output of the function includes the direct estimates and their variance, standard error, and lower and upper confidence intervals based on the specified confidence level. The confidence intervals are computed on the logit scale, i.e., if we use $D_i$ to denote the design-based variance of $\hat p^{HT}_i$, then the asymptotic design-based variance of $\mbox{logit}(\hat p^{HT}_i)$ is
 \[
 V_i  = \frac{D_i}{(\hat p^{HT}_i)^2(1-\hat p^{HT}_i)^2}
 \]
@@ -178,7 +180,11 @@ and we compute the lower and upper confidence interval on the probability scale 
 \mbox{expit}[\mbox{logit}(\hat p^{HT}_i) + z_{\alpha/2}V_i^{1/2}]).
 \]
 
-The function also produce aggregated estimates to upper administrative levels when `aggregation = T`. **TODO: add more details in equation and text explanation of how the aggregated estimates are defined.**
+The function also produce aggregated estimates to upper administrative levels when `aggregation = T`. Let i be the lower admin level and k be the upper admin level, then aggregated estimates for area k is 
+
+$$ \hat p^{HT}_{k}=\frac {\sum_{i \in k} \hat p^{HT}_{i}E_i}{\sum_{i \in k} \text{E}_i},$$
+where $E_i=\text{population}_{i}\times \textbf{1}(\hat p^{HT}_{i} \neq \text{NA})$. When there is no missing area i in k, $\hat p^{HT}_{k}$ is the weighted average using population fractions. When Admin i in k is missing, then the $\hat p^{HT}_{k}$ is the weighted average of the rest areas in k. 
+
 
 
 
@@ -222,7 +228,7 @@ $$\text{logit}(\hat p^{HT}_{i})|\lambda_{i} \sim\textrm{Normal}(\lambda_{i}, V_{
 $$\lambda_{i}= \mathbf x_i^{T} \mathbf{\beta} + e_i+S_i.$$
 Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, $\mathbf{x}_i$ represents area-level covariates, and $e_i$ and $S_i$ are  unstructured and structured spatial random effects. 
 
-As of now the package allows only an overall intercept for the fixed effect. The default prior for the intercept is $N(0, 1000)$. The $e_i + S_i$ term is implemented via the BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$. 
+As of now the package allows only an overall intercept for the fixed effect. The default prior for the intercept is $N(0, 1000)$. The $e_i + S_i$ term is implemented via the BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
 
 
 The `fhModel()` calculates spatial Fay Herriot estimates at different administrative levels using `SUMMER::smoothSurvey()`. Users can specify either only i.i.d. random effect (i.e., no $S_i$ term) or the Besag-York-Mollié (BYM) model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregated to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more details in Section \@ref(sec:aggregation). 
@@ -299,26 +305,40 @@ head(cl_res_ad2$res.admin2)
 ```
 
 
-## Comparing Prevalence Estiamtes {#sec:vis}
+## Visualizing Prevalence Estiamtes {#sec:vis}
 
 We can use `mapPlot()` function from the SUMMER package to visualize estimates and standard errors. We note that for admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
 
-```{r ,fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster model estimates"}
+```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level estimates"}
 poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
 
 # Make all plots share the same color range
-min= min(res_ad1$res.admin1$direct.est,smth_res_ad1_bym2$mean,cl_res_ad1$res.admin1$mean,cl_res_ad2$res.admin2$mean)
-max= max(res_ad1$res.admin1$direct.est,smth_res_ad1_bym2$mean,cl_res_ad1$res.admin1$mean,cl_res_ad2$res.admin2$mean)
+min= min(res_ad1$res.admin1$direct.est,smth_res_ad1_bym2$mean,
+         cl_res_ad1$res.admin1$mean,cl_res_ad2$res.admin2$mean)
+max= max(res_ad1$res.admin1$direct.est,smth_res_ad1_bym2$mean,
+         cl_res_ad1$res.admin1$mean,cl_res_ad2$res.admin2$mean)
 ylim=c(min,max)
 
 
-g1 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "direct.est", legend.label = "Admin 1 Direct", ylim =ylim, removetab = TRUE)
+g1 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1,
+              by.data = "admin1.name",  by.geo = "NAME_1", 
+              variable = "direct.est", legend.label = "Admin 1 Direct",
+              ylim =ylim, removetab = TRUE)
 
-g2 <- mapPlot(data = smth_res_ad1_bym2$res.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", legend.label = "Admin 1 Fay–Herriot", ylim =ylim, removetab = TRUE)
+g2 <- mapPlot(data = smth_res_ad1_bym2$res.admin1, geo = poly.adm1,
+              by.data = "admin1.name", by.geo = "NAME_1", 
+              variable = "mean", legend.label = "Admin 1 Fay–Herriot", 
+              ylim =ylim, removetab = TRUE)
 
-g3 <- mapPlot(data = cl_res_ad1$res.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", legend.label = "Admin 1 unstratified", ylim = ylim, removetab = TRUE)
+g3 <- mapPlot(data = cl_res_ad1$res.admin1, geo = poly.adm1, 
+              by.data = "admin1.name", by.geo = "NAME_1", 
+              variable = "mean",  legend.label = "Admin 1 unstratified", 
+              ylim = ylim, removetab = TRUE)
 
-g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "mean", legend.label = "Admin 2 unstratified", ylim = ylim, removetab = TRUE)
+g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2, 
+              by.data = "admin2.name.full", by.geo = "admin2.name.full",
+              variable = "mean", legend.label = "Admin 2 unstratified", 
+              ylim = ylim, removetab = TRUE)
 
 (g1 + g2) / (g3 + g4)
 
@@ -328,7 +348,7 @@ g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2, by.data = "admin2.n
 
 The `scatterPlot()` function takes results from two model outputs, and produce a scatter plot of the selected variable. Here we visualize the comparison of the estimates and standard deviations.
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10}
+```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 Fay–Herriot"}
 s1<-scatterPlot(
   res1=res_ad1$res.admin1,
   res2=smth_res_ad1_bym2$res.admin1,
@@ -353,9 +373,9 @@ s2<-scatterPlot(
 )
 s1 +s2
 ```
+ 
 
-
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10}
+```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level estimates"}
 s1<-scatterPlot(
 res1=res_ad1$res.admin1,
 res2=cl_res_ad1$res.admin1,
@@ -388,7 +408,7 @@ s1 +s2
 # More Models for Admin 2  {#sec:model2}
 In this section, we discuss additional models that can be fit to estimate prevalences at the Admin 2 level. These models either require additional care from the users in examining the assumptions and results, or require additional information not readily available from the DHS data alone. 
 
-## Admin 2 direct Estimates {#sec:direct2} 
+## Admin 2 Direct Estimates {#sec:direct2} 
 
 For `directEST()`, if we set `admin = 2`, the output includes results at the Admin 2 level with `aggregation = FALSE` and aggregated results at both the Admin 1 and national level  with `aggregation = TRUE`. For countries with a large number of Admin 2 areas, some of the direct estimates can be undefined if there is no cluster in the area.
 
@@ -420,13 +440,13 @@ head(smth_res_ad2$res.admin2)
 ```
 
 
-## Admin 2 Cluster-Level Estimates {#sec:cluster-level2}
+## Admin 2 Cluster-Level Estimates with Urban/Rural Stratification {#sec:cluster-level2}
 
 For `clusterModel()`, when setting `stratification = TRUE`, the `res.admin1` or `res.admin2` includes the results for urban, rural, and the overall area-level prevalences. The area-level risk (`type=="full"` in the output) are aggregated using urban/rural proportion at the corresponding admin level. 
 
 In order to facilitate aggregation for cluster-level model with urban/rural effects, we need to know the fraction of urban population by each administrative region. This computation can be non-trivial and requires external information (i.e., the urban/rural definition by census), so we omit this step from this document for now and assume such information is already obtained from a difference source. 
 
-Given the urban/rural proportions, we first add the information into `admin.info2` using `adminInfo()`.The urban proportions for women of age 15 to 49 in Zambia in 2018 has been pre-computed and saved in `ZambiaPopWomen$admin1_urban` and `ZambiaPopWomen$admin2_urban`
+Given the urban/rural proportions, we first add the information into `admin.info2` using `adminInfo()`.The urban proportions for women of age 15 to 49 in Zambia in 2018 has been pre-computed and saved in `ZambiaPopWomen$admin1_urban` and `ZambiaPopWomen$admin2_urban`.
 
 
 ```{r}
@@ -454,20 +474,20 @@ cl_res_ad2_T <- clusterModel(data=data,
                    CI = 0.95)
 ```
 
-The `compare=F` in `intervalPlot()`is specifically designed for cluster models with urban/rural stratification. It presents a comparison of Admin 2 estimates with credible intervals within an Admin 1 region. 
+The `compare=FALSE` in `intervalPlot()`is specifically designed for cluster models with urban/rural stratification. It presents a comparison of Admin 2 estimates with credible intervals within an Admin 1 region. 
 
-```{r,fig.show='hold', fig.height = 15, fig.width = 10}
+```{r,fig.show='hold', fig.height = 15, fig.width = 10, fig.cap="Comparing Admin 2 estimates with credible intervals within an Admin 1 region"}
 plots <- intervalPlot(compare = FALSE, model = list("model"=cl_res_ad2_T))
 wrap_plots(plots, ncol = 2)
 ```
 
 
 
-## Comparing Admin 2 Prevalence Estimates  {#sec:vis2}
+## Visualizing Admin 2 Prevalence Estimates  {#sec:vis2}
 
 We can compare the estimates on a map using `mapPlot()` function in **SUMMER** as before.
 
-```{r ,fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 1 and Admin 2 stratified cluster model estimates"}
+```{r ,warning=FALSE,echo=FALSE,fig.show="hold",fig.dim = c(6, 4),fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 2 unstratified and stratified cluster-level estimates"}
 min= min(res_ad2$res.admin2$direct.est,smth_res_ad2$res.admin2$mean,
          cl_res_ad2$res.admin2$mean,
          cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",]$mean)
@@ -477,14 +497,26 @@ max= max(res_ad2$res.admin2$direct.est,smth_res_ad2$res.admin2$mean,
 ylim=c(min,max)
 
 
-g1 <- mapPlot(data = res_ad2$res.admin2, geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "direct.est", legend.label = "Admin 2 Direct", ylim =ylim, removetab = TRUE)
+g1 <- mapPlot(data = res_ad2$res.admin2, geo = poly.adm2, 
+              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
+              variable = "direct.est", legend.label = "Admin 2 Direct", 
+              ylim =ylim, removetab = TRUE)
 
-g2 <- mapPlot(data = smth_res_ad2$res.admin2, geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "mean", legend.label = "Admin 2 Fay–Herriot", ylim =ylim, removetab = TRUE)
+g2 <- mapPlot(data = smth_res_ad2$res.admin2, geo = poly.adm2, 
+              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
+              variable = "mean", legend.label = "Admin 2 Fay–Herriot", 
+              ylim =ylim, removetab = TRUE)
 
-g3 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "mean", legend.label = "Admin 2 unstratified", ylim = ylim, removetab = TRUE)
+g3 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2,
+              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
+              variable = "mean", legend.label = "Admin 2 unstratified", 
+              ylim = ylim, removetab = TRUE)
 
 
-g4 <- mapPlot(data = cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",], geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "mean", legend.label = "Admin 2 stratified", ylim = ylim, removetab = TRUE)
+g4 <- mapPlot(data = cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",], 
+              geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", 
+              variable = "mean", legend.label = "Admin 2 stratified", 
+              ylim = ylim, removetab = TRUE)
 
 (g1 + g2)/(g3+ g4)
 
@@ -494,7 +526,7 @@ g4 <- mapPlot(data = cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full
 
 The following are model comparisons using `scatterPlot()`. Admin 2 direct estimates may not cover all admin 2 areas, the red triangle points on the edges meaning missing direct estimates.
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10}
+```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 Fay–Herriot estimates"}
 s1<-scatterPlot(
 res1=res_ad2$res.admin2,
 res2=smth_res_ad2$res.admin2,
@@ -520,7 +552,7 @@ label2="Spatial Fay–Herriot"
 s1 +s2
 ```
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10}
+```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 unstratified cluster-level estimates"}
 s1<-scatterPlot(
 res1=res_ad2$res.admin2,
 res2=cl_res_ad2$res.admin2,
@@ -546,7 +578,7 @@ label2="Cluster-level model"
 s1 +s2
 ```
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10}
+```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 unstratified cluster-level estimates"}
 s1<-scatterPlot(
 res1=smth_res_ad2$res.admin2,
 res2=cl_res_ad2$res.admin2,
@@ -631,7 +663,6 @@ head(ZambiaPopWomen$admin2_pop)
 
 An alternative approach to obtain population fractions is to simply use survey weights to estimate the population size within each area. This approach, however, can lead to noisy estimates at fine spatial resolutions. Nevertheless, similar to `aggPopulation()`, the `aggSurveyWeight()` function produces the estimated population size at the specified admin level. The output can be used as weights for aggregation model results to higher admin levels. 
 
-**Since not all admin 2 areas are covered by survey, there maybe missing admin 2s. In this case, users need to provide `admin2.name.full` in the format of admin1.name_admin2.name. Question: are they needed?** 
 
 ```{r}
 agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
@@ -667,66 +698,57 @@ head(admin.info2$data)
 
 The following maps display the 15-49 female population and aggregated DHS survey weights ratio within upper admin levels.
 
-```{r,fig.show='hold',fig.dim = c(6, 4)}
-
+```{r,fig.show='hold',fig.dim = c(6, 4), fig.cap="survey weight ratio and population ratio at Admin 1 and Admin 2"}
 admin.info1$data$r.population=
   admin.info1$data$population/sum(admin.info1$data$population)
-
 admin.info1.survey$data$r.SurveyWeight=
   admin.info1.survey$data$population/sum(admin.info1.survey$data$population)
-
-
-
 admin.info2$data$r.population=
   admin.info2$data$population/admin.info2$data$population.admin1
-
 admin.info2.survey$data$r.SurveyWeight=
   admin.info2.survey$data$population/admin.info2.survey$data$population.admin1
-
-
-
 min= min(admin.info1.survey$darta$r.SurveyWeight, admin.info1$data$r.population)
 max= max(admin.info1.survey$darta$r.SurveyWeight, admin.info1$data$r.population)
 ylim=c(min,max)
-
-
-g1 <- mapPlot(data = admin.info1.survey$data, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "r.SurveyWeight", legend.label = "rario SurveyWeight",removetab = TRUE, ylim = ylim)
-g2 <- mapPlot(data= admin.info1$data, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "r.population", legend.label = "rario Population", removetab = TRUE, ylim = ylim)
-
-
+g1 <- mapPlot(data = admin.info1.survey$data, geo = poly.adm1, 
+              by.data = "admin1.name", by.geo = "NAME_1", 
+              variable = "r.SurveyWeight",  legend.label = "rario SurveyWeight",
+              removetab = TRUE, ylim = ylim)
+g2 <- mapPlot(data= admin.info1$data, geo = poly.adm1, by.data = "admin1.name", 
+              by.geo = "NAME_1", variable = "r.population", 
+              legend.label = "rario Population", removetab = TRUE, ylim = ylim)
 min= min(admin.info2.survey$admin.info$r.SurveyWeight, admin.info2$data$r.population)
 max= max(admin.info2.survey$admin.info$r.SurveyWeight, admin.info2$data$r.population)
 ylim2=c(min,max)
+g3 <- mapPlot(data = admin.info2$data, geo = poly.adm2, 
+              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
+              variable = "r.population", legend.label = "rario population",
+              removetab = TRUE, ylim = ylim2)
 
-g3 <- mapPlot(data = admin.info2$data, geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "r.population", legend.label = "rario population", removetab = TRUE, ylim = ylim2)
-
-g4 <- mapPlot(data = admin.info2.survey$data, geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", variable = "r.SurveyWeight", legend.label = "rario SurveyWeight",  removetab = TRUE, ylim = ylim2)
-
+g4 <- mapPlot(data = admin.info2.survey$data, geo = poly.adm2, 
+              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
+              variable = "r.SurveyWeight", legend.label = "rario SurveyWeight", 
+              removetab = TRUE, ylim = ylim2)
 (g1 + g2) /(g4 + g3)
-
 ```
 
 
 The scatter plots show the comparison of admin 2 survey weight ratio & 15-49 female population ratio within admin 1. Noticed that DHS data may have missing admin 2 areas. For example, Zambia has 112 out of 115 admin 2 areas for this survey (red points in the scatter plots). Users have to be aware of that this is an incomplete set of weights for aggregation to from admin 2 to admin 1. 
 
 
-```{r, fig.show='hold',fig.dim = c(12, 6)}
+```{r, fig.show='hold',fig.dim = c(12, 6),tidy=FALSE, fig.cap="Admin 2 survey weight ratio and 15-49 female population ratio"}
 
 df<-left_join(admin.info2$data,admin.info2.survey$data,by="admin2.name.full")
-
 df$pop_r=df$population.x/df$population.admin1.x 
 df$survey_weight_r=df$population.y/df$population.admin1.y
-
 missing.admin2=df[!admin.info2$data$admin2.name.full %in%
                     cluster.info$cluster.info$admin2.name.full, ]
 
 ggplot(df, aes(survey_weight_r,pop_r)) +
   geom_point(alpha = 0.5,size =df$population.x/50000)+
-   geom_point(data = missing.admin2, aes(survey_weight_r,pop_r), color = "red",size=missing.admin2$population.x/50000)+
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed")+
-    labs(title = "admin 2 survey weight ratio & 15-49 female population ratio")
-
-
+   geom_point(data = missing.admin2, aes(survey_weight_r,pop_r), color = "red",
+              size=missing.admin2$population.x/50000)+
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed")
 ```
 
 
@@ -784,7 +806,7 @@ res_ad2agg$agg.natl
 ```
 
 
-```{r, tidy = FALSE}
+```{r, tidy = FALSE, fig.cap="Comparing different aggregated direct estimates at national level"}
 intervalPlot(admin = 0, group = FALSE, compare = TRUE, 
   model = list(
   "Admin 0 direct estimate model" = res_ad0,
@@ -799,8 +821,6 @@ intervalPlot(admin = 0, group = FALSE, compare = TRUE,
 
 
 #### Area-level (Fay-Herriot) Estimates {#sec:area-level3}
-
-
 
 Aggregation of the Fay-Herriot model can be similarly carried out as model based results. See details in below.
 
@@ -854,7 +874,7 @@ head(smth_res_ad2_agg$agg.natl)
 
 
 
-```{r}
+```{r,fig.cap="Comparing different aggregated Fay-Herriot estimates at national level"}
 intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
             "Admin 0 FH model"=res_ad0,
             "Aggregated Admin 2 FH model by survey"=smth_res_ad2_agg.survey,
@@ -949,55 +969,63 @@ cl_res_ad2$agg.natl
 
 
 
+```{r,tidy = FALSE, fig.cap="Comparing different aggregated cluster-level estimates at national level"}
 
-```{r}
 intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
             "Admin 0 FH model"=res_ad0,
              "Aggregated Admin 2 cluster model by survey"=cl_res_ad2.suevey,
-             "Aggregated Admin 1 FH cluster by survey"=cl_res_ad1.survey,
-             "Aggregated Admin 2 FH cluster by pop"=cl_res_ad2,
-             "Aggregated Admin 1 FH cluster by pop"=cl_res_ad1,
-             "Aggregated Admin 2 FH cluster stratified by pop"=cl_res_ad2_T,
-             "Aggregated Admin 1 FH cluster stratified by pop"=cl_res_ad1_T
-          
-))
+             "Aggregated Admin 1 cluster model by survey"=cl_res_ad1.survey,
+             "Aggregated Admin 2 cluster model by pop"=cl_res_ad2,
+             "Aggregated Admin 1 cluster model by pop"=cl_res_ad1,
+             "Aggregated Admin 2 stratified cluster model by pop"=cl_res_ad2_T,
+             "Aggregated Admin 1 stratified cluster model by pop"=cl_res_ad1_T))
 
 ```
 
 
-##  Model comparison 3{#sec:vis3}
+## Visualizing aggregation results {#sec:vis3}
+
 
 
 We can use `SUMMER::mapPlot` to show the model estimates and standard errors.
 
 
-
-```{r,fig.show='hold',fig.dim = c(6, 4)}
+```{r,fig.show='hold',fig.dim = c(6, 4),tidy = FALSE, fig.cap="Comparing aggregated Admin 2 stratified cluster-level estiamtes, aggregated Admin 2 direct estiamtes, aggregated Admin 2 Fay-Herriot, and Admin 1direct estiamtes"}
 min= min(res_ad2agg$agg.admin1$direct.est,cl_res_ad2_T$agg.admin1$mean,
          res_ad1agg$res.admin1$direct.est,smth_res_ad2_agg$agg.admin1$mean)
 max= max(res_ad2agg$agg.admin1$direct.est,cl_res_ad2_T$agg.admin1$mean,
          res_ad1agg$res.admin1$direct.est,smth_res_ad2_agg$agg.admin1$mean)
 ylim=c(min,max)
 
-g1 <- mapPlot(data = cl_res_ad2_T$agg.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", legend.label = "Pop Aggregated\nAdmin2 stratified", ylim =ylim, removetab = TRUE)
+g1 <- mapPlot(data = cl_res_ad2_T$agg.admin1, geo = poly.adm1, 
+              by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", 
+              legend.label = "Pop Aggregated\nAdmin2 stratified", 
+              ylim =ylim, removetab = TRUE)
 
-g2 <- mapPlot(data = res_ad2agg$agg.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "direct.est", legend.label = "Pop Aggregated\nAdmin2 Direct", ylim =ylim, removetab = TRUE)
+g2 <- mapPlot(data = res_ad2agg$agg.admin1, geo = poly.adm1,
+              by.data = "admin1.name", by.geo = "NAME_1",
+              variable = "direct.est", 
+              legend.label = "Pop Aggregated\nAdmin2 Direct",
+              ylim =ylim, removetab = TRUE)
 
-g3 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "direct.est", legend.label = "Admin1 Direct", ylim = ylim, removetab = TRUE)
+g3 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1, 
+              by.data = "admin1.name", by.geo = "NAME_1",
+              variable = "direct.est", legend.label = "Admin1 Direct", 
+              ylim = ylim, removetab = TRUE)
 
-g4 <- mapPlot(data = smth_res_ad2_agg$agg.admin1, geo = poly.adm1, by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", legend.label = "Admin 2 Smooth Direct", ylim = ylim, removetab = TRUE)
+g4 <- mapPlot(data = smth_res_ad2_agg$agg.admin1, geo = poly.adm1, 
+              by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", 
+              legend.label = "Admin 2 Fay-Herriot", 
+              ylim = ylim, removetab = TRUE)
 
 (g3 + g2) / (g1 + g4)
 ```
 
 
-
-
-
 `intervalPlot()` can provide interval plots at different admin levels for model comparison with `compare=T`. Input should be a list of model outputs by `surveyPrev` with self defined model name, (e.g.`model=list("name 1"= fit1,"name 2"= fit2)`). Then by setting `admin=0,1`, the returned plot will be at given level. You can also group your model by adding group object in your model results like `fit1$model="group1"` and set `group=T`. See following examples at national level and admin 1 level.
 
 
-```{r,fig.show='hold',fig.dim = c(6, 4), tidy = FALSE}
+```{r,fig.show='hold',fig.dim = c(6, 4), tidy = FALSE, fig.cap="Comparing different model estimates at national level"}
 cl_res_ad2_T$group="cluster"
 cl_res_ad2$group="cluster"
 cl_res_ad1_T$group="cluster"
@@ -1016,16 +1044,15 @@ intervalPlot(admin = 0, group=TRUE, compare=TRUE, model = list(
       "Aggregated Admin 1 cluster-level model, not stratified"=cl_res_ad1,
       "Aggregated Admin 2 direct estimate model"=res_ad2agg,
       "Aggregated Admin 1 direct estimate model"=res_ad1agg,
-      "Aggregated Admin 1 fay herriot model"=smth_res_ad1_spatial,
-      "Aggregated Admin 2 fay herriot model"=smth_res_ad2_agg
-  
+      "Aggregated Admin 1 Fay-Herriot model"=smth_res_ad1_spatial,
+      "Aggregated Admin 2 Fay-Herriot model"=smth_res_ad2_agg
 ) )
 
 
 
 ```
 
-```{r,fig.show='hold',fig.dim = c(12, 5),tidy = FALSE}
+```{r,fig.show='hold',fig.dim = c(12, 5),tidy = FALSE, fig.cap="Comparing different model estimates at Admin 1 level"}
 
 intervalPlot(admin = 1, group=TRUE, compare=TRUE, model = list(
                   "Ad2 cls strat bym2"=cl_res_ad2_T,
@@ -1044,8 +1071,16 @@ intervalPlot(admin = 1, group=TRUE, compare=TRUE, model = list(
 
 The `compare = FALSE` in `intervalPlot()`is specifically designed for cluster models with urban/rural stratification. It presents a comparison of Admin 2 estimates with credible intervals within an Admin1 region.
 
-```{r,fig.show='hold', fig.height = 15, fig.width = 10}
+```{r,fig.show='hold', fig.height = 15, fig.width = 10, fig.cap="Comparing Admin 2 estimates with credible intervals within an Admin 1 region with aggregated results"}
 plots<-intervalPlot(compare = FALSE,model = list("model"=cl_res_ad2_T))
 wrap_plots(plots, ncol = 2)
 ```
+
+
+
+
+
+\newpage
+# References
+
 

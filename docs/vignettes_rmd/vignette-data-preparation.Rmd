@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE
 ```
 
 
-In this vignette, we provide an overview of the list of DHS indicators currently implemented in **surveyPrev** and the process to add new indicators or create customized indicators.
+In this vignette, we provide an overview of the list of DHS indicators currently implemented in **surveyPrev** and the process to add new indicators or create customized indicators. 
 
 
 First we load the **surveyPrev** package, and any packages used in the customized indicator processing function later. In our example, **dplyr** and **labelled** are used. 
@@ -69,7 +69,6 @@ If the DHS download using the API fails, you may also manually download the file
 # New indicators
 
 
-
 Details on how standard DHS indicators are defined can be found in the [Guide to DHS Statistics:https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Table_of_Contents.htm&rhsyns=%20&ux=search) by searching for an indicator. Codes for creating most standard DHS indicators can be found on DHS GitHub site: [https://github.com/DHSProgram/DHS-Indicators-R](https://github.com/DHSProgram/DHS-Indicators-R). The indicators are organized by chapters in the [Guide to DHS Statistics](https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Table_of_Contents.htm&rhsyns=%20&ux=search). 
 
 
@@ -105,12 +104,12 @@ knitr::kable(d,
 ## Function to process the indicator
 
 
-Let's take **Modern contraceptive prevalence rate (Married women currently using any modern method of contraception)** as an example. For users familiar with the standard indicators defined by the [DHS Data Indicator API](https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html), the indicator ID is "FP_CUSM_W_MOD". We will go through the steps to create the customized function below.
+Let's take **Modern contraceptive prevalence rate (Married women currently using any modern method of contraception)** as an example. For users familiar with the standard indicators defined by the [DHS Data Indicator API](https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html), the indicator ID is "FP_CUSA_W_MOD". We will go through the steps to create the customized function below.
 
 
 **Step 1**: Search indicator ID or key words in the [Guide to DHS Statistics](https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Table_of_Contents.htm&rhsyns=%20&ux=search), and then identify which chapter it is in.
 
-For our example, we can either search "FP_CUSM_W_MOD", or "contraceptive", and it is in chapter 7: family planning.
+For our example, we can either search "FP_CUSA_W_MOD", or "contraceptive", and it is in chapter 7: family planning.
 
 ```{r, echo = FALSE, out.width = "100%", fig.cap = "Step 1(a): Searching for indicator ID or key words."}
 knitr::include_graphics("figs/data1.png")
@@ -141,7 +140,7 @@ knitr::include_graphics("figs/data4.png")
 
 We extract the following chunk of codes for this indicator, which takes the IR data, and perform a few steps of data cleaning.
 
-```{r, eval=F}
+```{r, eval=FALSE}
 # Currently use modern method
 IRdata <- IRdata %>%
   mutate(fp_cruse_mod = 
@@ -155,7 +154,7 @@ We can use the code chunk to define a new function to be used in the `getDHSindi
 - Use Recode file as input and return the same data.frame.
 - Change the name of your variable into `"value"` in the end.
 
-The example below creates a `fp_cruse_mod` function for "Modern contraceptive prevalence rate (Married women currently using any modern method of contraception)", which can be recognized by the `getDHSindicator` function later.
+The example below creates a `fp_cruse_mod` function for "Modern contraceptive prevalence rate (All women currently using any modern method of contraception)", which can be recognized by the `getDHSindicator` function later.
 
 ```{r}
 fp_cruse_mod <- function(RData){
@@ -176,7 +175,7 @@ Finally, after we create this function `fp_cruse_mod`, We can create the indicat
 
 Altogether, the following codes creates the dataset of the processed indicator.
 
-```{r, eval=T}
+```{r, eval=TRUE}
 year <- 2018
 country <- "Zambia"
 Recode <- "Individual Recode"
@@ -187,5 +186,14 @@ head(data)
 ```
 
 
+
+
+# Multiple dataset
+
+Some indicators, such as HIV prevalence, require an additional data file. Take, HIV prevalence among general population, as an example. This is a built-in indicator with the ID "HA_HIVP_B_HIV". It needs three Recode files: Individual, Men's and HIV Test Results, so that the output of `getDHSdata()` and the input for `getDHSindicator()` are a list of three data files. 
+
+```{r,eval=FALSE}
+HIVdhsData <- getDHSdata(country = country, indicator = NULL, Recode = c("Individual Recode", "Men's Recode","HIV Test Results Recode"), year = year)
+```
 
 

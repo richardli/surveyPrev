@@ -63,7 +63,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
     # colnames(raw.dat.tmp)[colnames(raw.dat.tmp) == 'n_un_fam_plan'] <- "value"
     raw.dat.tmp <- fp_unmet_tot( Rdata)
   }
-  else if(indicator == "FP_CUSM_W_MOD"){
+  else if(indicator == "FP_CUSA_W_MOD"){
     raw.dat.tmp <- fp_cruse_mod( Rdata)
 
   }
@@ -352,7 +352,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
 
   }
 
-  else if(indicator== "ML_ITNA_P_ACC") {
+  else if(indicator== "ML_NETP_H_IT2") {
 
     raw.dat.tmp <- ml_hhaccess(Rdata)
 
@@ -362,6 +362,13 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL) {
     raw.dat.tmp <- ml_test_rdtmal(Rdata)
 
   }
+
+  else if(indicator== "HA_HIVP_B_HIV") {
+
+    raw.dat.tmp <- hv_hiv_pos(Rdata)
+
+  }
+
 
   else if(indicator== "WS_TLET_H_IMP"||indicator== "sanitation") {
 
