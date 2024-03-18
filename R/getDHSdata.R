@@ -28,7 +28,6 @@
 #' @export
 getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
 
-
   IR_Individual<-c("ancvisit4+"
                      ,"RH_ANCN_W_N4P"
                      ,"womananemia"
@@ -48,7 +47,6 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
    ,"WS_TLET_P_BAS"
    ,"WS_SRCE_P_BAS"
  )
-
  KR_Children<-c(
     "CH_DIAT_C_ORT"
    ,"DPT3"
