@@ -25,6 +25,7 @@ First we load the **surveyPrev** package, and any packages used in the customize
 library(surveyPrev)
 library(dplyr)
 library(labelled)
+library(kableExtra)
 ```
 
 In order to use `getDHSdata()` to download the relevant DHS data directly from the DHS website, we need to 
@@ -40,19 +41,37 @@ rdhs::set_rdhs_config(email = "your_email",
 
 # Built-in indicators
 
-Currently, the `surveyPrev` package supports the following indicators: 
+```{r, echo = FALSE, eval = TRUE}
+data(surveyPrevIndicators)
+```
 
-- `ancvisit4+`: Percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits.
-- `womananemia`: Percentage of women aged 15-49 classified as having any anemia (<12.0 g/dl for non-pregnant women and <11.0 g/dl for pregnant women).
-- `stunting`:   Percentage of children under age five stunted (below -2 standard deviations of height-for-age according to the WHO standard).
-- `wasting`:    Percentage of children under age five with a weight-for-height z-score (WHZ) more than two standard deviations below the median WHO growth standards.
-- `DPT3`:   Diphtheria-tetanus-pertussis (DPT3) received; Percentage of children aged 12-23 months who had received a third DPT dose.
-- `sanitation`: Percentage of households using an improved sanitation facility.
-- `unmet_family`: Percentage of all women with an unmet need for family planning for spacing and limiting.
+Currently, the `surveyPrev` package supports `r dim(surveyPrevIndicators)[1]` indicators listed in Table \@ref(tab:indic). The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset.
+
+```{r, eval = FALSE}
+data(surveyPrevIndicators)
+head(surveyPrevIndicators)
+```
+
+
+```{r, indic, eval = TRUE, table.width = "100%", echo = FALSE}
+is_html_output = function() {
+  knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
+}
+if(is_html_output()){
+  kbl(surveyPrevIndicators, align = 'ccl', 
+    caption = "List of built-in indicators in the surveyPrev package.") %>%
+  kable_styling()
+}else{
+  kbl(surveyPrevIndicators, align = 'ccl', 
+    caption = "List of built-in indicators in the surveyPrev package.") %>%
+  column_spec(3, width = "25em")
+}
+```
 
 
 
-These indicators above can be directly processed within **surveyPrev** using `getDHSdata()` and `getDHSindicator()` functions. `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package. For example,  
+
+These indicators above can be directly processed within **surveyPrev** using `getDHSdata()` and `getDHSindicator()` functions. Both the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package. For example,  
 
 ```{r,message=FALSE,warning=FALSE}
 indicator <- "unmet_family"
@@ -190,7 +209,7 @@ head(data)
 
 # Multiple dataset
 
-Some indicators, such as HIV prevalence, require additional data files. Take, HIV prevalence among general population, as an example. This is a built-in indicator with the ID "HA_HIVP_B_HIV". It needs three Recode files: Individual, Men's and HIV Test Results, so that the output of `getDHSdata()` and the input for `getDHSindicator()` are a list of three data files. 
+Some indicators, such as HIV prevalence, require additional data files. Take, HIV prevalence among general population, as an example. This is a built-in indicator with the ID "HA_HIVP_B_HIV". It needs three Recode files: Individual, Men's and HIV Test Results, so that the output of `getDHSdata()` and the input for `getDHSindicator()` is a list of three data files. 
 
 ```{r,eval=FALSE}
 HIVdhsData <- getDHSdata(country = country, indicator = NULL, Recode = c("Individual Recode", "Men's Recode","HIV Test Results Recode"), year = year)
