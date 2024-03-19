@@ -61,6 +61,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
  }
 
   if(admin==2){
+    if(strata != "all"){
+      message("Subnational stratum-specific direct estimates are not implemented yet. Only overall estimates are computed")
+    }
     #prepare data
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
@@ -263,6 +266,10 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
   }else if(admin==1){
 
+    if(strata != "all"){
+      message("Subnational stratum-specific direct estimates are not implemented yet. Only overall estimates are computed")
+    }
+    
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)

@@ -81,7 +81,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 
 
   if( unique(is.na(admin.info$data$urban)) && stratification==T){
-    message("No urban/rural proportion found")
+    message("No urban/rural proportion found. Unstratified model is fitted instead")
     stratification = F
   }
 
