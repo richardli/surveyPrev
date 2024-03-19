@@ -7,13 +7,13 @@
 adminInfo(poly.adm, admin, agg.pop = NULL, proportion = NULL)
 }
 \arguments{
+\item{poly.adm}{spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.}
+
 \item{admin}{admin level}
 
 \item{agg.pop}{data frame of aggregated poplulation from aggPopulation function. It should have two columns: "admin2.name.full" and "population".}
 
 \item{proportion}{data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.}
-
-\item{geo}{spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.}
 }
 \value{
 This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix.
@@ -34,7 +34,7 @@ info <- adminInfo(geo.sf, admin = 1)
 
 # To include the population information
 data(ZambiaPopWomen)
-info <- adminInfo(geo = ZambiaAdm1,
+info <- adminInfo(poly.adm = ZambiaAdm1,
                   admin = 1,
                   agg.pop = ZambiaPopWomen$admin1_pop,
                   proportion = ZambiaPopWomen$admin1_urban )

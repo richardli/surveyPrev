@@ -30,7 +30,7 @@
 #'                                  year = 2018)
 #'
 #' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
-#' admin.info1 <- adminInfo(geo = ZambiaAdm1,
+#' admin.info1 <- adminInfo(poly.adm = ZambiaAdm1,
 #'                         admin = 1,
 #'                         agg.pop =ZambiaPopWomen$admin1_pop,
 #'                         proportion = ZambiaPopWomen$admin1_urban)
@@ -41,7 +41,7 @@
 #'                        model = "bym2",
 #'                        aggregation = F)
 #'
-#' admin.info2 <- adminInfo(geo = ZambiaAdm2,
+#' admin.info2 <- adminInfo(poly.adm = ZambiaAdm2,
 #'                         admin = 2,
 #'                         agg.pop =ZambiaPopWomen$admin2_pop,
 #'                         proportion = ZambiaPopWomen$admin2_urban)

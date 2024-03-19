@@ -2,7 +2,7 @@
 #'
 #' This function get admin information including name, character, population and unban/rural proportion.
 #'
-#' @param geo spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.
+#' @param poly.adm spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.
 #' @param admin admin level
 #' @param agg.pop  data frame of aggregated poplulation from aggPopulation function. It should have two columns: "admin2.name.full" and "population".
 #' @param proportion data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.
@@ -23,14 +23,14 @@
 #'
 #' # To include the population information
 #' data(ZambiaPopWomen)
-#' info <- adminInfo(geo = ZambiaAdm1,
+#' info <- adminInfo(poly.adm = ZambiaAdm1,
 #'                   admin = 1,
 #'                   agg.pop = ZambiaPopWomen$admin1_pop,
 #'                   proportion = ZambiaPopWomen$admin1_urban )
 #' @export
 adminInfo <- function(poly.adm, admin, agg.pop = NULL, proportion = NULL) {
 
-  geo=poly.adm
+  geo <- poly.adm
  if("sf" %in% class(geo)) geo <- sf::as_Spatial(geo)
 
   admin.info <- NULL
