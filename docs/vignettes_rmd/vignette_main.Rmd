@@ -52,7 +52,7 @@ install_github("richardli/surveyPrev")
 
 After installation, the package can be loaded with 
 
-```{r, message=FALSE,warning=FALSE}
+```{r, message=FALSE,warning=FALSE, eval = TRUE}
 library(surveyPrev)
 ```
 
@@ -67,7 +67,7 @@ library(INLA)
 
 The following packages are also needed to run the examples in this vignette.
 
-```{r, message=FALSE,warning=FALSE}
+```{r, message=FALSE,warning=FALSE, eval = TRUE}
 library(geodata)
 library(sf)
 library(SUMMER)
@@ -75,24 +75,48 @@ library(rdhs)
 library(ggplot2)
 library(patchwork)
 library(dplyr)
+library(kableExtra)
 ```
 
 
 
 
+## Built-in indicators
+
+```{r, echo = FALSE, eval = TRUE}
+data(surveyPrevIndicators)
+```
+
+Currently, the `surveyPrev` package supports `r dim(surveyPrevIndicators)[1]` indicators. The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset. Either the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. The full list of indicators and their IDs are summarized in Table \@ref(tab:indic).
+
+```{r, eval = FALSE}
+data(surveyPrevIndicators)
+head(surveyPrevIndicators)
+```
+
+```{r, indic, eval = TRUE, table.width = "100%", echo = FALSE}
+is_html_output = function() {
+  knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
+}
+if(is_html_output()){
+  kbl(surveyPrevIndicators, align = 'ccl', 
+    caption = "List of built-in indicators in the surveyPrev package.") %>%
+  kable_styling()
+}else{
+  kbl(surveyPrevIndicators, align = 'ccl', 
+    caption = "List of built-in indicators in the surveyPrev package.") %>%
+  column_spec(3, width = "25em")
+}
+```
+
+
+Details on more common DHS indicators can be found in the Guide to DHS Statistics^[https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/) by searching for an indicator. User-specified function can also be used to process raw DHS data into new indicators. Please refer to the vignette on _Built-in and Customized Indicators_ for more details.
+
+In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator can be extracted with `indicator = "ancvisit4+"` or `indicator = "RH_ANCN_W_N4P"`. 
+
+
+
 ## DHS survey data 
-
-Currently, the `surveyPrev` package supports the following indicators: 
-
-- `ancvisit4+`: Percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits.
-- `womananemia`: Percentage of women aged 15-49 classified as having any anemia (<12.0 g/dl for non-pregnant women and <11.0 g/dl for pregnant women).
-- `stunting`:   Percentage of children under age five stunted (below -2 standard deviations of height-for-age according to the WHO standard).
-- `wasting`:    Percentage of children under age five with a weight-for-height z-score (WHZ) more than two standard deviations below the median WHO growth standards.
-- `DPT3`:   Diphtheria-tetanus-pertussis (DPT3) received; Percentage of children aged 12-23 months who had received a third DPT dose.
-- `sanitation`: Percentage of households using an improved sanitation facility.
-- `unmet_family`: Percentage of all women with an unmet need for family planning for spacing and limiting.
-
-Details on how each indicator is defined can be found in the Guide to DHS Statistics^[https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/) by searching for an indicator. In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator can be extracted with `indicator = "ancvisit4+"` or `indicator = "RH_ANCN_W_N4P"`. 
 
 Processing the binary indicator from the raw DHS data consist of two steps: 
 1. download the relevant DHS data recode using `getDHSdata()`, or manually from the DHS website,
@@ -302,7 +326,7 @@ head(cl_res_ad2$res.admin2)
 
 We can use `mapPlot()` function from the SUMMER package to visualize estimates and standard errors. We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
 
-```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level estimates"}
+```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level estimates", out.width = "100%"}
 poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
 
 # Make all plots share the same color range
@@ -334,8 +358,6 @@ g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2,
               ylim = ylim, removetab = TRUE)
 
 (g1 + g2) / (g3 + g4)
-
-
 ```
 
 
@@ -368,7 +390,7 @@ s1 +s2
 ```
  
 
-```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level estimates"}
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level estimates"}
 s1<-scatterPlot(
 res1=res_ad1$res.admin1,
 res2=cl_res_ad1$res.admin1,
@@ -476,7 +498,7 @@ patchwork::wrap_plots(plots, ncol = 2)
 
 We can compare the estimates on a map using `mapPlot()` function in **SUMMER** as before.
 
-```{r ,warning=FALSE,echo=TRUE,fig.show="hold",fig.dim = c(6, 4),fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 2 unstratified and stratified cluster-level estimates"}
+```{r ,warning=FALSE,echo=TRUE,fig.show="hold",fig.dim = c(6, 4), out.width = "100%", fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 2 unstratified and stratified cluster-level estimates"}
 min= min(res_ad2$res.admin2$direct.est,smth_res_ad2$res.admin2$mean,
          cl_res_ad2$res.admin2$mean,
          cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",]$mean)
@@ -687,7 +709,7 @@ head(admin.info2$data)
 
 The following maps display the 15-49 female population and aggregated DHS survey weights ratio within upper admin levels.
 
-```{r,fig.show='hold',fig.dim = c(6, 4), fig.cap="survey weight ratio and population ratio at Admin 1 and Admin 2"}
+```{r,fig.show='hold',fig.dim = c(6, 4), fig.cap="survey weight ratio and population ratio at Admin 1 and Admin 2", out.width = "100%"}
 admin.info1$data$r.population=
   admin.info1$data$population/sum(admin.info1$data$population)
 admin.info1.survey$data$r.SurveyWeight=
@@ -725,7 +747,7 @@ g4 <- mapPlot(data = admin.info2.survey$data, geo = poly.adm2,
 The scatter plots show the comparison of Admin 2 survey weight ratio & 15-49 female population ratio within Admin 1. Noticed that DHS data may have missing Admin 2 areas. For example, Zambia has 112 out of 115 Admin 2 areas for this survey (red points in the scatter plots). Users have to be aware of that this is an incomplete set of weights for aggregation to from Admin 2 to Admin 1. 
 
 
-```{r, fig.show='hold',fig.dim = c(7, 7),tidy=FALSE, fig.cap="Admin 2 survey weight ratio and 15-49 female population ratio", out.width = "50%"}
+```{r, fig.show='hold',fig.dim = c(7, 7),tidy=FALSE, fig.cap="Admin 2 survey weight ratio and 15-49 female population ratio", out.width = "50%", fig.align = 'center'}
 
 df<-left_join(admin.info2$data,admin.info2.survey$data,by="admin2.name.full")
 df$pop_r=df$population.x/df$population.admin1.x 
@@ -998,7 +1020,7 @@ g4 <- mapPlot(data = smth_res_ad2_agg$agg.admin1, geo = poly.adm1,
 `intervalPlot()` can provide interval plots at different admin levels for model comparison with `compare=T`. Input should be a list of model outputs by `surveyPrev` with self defined model name, (e.g.`model=list("name 1"= fit1,"name 2"= fit2)`). Then by setting `admin=0,1`, the returned plot will be at given level. You can also group your model by adding group object in your model results like `fit1$model="group1"` and set `group=T`. See following examples at national level and Admin 1 level.
 
 
-```{r,fig.show='hold',fig.dim = c(6, 4), tidy = FALSE, fig.cap="Comparing different model estimates at national level"}
+```{r,fig.show='hold',fig.dim = c(8, 4), tidy = FALSE, fig.cap="Comparing different model estimates at national level"}
 cl_res_ad2_T$group="cluster"
 cl_res_ad2$group="cluster"
 cl_res_ad1_T$group="cluster"
@@ -1035,9 +1057,7 @@ intervalPlot(admin = 1, group=TRUE, compare=TRUE, model = list(
                   "Ad2 dir.est  "=res_ad2agg,
                   "Ad1 dir.est  "=res_ad1agg,
                   "Ad1 fh bym2"=smth_res_ad1_spatial,
-                  "Ad2 fh bym2"=smth_res_ad2_agg
-  
-) )
+                  "Ad2 fh bym2"=smth_res_ad2_agg))
 
 ```
 
