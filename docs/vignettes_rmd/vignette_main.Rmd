@@ -15,13 +15,14 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=TRUE)
 ```
 
+\clearpage
 # Overview
 
 In this vignette, we describe how prevalence mapping using DHS data can be carried out. The vignette is organized as follows. In Section \@ref(sec:data) we first describe the data preparation steps to obtain and process the relevant DHS survey data in R. In Section \@ref(sec:model) we describe the following models:
 
-1. Direct estimates (Section \@ref(sec:direct))
-2. Area-level (Fay-Herriot) estimates (Section \@ref(sec:area-level))
-3. Cluster-level estimates (Section \@ref(sec:cluster-level))
+1. Direct estimates in Section \@ref(sec:direct).
+2. Area-level Fay-Herriot model in Section \@ref(sec:area-level).
+3. Cluster-level model in Section \@ref(sec:cluster-level).
 
 In Section \@ref(sec:model2), we describe additional models for estimating prevalence at Admin 2 level. Section \@ref(sec:aggregation) is about aggregation model results to higher admin levels.
 
@@ -46,7 +47,7 @@ The **surveyPrev** package can be installed from GitHub with
 
 ```{r, message=FALSE,warning=FALSE, eval=FALSE}
 library(devtools)
-install_github("richardli/LINsurveyPrev")
+install_github("richardli/surveyPrev")
 ```
 
 After installation, the package can be loaded with 
@@ -56,7 +57,7 @@ library(surveyPrev)
 ```
 
 
-In particular, one of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following codes [@rue2009inla].
+In particular, one of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following codes [@rue2009inla]. 
 
 ```{r pkg, eval = FALSE, tidy = FALSE}
 install.packages("INLA", repos=c(getOption("repos"), 
@@ -70,28 +71,16 @@ The following packages are also needed to run the examples in this vignette.
 library(geodata)
 library(sf)
 library(SUMMER)
-# library(rdhs)
+library(rdhs)
 library(ggplot2)
 library(patchwork)
 library(dplyr)
-# library(rgdal)
 ```
 
 
 
 
 ## DHS survey data 
-
-The `getDHSdata()` function downloads the relevant DHS data directly from the DHS website. This step requires the analyst to
-
-1. register with DHS to gain data access, and
-2. set up a DHS account details in R using `rdhs` package, i.e.,
-
-```{r,eval=FALSE}
-rdhs::set_rdhs_config(email = "your_email",
-                project = "your_registered_DHS_project_title")
-```
-
 
 Currently, the `surveyPrev` package supports the following indicators: 
 
@@ -103,9 +92,23 @@ Currently, the `surveyPrev` package supports the following indicators:
 - `sanitation`: Percentage of households using an improved sanitation facility.
 - `unmet_family`: Percentage of all women with an unmet need for family planning for spacing and limiting.
 
-Details on how each indicator is defined can be found in the [Guide to DHS Statistics](https://dhsprogram.com/data/Guide-to-DHS-Statistics/index.htm#t=Table_of_Contents.htm&rhsyns=%20&ux=search) by searching for an indicator.
+Details on how each indicator is defined can be found in the Guide to DHS Statistics^[https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/) by searching for an indicator. In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator can be extracted with `indicator = "ancvisit4+"` or `indicator = "RH_ANCN_W_N4P"`. 
 
-In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator
+Processing the binary indicator from the raw DHS data consist of two steps: 
+1. download the relevant DHS data recode using `getDHSdata()`, or manually from the DHS website,
+2. create a data frame with the binary indicator and relevant information using `getDHSindicator()`. 
+
+The `getDHSdata()` function downloads the relevant DHS data directly from the DHS website using the **rdhs** package. This step requires users to
+
+1. register with DHS to gain data access, 
+2. set up the DHS account login details in R with `rdhs::set_rdhs_config()`.
+
+```{r,eval=FALSE}
+rdhs::set_rdhs_config(email = "your_email",
+                project = "your_registered_DHS_project_title")
+```
+
+After setting up the DHS account information, `getDHSdata()` can be used to download the relevant survey files directly into R. If data download using the API fails, or if it is preferred to work with downloaded data files offline, you may also manually download the file from the DHS website and read into R. The `getDHSdata()` function returns a message specifying which file is used (e.g., Individual Record file for the ANC visit example). 
 
 ```{r,message=FALSE,warning=FALSE}
 indicator <- "ancvisit4+"
@@ -114,10 +117,7 @@ country <- "Zambia"
 dhsData <- getDHSdata(country = country, indicator = indicator, year = year)
 ```
 
-If the DHS download using the API fails, you may also manually download the file from the DHS website and read into R. The `getDHSdata()` function returns a message specifying which file is used (e.g., Individual Record file for the ANC visit example).
-
-
-We then use `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package.
+We then use `getDHSindicator()` to process the raw survey data into a data frame, where the column `value` is the indicator of interest. The data frame also contains information specifying survey designs in the **survey** package, including cluster ID, household ID, survey weight and strata information. 
 
 ```{r}
 data <- getDHSindicator(dhsData, indicator = indicator)
@@ -126,7 +126,7 @@ head(data)
 
 ## Spatial information
 
-The `getDHSgeo()`function downloads the GPS data for cluster locations through `rdhs`. This step loads in the GPS location as a `SpatialPointsDataFrame`, but it can also be performed manually by downloading the GPS file from the DHS website. This step is needed to match cluster locations to different admin levels. 
+The `getDHSgeo()`function downloads the GPS data for cluster locations, also through the **rdhs** package. This step loads in the GPS location as a `SpatialPointsDataFrame`, but it can also be performed manually by downloading the GPS file from the DHS website. The GPS location of the clusters are used to match clusters to regions at different admin levels. 
 
 ```{r}
 geo <- getDHSgeo(country = country, year = year)
@@ -135,10 +135,10 @@ geo <- getDHSgeo(country = country, year = year)
 In the case of Zambia, the maps are already included in the package as example datasets (`data(ZambiaAdm1)` and `data(ZambiaAdm2)`) so we load them directly within R. For other countries, the Admin 1 and Admin 2 boundary shapefiles can be downloaded from the GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)] and read into R manually. Another alternative is to use the **geodata** and **sf** package to download the maps from the GADM site and load them in R directly.
 
 ```{r}
-poly.adm1 <- gadm(country="ZMB", level=1, path=tempdir())
-poly.adm1 <- st_as_sf(poly.adm1)
-poly.adm2 <- gadm(country="ZMB", level=2, path=tempdir())
-poly.adm2 <- st_as_sf(poly.adm2)
+poly.adm1 <- geodata::gadm(country="ZMB", level=1, path=tempdir())
+poly.adm1 <- sf::st_as_sf(poly.adm1)
+poly.adm2 <- geodata::gadm(country="ZMB", level=2, path=tempdir())
+poly.adm2 <- sf::st_as_sf(poly.adm2)
 ```
 
 
@@ -152,7 +152,7 @@ head(cluster.info$wrong.points)
 ```
 
 
-The `adminInfo()` function computes the spatial adjacency matrix, and if supplied with additional information on population, combines needed information for each administrative area, including the name, population, and urban population fractions of each administrative area. We will ignore the population information for now and focus on only information from the DHS data. The `admin.mat` object stores adjacency matrix for spatial models. 
+The `adminInfo()` function computes the spatial adjacency matrix, and if supplied with additional information on population, combines needed information for each administrative area, including the name, population, and urban population fractions of each administrative area. The `admin.mat` object stores adjacency matrix for spatial models. We will ignore the population information for now and focus on only information from the DHS data, and will return to the population information in Section \@ref(sec:aggregation). 
 
 ```{r}
 admin.info1 <- adminInfo(poly.adm = poly.adm1, admin = 1)
@@ -162,64 +162,57 @@ head(admin.info2$data)
 
 
 
-# Prevalence estimation with only DHS data {#sec:model}
+# Prevalence Estimation With Only DHS Data {#sec:model}
 
 ## Direct estimates {#sec:direct}
 
-For $y_j$ be the $j^{\text{th}}$ individual result and $w_j$ denote the design weight associated with this individual.  For a given area denoted as $i$, we have
+For $y_j$ be the binary outcome of interest for the $j^{\text{th}}$ individual in the survey and $w_j$ be the design weight associated with this individual.  For a given area denoted as $i$, we have
 
 $$ \hat p^{HT}_{i}=\frac {\sum_{j \in S_i} y_j w_j}{\sum_{j \in S_i} w_j}$$
 
-The `directEST()` function calculates direct estimates at different Admin levels using the `SUMMER::smoothSurvey()` function in the **SUMMER** package internally [@li2020summer].  The output of the function includes the direct estimates and their variance, standard error, and lower and upper confidence intervals based on the specified confidence level. The confidence intervals are computed on the logit scale, i.e., if we use $D_i$ to denote the design-based variance of $\hat p^{HT}_i$, then the asymptotic design-based variance of $\mbox{logit}(\hat p^{HT}_i)$ is
+where $S_i$ is the set of individual index within the $i$-th region. The `directEST()` function calculates direct estimates at different Admin levels using the `SUMMER::smoothSurvey()` function in the **SUMMER** package internally [@li2020summer].  The output of the function includes the direct estimates and their variance, standard error, and confidence intervals based on the specified confidence level. The confidence intervals are computed on the logit scale, i.e., if we use $D_i$ to denote the design-based variance of $\hat p^{HT}_i$, then the asymptotic design-based variance of $\mbox{logit}(\hat p^{HT}_i)$ is
 \[
 V_i  = \frac{D_i}{(\hat p^{HT}_i)^2(1-\hat p^{HT}_i)^2}
 \]
-and we compute the lower and upper confidence interval on the probability scale to be 
+and we compute the confidence interval on the probability scale to be 
 \[
 (\mbox{expit}[\mbox{logit}(\hat p^{HT}_i) - z_{\alpha/2}V_i^{1/2}], \;\;
 \mbox{expit}[\mbox{logit}(\hat p^{HT}_i) + z_{\alpha/2}V_i^{1/2}]).
 \]
 
-The function also produce aggregated estimates to upper administrative levels when `aggregation = T`. Let i be the lower admin level and k be the upper admin level, then aggregated estimates for area k is 
-
-$$ \hat p^{HT}_{k}=\frac {\sum_{i \in k} \hat p^{HT}_{i}E_i}{\sum_{i \in k} \text{E}_i},$$
-where $E_i=\text{population}_{i}\times \textbf{1}(\hat p^{HT}_{i} \neq \text{NA})$. When there is no missing area i in k, $\hat p^{HT}_{k}$ is the weighted average using population fractions. When Admin i in k is missing, then the $\hat p^{HT}_{k}$ is the weighted average of the rest areas in k. 
-
-
+Currently the package defaults to a two-stage stratified cluster sampling design, with the sampling clusters (enumeration areas) being stratified by Admin 1 areas and urban/rural status, which is the most common sampling design in the DHS. 
 
 
 ```{r}
 res_ad1 <- directEST(data = data,
                    cluster.info = cluster.info,
-                   admin = 1,
-                   aggregation = FALSE)
+                   admin = 1)
 head(res_ad1$res.admin1)
 ```
 
 
-For national level (`admin = 0`), we add the argument `strata`, which can take values `urban`, `rural`, or `all` to calculate direct estimate using urban clusters, rural clusters, or all of the data, respectively. 
+For national level (`admin = 0`), the function can additioanlly produce urban- and rural-specific direct estimates by specifying argument `strata`. 
 
 ```{r}
 res_ad0 <- directEST(data=data,
                    cluster.info= cluster.info,
                    admin=0,
                    strata="all")
-res_ad0$res.admin0
-
-res_ad0_urban<-directEST(data=data,
+res_ad0_urban <- directEST(data=data,
                    cluster.info= cluster.info,
                    admin=0,
                    strata="urban")
-res_ad0_urban$res.admin0
-res_ad0_rural<-directEST(data=data,
+res_ad0_rural <- directEST(data=data,
                    cluster.info= cluster.info,
                    admin=0,
                    strata="rural")
-res_ad0_rural$res.admin0
+list(all = res_ad0$res.admin0, 
+      urban = res_ad0_urban$res.admin0, 
+      rural = res_ad0_rural$res.admin0)
 ```
 
 
-## Area-level (Fay-Herriot) Estimates {#sec:area-level}
+## Area-level Fay-Herriot model {#sec:area-level}
 
 
 Fay-Herriot models provides smoothed estimates at the areal level using direct estimate $\hat p^{HT}_{i}$ as input. The direct estimates are modeled as a noisy observation of the true prevalence, with the variance of noise determined by the design-based variance. We consider the spatial Fay-Herriot model for the logit transformed direct estimates, which is defined as follows:
@@ -228,7 +221,7 @@ $$\text{logit}(\hat p^{HT}_{i})|\lambda_{i} \sim\textrm{Normal}(\lambda_{i}, V_{
 $$\lambda_{i}= \mathbf x_i^{T} \mathbf{\beta} + e_i+S_i.$$
 Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, $\mathbf{x}_i$ represents area-level covariates, and $e_i$ and $S_i$ are  unstructured and structured spatial random effects. 
 
-As of now the package allows only an overall intercept for the fixed effect. The default prior for the intercept is $N(0, 1000)$. The $e_i + S_i$ term is implemented via the BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
+As of now the package allows only an overall intercept for the fixed effect. The default prior for the intercept is $N(0, 1000)$. The structured and non-structured random effects are implemented via the BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
 
 
 The `fhModel()` calculates spatial Fay Herriot estimates at different administrative levels using `SUMMER::smoothSurvey()`. Users can specify either only i.i.d. random effect (i.e., no $S_i$ term) or the Besag-York-Mollié (BYM) model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregated to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more details in Section \@ref(sec:aggregation). 
@@ -253,9 +246,9 @@ head(smth_res_ad1_bym2$res.admin1)
 ```
 
 
-## Cluster-Level Estimates {#sec:cluster-level}
+## Cluster-level model {#sec:cluster-level}
 
-Cluster-level models assume smoothing models for counts of events in each cluster. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$.
+Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$.
 
 $$Y_c|p_c,d\sim \textrm{BetaBinomial}(n_c,p_c,d),$$
 $$p_c=\textrm{expit}(\alpha+\mathbf{x}_c\beta+e_{i[s_c]}+S_{i[s_c]}),$$
@@ -305,9 +298,9 @@ head(cl_res_ad2$res.admin2)
 ```
 
 
-## Visualizing Prevalence Estiamtes {#sec:vis}
+## Visualizing prevalence estimates {#sec:vis}
 
-We can use `mapPlot()` function from the SUMMER package to visualize estimates and standard errors. We note that for admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
+We can use `mapPlot()` function from the SUMMER package to visualize estimates and standard errors. We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
 
 ```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level estimates"}
 poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
@@ -348,7 +341,7 @@ g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2,
 
 The `scatterPlot()` function takes results from two model outputs, and produce a scatter plot of the selected variable. Here we visualize the comparison of the estimates and standard deviations.
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 Fay–Herriot"}
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 Fay–Herriot"}
 s1<-scatterPlot(
   res1=res_ad1$res.admin1,
   res2=smth_res_ad1_bym2$res.admin1,
@@ -375,7 +368,7 @@ s1 +s2
 ```
  
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level estimates"}
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level estimates"}
 s1<-scatterPlot(
 res1=res_ad1$res.admin1,
 res2=cl_res_ad1$res.admin1,
@@ -405,12 +398,12 @@ s1 +s2
 
 
 
-# More Models for Admin 2  {#sec:model2}
+# More Models for Admin 2 Estimates {#sec:model2}
 In this section, we discuss additional models that can be fit to estimate prevalences at the Admin 2 level. These models either require additional care from the users in examining the assumptions and results, or require additional information not readily available from the DHS data alone. 
 
-## Admin 2 Direct Estimates {#sec:direct2} 
+## Admin 2 direct estimates {#sec:direct2} 
 
-For `directEST()`, if we set `admin = 2`, the output includes results at the Admin 2 level with `aggregation = FALSE` and aggregated results at both the Admin 1 and national level  with `aggregation = TRUE`. For countries with a large number of Admin 2 areas, some of the direct estimates can be undefined if there is no cluster in the area.
+In general, direct estimates at Admin 2 are unstable. For countries with a large number of Admin 2 areas, some of the direct estimates can be undefined if there is no cluster in the area.
 
 ```{r}
 res_ad2 <- directEST(data = data,
@@ -420,17 +413,17 @@ res_ad2 <- directEST(data = data,
 ```
 
 
-## Admin 2 Area-level (Fay-Herriot) Estimates {#sec:area-level2}
+## Admin 2 area-level Fay-Herriot model {#sec:area-level2}
 
 Fay-Herriot model at admin2 level can be fit by treating areas without direct estimates as missing data, though it is usually not recommended due to data sparsity. In addition, numerical issue arise when design-based variance of direct estimate is close to zero and logit precision become too large. A potential fix for this issue is to identify regions with too small design variance(< 1e-30), and delete the clusters in these regions, before fitting the model. However, this step creates additional bias in the results if the number of clusters deleted is large.
 
 
 ```{r}
-problem_admin2 <- res_ad2$res.admin2$admin2.name.full[res_ad2$res.admin2$direct.var < 1e-30]
+bad_admin2 <- subset(res_ad2$res.admin2, direct.var < 1e-30)$admin2.name.full
 # identify clusters in these regions
-problem_clusters <- cluster.info$data$cluster[cluster.info$data$admin2.name.full %in% problem_admin2]
+bad_clusters <- subset(cluster.info$data, admin2.name.full %in% bad_admin2)$cluster
 # Run FH model without these clusters
-smth_res_ad2 <- fhModel(subset(data, !cluster %in% problem_clusters),
+smth_res_ad2 <- fhModel(subset(data, !cluster %in% bad_clusters),
                     cluster.info = cluster.info,
                     admin.info = admin.info2,
                     admin = 2,
@@ -440,18 +433,15 @@ head(smth_res_ad2$res.admin2)
 ```
 
 
-## Admin 2 Cluster-Level Estimates with Urban/Rural Stratification {#sec:cluster-level2}
+## Admin 2 cluster-level model with urban/rural stratification {#sec:cluster-level2}
 
-For `clusterModel()`, when setting `stratification = TRUE`, the `res.admin1` or `res.admin2` includes the results for urban, rural, and the overall area-level prevalences. The area-level risk (`type=="full"` in the output) are aggregated using urban/rural proportion at the corresponding admin level. 
-
-In order to facilitate aggregation for cluster-level model with urban/rural effects, we need to know the fraction of urban population by each administrative region. This computation can be non-trivial and requires external information (i.e., the urban/rural definition by census), so we omit this step from this document for now and assume such information is already obtained from a difference source. 
-
-Given the urban/rural proportions, we first add the information into `admin.info2` using `adminInfo()`.The urban proportions for women of age 15 to 49 in Zambia in 2018 has been pre-computed and saved in `ZambiaPopWomen$admin1_urban` and `ZambiaPopWomen$admin2_urban`.
-
+In situations where the urban and rural prevalence are different, the urban/rural stratification variable needs to be included in the model. This can be achieved by setting `stratification = TRUE`. The returned results then consist of urban-specific, rural-specific, and the overall area-level prevalences. In order to facilitate aggregation for cluster-level model with urban/rural effects, we need to know the fraction of urban population by each administrative region. This computation can be non-trivial and requires external information (i.e., the urban/rural definition by census), so we omit this step from this document for now and assume such information is already obtained from a difference source. he urban proportions for women of age 15 to 49 in Zambia in 2018 has been pre-computed and saved in `ZambiaPopWomen$admin1_urban` and `ZambiaPopWomen$admin2_urban`.
 
 ```{r}
 head(ZambiaPopWomen$admin2_urban)
 ```
+
+Given the urban/rural proportions, we first add the information into `admin.info2` using `adminInfo()`.T
 
 
 ```{r, tidy = F}
@@ -461,7 +451,7 @@ admin.info2 <- adminInfo(poly.adm = poly.adm2,
 head(admin.info2$data)
 ```
 
-We can then fit the stratified cluster-level model by specifying `aggregation = TRUE`. 
+We can then fit the stratified cluster-level model by specifying `stratification = TRUE`. 
 
 ```{r}
 cl_res_ad2_T <- clusterModel(data=data,
@@ -470,7 +460,6 @@ cl_res_ad2_T <- clusterModel(data=data,
                    model = "bym2",
                    stratification = TRUE,
                    admin = 2, 
-                   aggregation = FALSE,
                    CI = 0.95)
 ```
 
@@ -478,16 +467,16 @@ The `compare=FALSE` in `intervalPlot()`is specifically designed for cluster mode
 
 ```{r,fig.show='hold', fig.height = 15, fig.width = 10, fig.cap="Comparing Admin 2 estimates with credible intervals within an Admin 1 region"}
 plots <- intervalPlot(compare = FALSE, model = list("model"=cl_res_ad2_T))
-wrap_plots(plots, ncol = 2)
+patchwork::wrap_plots(plots, ncol = 2)
 ```
 
 
 
-## Visualizing Admin 2 Prevalence Estimates  {#sec:vis2}
+## Visualizing Admin 2 prevalence estimates  {#sec:vis2}
 
 We can compare the estimates on a map using `mapPlot()` function in **SUMMER** as before.
 
-```{r ,warning=FALSE,echo=FALSE,fig.show="hold",fig.dim = c(6, 4),fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 2 unstratified and stratified cluster-level estimates"}
+```{r ,warning=FALSE,echo=TRUE,fig.show="hold",fig.dim = c(6, 4),fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 2 unstratified and stratified cluster-level estimates"}
 min= min(res_ad2$res.admin2$direct.est,smth_res_ad2$res.admin2$mean,
          cl_res_ad2$res.admin2$mean,
          cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",]$mean)
@@ -524,7 +513,7 @@ g4 <- mapPlot(data = cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full
 ```
 
 
-The following are model comparisons using `scatterPlot()`. Admin 2 direct estimates may not cover all admin 2 areas, the red triangle points on the edges meaning missing direct estimates.
+The following are model comparisons using `scatterPlot()`. Admin 2 direct estimates may not cover all Admin 2 areas, the red triangle points on the edges meaning missing direct estimates.
 
 ```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 Fay–Herriot estimates"}
 s1<-scatterPlot(
@@ -607,9 +596,9 @@ s1 +s2
 
 # Aggregation to higher admin levels {#sec:aggregation}
 
-## Computing Population Size from WorldPop Raster
+## Computing population size from WorldPop raster
 
-Population fractions are necessary to aggregate estimates from finer administrative regions to higher levels. The script below demonstrates the creation of a pixel-level population raster at the 100m by 100m level for women of age 15 to 49 in Zambia in 2018. The corresponding age-sex-specific population estimates can be found at [https://hub.worldpop.org/geodata/summary?id=16429](https://hub.worldpop.org/geodata/summary?id=16429). The path to the `Geotiff` files are specified in the `pop_dir` object. The `aggPopulation()` aggregates population data from the population raster into admin levels based on the input shapefiles we read in previous step. Here we aggregate pixel-level population for women of age 15 to 49 in Zambia in 2018 into admin levels 1 and 2.
+Population fractions are necessary to aggregate estimates from finer administrative regions to higher levels. The script below demonstrates the creation of a pixel-level population raster at the 100m by 100m level for women of age 15 to 49 in Zambia in 2018. The corresponding age-sex-specific population estimates can be found at [https://hub.worldpop.org/geodata/summary?id=16429](https://hub.worldpop.org/geodata/summary?id=16429). The path to the downloaded .tiff files are specified in the `pop_dir` object. The `aggPopulation()` aggregates population data from the population raster into admin levels based on the input shapefiles we read in previous step. Here we aggregate pixel-level population for women of age 15 to 49 in Zambia in 2018 into both Admin 1 and Admin 2 levels.
 
 ```{r, eval = FALSE}
 library(raster)
@@ -635,22 +624,22 @@ pop_f_35 <- raster(f_35_name)
 pop_f_40 <- raster(f_40_name)
 pop_f_45 <- raster(f_45_name)
 
-ZambiaPopWomen_raster <- pop_f_45 + pop_f_40 + pop_f_35 + pop_f_30 + pop_f_25 + pop_f_20 + pop_f_15
+raster <- pop_f_45 + pop_f_40 + pop_f_35 + pop_f_30 + pop_f_25 + pop_f_20 + pop_f_15
 agg.pop1 <- aggPopulation(
-  tiff = ZambiaPopWomen_raster,
+  tiff = raster,
   SpatialPolygons = ZambiaAdm1,
   varname = c("NAME_1")
 )
 colnames(agg.pop1)[1] <- "admin1.name"
 agg.pop2 <- aggPopulation(
-  tiff = ZambiaPopWomen_raster,
+  tiff = raster,
   SpatialPolygons = ZambiaAdm2,
   varname = c("NAME_2")
 )
 ```
 
 
-The computed population estimates in this example are also available in the `ZambiaPopWomen` dataset.
+The computed population estimates in this example is built into the package and available in the `ZambiaPopWomen` dataset.
 
 ```{r}
 data(ZambiaPopWomen)
@@ -659,12 +648,12 @@ head(ZambiaPopWomen$admin2_pop)
 ```
 
 
-## Estimating Population Size by Survey Weight
+## Estimating population size by survey weight {#sec:survey-weight-fraction}
 
 An alternative approach to obtain population fractions is to simply use survey weights to estimate the population size within each area. This approach, however, can lead to noisy estimates at fine spatial resolutions. Nevertheless, similar to `aggPopulation()`, the `aggSurveyWeight()` function produces the estimated population size at the specified admin level. The output can be used as weights for aggregation model results to higher admin levels. 
 
 
-```{r}
+```{r, tidy = TRUE}
 agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
 agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,poly.adm = poly.adm2)
 ```
@@ -733,10 +722,10 @@ g4 <- mapPlot(data = admin.info2.survey$data, geo = poly.adm2,
 ```
 
 
-The scatter plots show the comparison of admin 2 survey weight ratio & 15-49 female population ratio within admin 1. Noticed that DHS data may have missing admin 2 areas. For example, Zambia has 112 out of 115 admin 2 areas for this survey (red points in the scatter plots). Users have to be aware of that this is an incomplete set of weights for aggregation to from admin 2 to admin 1. 
+The scatter plots show the comparison of Admin 2 survey weight ratio & 15-49 female population ratio within Admin 1. Noticed that DHS data may have missing Admin 2 areas. For example, Zambia has 112 out of 115 Admin 2 areas for this survey (red points in the scatter plots). Users have to be aware of that this is an incomplete set of weights for aggregation to from Admin 2 to Admin 1. 
 
 
-```{r, fig.show='hold',fig.dim = c(12, 6),tidy=FALSE, fig.cap="Admin 2 survey weight ratio and 15-49 female population ratio"}
+```{r, fig.show='hold',fig.dim = c(7, 7),tidy=FALSE, fig.cap="Admin 2 survey weight ratio and 15-49 female population ratio", out.width = "50%"}
 
 df<-left_join(admin.info2$data,admin.info2.survey$data,by="admin2.name.full")
 df$pop_r=df$population.x/df$population.admin1.x 
@@ -752,11 +741,18 @@ ggplot(df, aes(survey_weight_r,pop_r)) +
 ```
 
 
-## Aggregated Estimates
-#### Direct estimates {#sec:direct3}
+## Aggregated estimates
 
+### Direct estimates {#sec:direct3}
+
+For direct estimates, we caution that we almost always prefer directly computing direct estimates at the desired level, rather than aggregating direct estimates at finer levels. Nevertheless, here we describe how the aggregated direct estimates are computed. 
+
+Let $i$ denote the index for the lower admin level and $k[i]$ be the index for the corresponding upper admin level, then aggregated estimates for the $k$-th upper admin area is 
+
+$$ \hat p^{agg}_{k}=\frac {\sum_{k[i] = k} \hat p^{HT}_{i}E_i}{\sum_{k[i] = k} \text{E}_i},$$
+where $E_i=\widehat{\text{pop}_{i}} \times \textbf{1}(\hat p^{HT}_{i} \neq \text{NA})$, i.e., the point estimates are obtained by weighted average of non-missing direct estimates in the area, where the weights are either given by external population information, or estimated by survey weights. The standard error and confidence intervals are computed by simulation using samples from the design-based asymptotic sampling distributions of $\mbox{logit}(\hat p^{HT}_i)$.
  
-Now we compute the direct estimates at admin1 level and aggregate them to national estimates. We can choose `weight = "population"` or `weight = "survey"` in `directEST()`. When using survey weight, the aggregated result at national level is the same as the national level direct estimate. 
+The `directEST()` function allows aggregation by survey weight directly by specifying `weight = "survey"`, without going through the steps discussed in Section \@ref(sec:survey-weight-fraction). We compute the direct estimates at admin1 level and aggregate them to national estimates. When using survey weight, the aggregated point estimate at national level is the same as the national level direct estimate, but the uncertainty calculation are different as discussed above. 
 
 ```{r, tidy = FALSE}
 res_ad1agg <- directEST(data = data,
@@ -783,7 +779,7 @@ head(res_ad0$res.admin0)
 ```
 
 
-Similarly, if we set `admin = 2`, the output includes results at the Admin 2 level with `aggregation = FALSE` and aggregated results at both the Admin1 and national level  with `aggregation = TRUE`, computed by weighting the Admin 2 level estimates by their population (as specified by `weight = "population"`). 
+Similarly, if we set `admin = 2`, the output includes aggregated results at both the Admin1 and national level  with `aggregation = TRUE`, computed by weighting the Admin 2 level estimates by their population (as specified by `weight = "population"`). 
 
 
 
@@ -805,24 +801,25 @@ head(res_ad2agg$agg.admin1)
 res_ad2agg$agg.natl
 ```
 
+We can compare these aggregated results at the national level using `intervalPlot()`. 
 
 ```{r, tidy = FALSE, fig.cap="Comparing different aggregated direct estimates at national level"}
 intervalPlot(admin = 0, group = FALSE, compare = TRUE, 
   model = list(
-  "Admin 0 direct estimate model" = res_ad0,
-  "Aggregated Admin 2 direct estimate model by survey" =res_ad2agg_bysurvey,
-  "Aggregated Admin 1 direct estimate model by survey" =res_ad1agg_bysurvey,
-  "Aggregated Admin 2 direct estimate model by pop" = res_ad2agg,
-  "Aggregated Admin 1 direct estimate model by pop" = res_ad1agg))
+  "Admin 0 direct estimate" = res_ad0,
+  "Admin 2 direct estimate, aggregated by survey" =res_ad2agg_bysurvey,
+  "Admin 1 direct estimate, aggregated by survey" =res_ad1agg_bysurvey,
+  "Admin 2 direct estimate, aggregated by population" = res_ad2agg,
+  "Admin 1 direct estimate, aggregated by population" = res_ad1agg))
 
 ```
 
 
 
 
-#### Area-level (Fay-Herriot) Estimates {#sec:area-level3}
+### Area-level Fay-Herriot estimates {#sec:area-level3}
 
-Aggregation of the Fay-Herriot model can be similarly carried out as model based results. See details in below.
+Aggregation of the Fay-Herriot model can be similarly carried out as model based results. 
 
 ```{r}
 smth_res_ad1_spatial <- fhModel(data,
@@ -845,11 +842,8 @@ smth_res_ad1_spatial.survey <- fhModel(data,
 
 
 ```{r}
-problem_admin2 <- res_ad2$res.admin2$admin2.name.full[res_ad2$res.admin2$direct.var < 1e-30]
-# identify clusters in these regions
-problem_clusters <- cluster.info$data$cluster[cluster.info$data$admin2.name.full %in% problem_admin2]
-# Run FH model without these clusters
-smth_res_ad2_agg <- fhModel(subset(data, !cluster %in% problem_clusters),
+# Run FH model without problematic clusters
+smth_res_ad2_agg <- fhModel(subset(data, !cluster %in% bad_clusters),
                     cluster.info = cluster.info,
                     admin.info = admin.info2,
                     admin = 2,
@@ -857,7 +851,7 @@ smth_res_ad2_agg <- fhModel(subset(data, !cluster %in% problem_clusters),
                     aggregation = TRUE)
 
 
-smth_res_ad2_agg.survey <- fhModel(subset(data, !cluster %in% problem_clusters),
+smth_res_ad2_agg.survey <- fhModel(subset(data, !cluster %in% bad_clusters),
                     cluster.info = cluster.info,
                     admin.info = admin.info2.survey,
                     admin = 2,
@@ -866,21 +860,14 @@ smth_res_ad2_agg.survey <- fhModel(subset(data, !cluster %in% problem_clusters),
 
 ```
 
-```{r}
-head(smth_res_ad2_agg$res.admin2)
-head(smth_res_ad2_agg$agg.admin1)
-head(smth_res_ad2_agg$agg.natl)
-```
-
-
 
 ```{r,fig.cap="Comparing different aggregated Fay-Herriot estimates at national level"}
 intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
-            "Admin 0 FH model"=res_ad0,
-            "Aggregated Admin 2 FH model by survey"=smth_res_ad2_agg.survey,
-            "Aggregated Admin 1 FH model by survey"=smth_res_ad1_spatial.survey,
-            "Aggregated Admin 2 FH model by pop"=smth_res_ad2_agg,
-            "Aggregated Admin 1 FH model by pop"=smth_res_ad1_spatial
+            "Admin 0 direct estimates"=res_ad0,
+            "Admin 2 FH model, aggregated by survey"=smth_res_ad2_agg.survey,
+            "Admin 1 FH model, aggregated by survey"=smth_res_ad1_spatial.survey,
+            "Admin 2 FH model, aggregated by pop"=smth_res_ad2_agg,
+            "Admin 1 FH model, aggregated by pop"=smth_res_ad1_spatial
           ))
 
 ```
@@ -889,14 +876,10 @@ intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
 
 
 
-#### Cluster-Level Estimates {#sec:cluster-level3}
-For admin 1 model without stratification, `res.admin1` and `agg.natl` are the admin 1 model result, aggregated result at national level using `population` in `admin.info1$data`. Similarly for admin 2 model without stratification, `res.admin1`, `agg.admin1` ,and `agg.natl` are the admin 2 model result, aggregated result at admin 1 and national level. 
-
-When setting `stratification = TRUE`, the `res.admin1` or `res.admin2` includes the results for urban, rural or full, `type == "full"` is the aggregated area-level risk obtained using urban/rural proportion at each admin 1 or admin 2 . All the aggregations to upper admin levels use full data. 
-
+### Cluster-level model {#sec:cluster-level3}
+Here we first fit the unstratified cluster-level model at both Admin 1 and Admin 2, and aggregate to higher levels using both types of weights.
 
 ```{r}
-
 cl_res_ad1 <- clusterModel(data=data,
                    cluster.info=cluster.info,
                    admin.info = admin.info1,
@@ -915,7 +898,6 @@ cl_res_ad1.survey <- clusterModel(data=data,
                    aggregation = TRUE,
                    CI = 0.95)
 
-
 cl_res_ad2 <- clusterModel(data=data,
                    cluster.info= cluster.info,
                    admin.info = admin.info2,
@@ -925,7 +907,7 @@ cl_res_ad2 <- clusterModel(data=data,
                    aggregation = TRUE,
                    CI = 0.95)
 
-cl_res_ad2.suevey <- clusterModel(data=data,
+cl_res_ad2.survey <- clusterModel(data=data,
                    cluster.info= cluster.info,
                    admin.info = admin.info2.survey,
                    model = "bym2",
@@ -934,6 +916,11 @@ cl_res_ad2.suevey <- clusterModel(data=data,
                    aggregation = TRUE,
                    CI = 0.95)
 
+```
+Similarly we fit the stratified cluster-level model at both Admin 1 and Admin 2, and aggregate to higher levels. Since the urban/rural fractions were computed using population raster, here we use only population weights to aggregate for consistency.
+
+
+```{r}
 cl_res_ad1_T <- clusterModel(data=data,
                    cluster.info=cluster.info,
                    admin.info = admin.info1,
@@ -952,34 +939,20 @@ cl_res_ad2_T <- clusterModel(data=data,
                    admin = 2, 
                    aggregation = TRUE,
                    CI = 0.95)
-
-
 ```
 
-
-```{r}
-head(cl_res_ad2$res.admin2)
-head(cl_res_ad2$agg.admin1)
-cl_res_ad2$agg.natl
-
-head(cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",])
-head(cl_res_ad2_T$agg.admin1)
-cl_res_ad2$agg.natl
-```
-
+Finally we compare the six aggregated models with the national direct estimates
 
 
 ```{r,tidy = FALSE, fig.cap="Comparing different aggregated cluster-level estimates at national level"}
-
 intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
-            "Admin 0 FH model"=res_ad0,
-             "Aggregated Admin 2 cluster model by survey"=cl_res_ad2.suevey,
-             "Aggregated Admin 1 cluster model by survey"=cl_res_ad1.survey,
-             "Aggregated Admin 2 cluster model by pop"=cl_res_ad2,
-             "Aggregated Admin 1 cluster model by pop"=cl_res_ad1,
-             "Aggregated Admin 2 stratified cluster model by pop"=cl_res_ad2_T,
-             "Aggregated Admin 1 stratified cluster model by pop"=cl_res_ad1_T))
-
+            "Admin 0 direct estimates"=res_ad0,
+             "Admin 2 unstratified model, aggregated by survey"=cl_res_ad2.survey,
+             "Admin 1 unstratified model, aggregated by survey"=cl_res_ad1.survey,
+             "Admin 2 unstratified model, aggregated by pop"=cl_res_ad2,
+             "Admin 1 unstratified model, aggregated by pop"=cl_res_ad1,
+             "Admin 2 stratified model, aggregated by pop"=cl_res_ad2_T,
+             "Admin 1 stratified model, aggregated by pop"=cl_res_ad1_T))
 ```
 
 
@@ -1022,7 +995,7 @@ g4 <- mapPlot(data = smth_res_ad2_agg$agg.admin1, geo = poly.adm1,
 ```
 
 
-`intervalPlot()` can provide interval plots at different admin levels for model comparison with `compare=T`. Input should be a list of model outputs by `surveyPrev` with self defined model name, (e.g.`model=list("name 1"= fit1,"name 2"= fit2)`). Then by setting `admin=0,1`, the returned plot will be at given level. You can also group your model by adding group object in your model results like `fit1$model="group1"` and set `group=T`. See following examples at national level and admin 1 level.
+`intervalPlot()` can provide interval plots at different admin levels for model comparison with `compare=T`. Input should be a list of model outputs by `surveyPrev` with self defined model name, (e.g.`model=list("name 1"= fit1,"name 2"= fit2)`). Then by setting `admin=0,1`, the returned plot will be at given level. You can also group your model by adding group object in your model results like `fit1$model="group1"` and set `group=T`. See following examples at national level and Admin 1 level.
 
 
 ```{r,fig.show='hold',fig.dim = c(6, 4), tidy = FALSE, fig.cap="Comparing different model estimates at national level"}
