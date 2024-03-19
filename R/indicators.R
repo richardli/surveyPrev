@@ -1,14 +1,3 @@
-#' Internal function to compute "Any anemia - women"
-#'
-#' @param RData list returned from getDHSdata when indicator is specified as NULL
-#'
-#'
-
-
-
-
-
-
 
 ################
 #Family Planning ch7

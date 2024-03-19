@@ -10,7 +10,7 @@
 #' @importFrom naniar replace_with_na
 #' @import dplyr
 #' @import tidyverse
-#' @import sjlabelled
+#' @importFrom sjlabelled set_label
 #' @import labelled
 #' @author Qianyu Dong
 #' @examples
