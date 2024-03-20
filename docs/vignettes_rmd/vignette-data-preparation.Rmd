@@ -1,14 +1,21 @@
 ---
-title: "**surveyPrev** Package: Built-in and Customized Indicators"
-author: "Qianyu Dong, Zehang Richard Li, Andrea Boskovic, Jon Wakefield"
+title: "Creating Customized Indicators for **surveyPrev**"
+author: "Qianyu Dong and Zehang Richard Li"
 date: "`r Sys.Date()`"
 output: 
+  bookdown::html_document2:
+    base_format: minidown::mini_document
+    format: water
+    toc: true
+    toc_float: true
+    toc_highlight: true
   bookdown::pdf_book:
     number_sections: true
     toc: false
-  html_document:
-    number_sections: true
-    toc: false
+vignette: >
+  \VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Create customized indicators}
+  %\usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}
@@ -130,13 +137,14 @@ Let's take **Current use of any modern method of contraception (all women)** as 
 
 For our example, we can either search "FP_CUSA_W_MOD", or "contraceptive", and it is in chapter 7: family planning.
 
-```{r, echo = FALSE, out.width = "100%", fig.cap = "Step 1(a): Searching for indicator ID or key words."}
-knitr::include_graphics("figs/data1.png")
+
+```{r, echo = FALSE, out.width = "100%", fig.cap = "Screenshot of Step 1(a): Searching for indicator ID or key words."}
+knitr::include_graphics("figs/data1.jpg")
 ```
 
 
-```{r, echo = FALSE, out.width = "100%", fig.cap = "Step 1(b): Identifying which chapter the indicator is from."}
-knitr::include_graphics("figs/data2.png")
+```{r, echo = FALSE, out.width = "100%", fig.cap = "Screenshot of Step 1(b): Identifying which chapter the indicator is from."}
+knitr::include_graphics("figs/data2.jpg")
 ```
 
 **Step 2**: We can download [IndicatorList.xlsx](https://github.com/DHSProgram/DHS-Indicators-R/blob/main/IndicatorList.xlsx) from [DHS GitHub site](https://github.com/DHSProgram/DHS-Indicators-R), and search keyword again in the the corresponding chapter to find out 
@@ -147,14 +155,14 @@ knitr::include_graphics("figs/data2.png")
 
 For our example, since we are looking up for the indicator of all women currently using any modern method of contraception, we identify the cell "currently use any modern method", and find out that the code to process this indicator is in the FP_USE.do file and we need IRdata (Individual Recode). We also identify the variable name used in the R codes on the Github repository is "fp_cruse_mod".  We will all three pieces of information in the next step to find the codes processing the indicator.
 
-```{r, echo = FALSE, out.width = "100%", fig.cap = "Step 2: Finding file name and recode name."}
-knitr::include_graphics("figs/data3.png")
+```{r, echo = FALSE, out.width = "100%", fig.cap = "Screenshot of Step 2: Finding file name and recode name."}
+knitr::include_graphics("figs/data3.jpg")
 ```
 
 **Step 3**:  In the Github repository, we find the folder for Chapter 7, the file FP_USE.R, and search "fp_cruse_mod" to find the following chunk of code script.
 
-```{r, echo = FALSE, out.width = "100%", fig.cap = "Step 3: Finding code."}
-knitr::include_graphics("figs/data4.png")
+```{r, echo = FALSE, out.width = "100%", fig.cap = "Screenshot of Step 3: Finding code."}
+knitr::include_graphics("figs/data4.jpg")
 ```
 
 We extract the following chunk of codes for this indicator, which takes the IR data, and perform a few steps of data cleaning.
