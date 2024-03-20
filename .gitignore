@@ -5,3 +5,6 @@
 .DS_Store
 docs/vignettes_rmd/*.html
 docs/vignettes_rmd/*.pdf
+docs/vignettes_rmd/vignette-main_cache
+docs/vignettes_rmd/vignette-main_files
+*.log
