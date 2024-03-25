@@ -50,8 +50,12 @@ fp_cruse_mod <- function(Rdata){
 # nmr CM_ECMR_C_NNR BR (not from dhs github)
 # Neonatal mortality rate !!!!!!
 NMR<- function(Rdata){
-  BRdata <- Rdata %>%
-    mutate(wt = v005/1000000)
+
+  BRdata <- Rdata%>%
+    mutate(wt = v005/1000000)%>%
+    mutate(bo10 =dhsData$v008-120-b3)%>%
+    filter(bo10<0)
+
   BRdata$value<- ifelse(BRdata$b7==0, 1, 0)
   BRdata$value[is.na( BRdata$value)] <- 0
 
