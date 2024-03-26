@@ -96,6 +96,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     admin2_res$direct.lower <- expit(admin2_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
     admin2_res$direct.upper <- expit(admin2_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
+    admin2_res$cv<-sqrt(admin2_res$direct.var)/admin2_res$direct.est
     # admin2_res$admin1.name
 
     res.admin2=admin2_res
@@ -269,7 +270,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     if(strata != "all"){
       message("Subnational stratum-specific direct estimates are not implemented yet. Only overall estimates are computed")
     }
-    
+
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
@@ -305,6 +306,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     colnames(admin1_res)[colnames(admin1_res) == 'HT.est'] <- 'direct.est'
     colnames(admin1_res)[colnames(admin1_res) == 'HT.est'] <- 'direct.est'
     colnames(admin1_res)[colnames(admin1_res) == 'HT.var'] <- 'direct.var'
+
     colnames(admin1_res)[colnames(admin1_res) == 'HT.logit.est'] <- 'direct.logit.est'
     colnames(admin1_res)[colnames(admin1_res) == 'HT.logit.var'] <- 'direct.logit.var'
     colnames(admin1_res)[colnames(admin1_res) == 'HT.logit.prec'] <- 'direct.logit.prec'
@@ -312,6 +314,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     admin1_res$direct.lower <- expit(admin1_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
     admin1_res$direct.upper <- expit(admin1_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
+    admin1_res$cv<-sqrt(admin1_res$direct.var)/admin1_res$direct.est
 
 
 

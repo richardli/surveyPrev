@@ -240,7 +240,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
       admin1.bb.res$var<-admin1.bb.res$sd^2
       admin1.bb.res$lower<-as.numeric (admin1.bb.res$lower)
       admin1.bb.res$upper<-as.numeric (admin1.bb.res$upper)
-
+      admin1.bb.res$cv=admin1.bb.res$sd/admin1.bb.res$mean
     }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
       post.r <- apply(draw.r, 2, mean)
@@ -268,7 +268,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("full", nregion)))
       admin1.bb.res$admin1.name <- rep(admin.info$admin1.name, 3)
-
+      admin1.bb.res$cv=admin1.bb.res$sd/admin1.bb.res$mean
     }
     #admin.bb.res
 
@@ -314,6 +314,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
       admin2.bb.res$var <- admin2.bb.res$sd^2
       admin2.bb.res$lower<-as.numeric (admin2.bb.res$lower)
       admin2.bb.res$upper<-as.numeric (admin2.bb.res$upper)
+      admin2.bb.res$cv=admin2.bb.res$sd/admin2.bb.res$mean
 
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
 
@@ -343,6 +344,8 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("full", nregion)))
       admin2.bb.res$admin2.name.full <- rep(admin.info$admin2.name.full, 3)
+      admin2.bb.res$cv=admin2.bb.res$sd/admin2.bb.res$mean
+
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
 
     }
