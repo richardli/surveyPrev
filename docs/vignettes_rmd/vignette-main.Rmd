@@ -23,13 +23,13 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALS
 \clearpage
 # Overview
 
-In this vignette, we describe how prevalence mapping using DHS data can be carried out. The vignette is organized as follows. In Section \@ref(sec:data) we first describe the data preparation steps to obtain and process the relevant DHS survey data in R. In Section \@ref(sec:model) we describe the following models:
+In this vignette, we describe how prevalence mapping using DHS data can be carried out. Produce mapping in Small Area Estimation(SAE) for proportions of some indicator of interest. The vignette is organized as follows. In Section \@ref(sec:data) we first describe the data preparation steps to obtain and process the relevant DHS survey data in R. In Section \@ref(sec:model) we describe the following models:
 
 1. Direct estimates in Section \@ref(sec:direct).
 2. Area-level Fay-Herriot model in Section \@ref(sec:area-level).
 3. Cluster-level model in Section \@ref(sec:cluster-level).
 
-In Section \@ref(sec:model2), we describe additional models for estimating prevalence at Admin 2 level. Section \@ref(sec:aggregation) is about aggregation model results to higher admin levels.
+In Section \@ref(sec:model2), we describe additional models for estimating prevalence at Admin 2 level. Section \@ref(sec:aggregation) is about aggregation model to produce estimates at higher admin levels.
 
 
 
@@ -38,12 +38,12 @@ In Section \@ref(sec:model2), we describe additional models for estimating preva
   
 ## Prerequisites
 
-As of the current version of the package, the following pieces of data are needed to produce small area estimations for DHS surveys:
+As of the current version of the package, the following pieces of data are needed to produce SAE for DHS surveys:
 
 
-+ **DHS survey data**: Depending on the indicator, different types of DHS files are used as input. This can be done within R, so there is no need to download files locally from the DHS website. See the section on downloading DHS data for details.
++ **DHS survey data**: Depending on the indicator, different types of DHS files are used as input. This can be done within R, so there is no need to download files locally from the DHS website. See \@ref(sec:DHS) on downloading DHS data for details.
 + **Spatial polygon files** for the desired admin level: These can be downloaded from GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)]. 
-+ **Population map**: These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].
++ **Population map**: These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are required for aggregation.
 
 
 ## Install _**surveyPrev**_  
@@ -68,7 +68,7 @@ library(surveyPrev)
 ```
 
 
-In particular, one of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following codes [@rue2009inla]. 
+One of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following code [@rue2009inla]. 
 
 ```{r pkg, eval = FALSE, tidy = FALSE}
 install.packages("INLA", repos=c(getOption("repos"), 
@@ -96,9 +96,10 @@ library(kableExtra)
 
 ```{r, echo = FALSE, eval = TRUE}
 data(surveyPrevIndicators)
+num=dim((surveyPrevIndicators))[1]
 ```
 
-Currently, the `surveyPrev` package supports `r dim(surveyPrevIndicators)[1]` indicators. The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset. Either the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. The full list of indicators and their IDs are summarized in Table \@ref(tab:indic).
+Currently, the `surveyPrev` package supports `r num` indicators. The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset. Either the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. The full list of indicators and their IDs are summarized in Table \@ref(tab:indic).
 
 ```{r, eval = FALSE}
 data(surveyPrevIndicators)
@@ -128,7 +129,7 @@ In this vignette, we consider estimating the percentage of women who had a live 
 Details on more common DHS indicators can be found in the Guide to DHS Statistics^[https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/) by searching for an indicator. User-specified function can also be used to process raw DHS data into new indicators. Please refer to the vignette on _Creating Customized Indicators for **surveyPrev**_ for more details.
 
 
-## DHS survey data 
+## DHS survey data {#sec:DHS} 
 
 Processing the binary indicator from the raw DHS data consist of two steps: 
 1. download the relevant DHS data recode using `getDHSdata()`, or manually from the DHS website,
@@ -168,7 +169,7 @@ The `getDHSgeo()`function downloads the GPS data for cluster locations, also thr
 geo <- getDHSgeo(country = country, year = year)
 ```
 
-In the case of Zambia, the maps are already included in the package as example datasets (`data(ZambiaAdm1)` and `data(ZambiaAdm2)`) so we load them directly within R. For other countries, the Admin 1 and Admin 2 boundary shapefiles can be downloaded from the GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)] and read into R manually. Another alternative is to use the **geodata** and **sf** package to download the maps from the GADM site and load them in R directly.
+In the case of Zambia, the maps are already included in the package as example datasets (`data(ZambiaAdm1)` and `data(ZambiaAdm2)`) so we load them directly within R. For other countries, the Admin 1 and Admin 2 boundary shapefiles can be downloaded from the GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)] and read into R manually. Another alternative is to use the **geodata** and **sf** package to download the maps from the GADM site and load them in R directly, in the following steps:
 
 ```{r}
 poly.adm1 <- geodata::gadm(country="ZMB", level=1, path=tempdir())
@@ -188,7 +189,7 @@ head(cluster.info$wrong.points)
 ```
 
 
-The `adminInfo()` function computes the spatial adjacency matrix, and if supplied with additional information on population, combines needed information for each administrative area, including the name, population, and urban population fractions of each administrative area. The `admin.mat` object stores adjacency matrix for spatial models. We will ignore the population information for now and focus on only information from the DHS data, and will return to the population information in Section \@ref(sec:aggregation). 
+The `adminInfo()` function computes the spatial the adjacency matrix, and if supplied with additional information on population, combines needed information for each administrative area, including the name, population, and urban population fractions of each administrative area. The `admin.mat` object stores the adjacency matrix for spatial models. We will ignore the population information for now and focus on only information from the DHS data, and will return to the population information in Section \@ref(sec:aggregation). 
 
 ```{r}
 admin.info1 <- adminInfo(poly.adm = poly.adm1, admin = 1)
@@ -198,22 +199,21 @@ head(admin.info2$data)
 
 
 
-# Prevalence Estimation With Only DHS Data {#sec:model}
+# Prevalence Estimation{#sec:model}
 
 ## Direct estimates {#sec:direct}
 
-For $y_j$ be the binary outcome of interest for the $j^{\text{th}}$ individual in the survey and $w_j$ be the design weight associated with this individual.  For a given area denoted as $i$, we have
+For $y_j$ be the binary outcome of interest for the $j^{\text{th}}$ individual in the survey and $w_j$ be the design weight associated with this individual.  For a given area denoted as $i$, we have the weighted estimator:
 
-$$ \hat p^{HT}_{i}=\frac {\sum_{j \in S_i} y_j w_j}{\sum_{j \in S_i} w_j}$$
+$$ \hat p^{W}_{i}=\frac {\sum_{j \in S_i} y_j w_j}{\sum_{j \in S_i} w_j}$$
 
-where $S_i$ is the set of individual index within the $i$-th region. The `directEST()` function calculates direct estimates at different Admin levels using the `SUMMER::smoothSurvey()` function in the **SUMMER** package internally [@li2020summer].  The output of the function includes the direct estimates and their variance, standard error, and confidence intervals based on the specified confidence level. The confidence intervals are computed on the logit scale, i.e., if we use $D_i$ to denote the design-based variance of $\hat p^{HT}_i$, then the asymptotic design-based variance of $\text{logit}(\hat p^{HT}_i)$ is
+where $S_i$ is the set of individual index within the $i$-th region. The `directEST()` function calculates direct estimates at different Admin levels using the `SUMMER::smoothSurvey()` function in the **SUMMER** package internally [@li2020summer].  The output of the function includes the direct estimates and their variance, standard error, and confidence intervals based on the specified confidence level. The confidence intervals are computed on the logit scale, i.e., if we use $D_i$ to denote the design-based variance of $\hat p^{W}_i$, then the asymptotic design-based variance of $\text{logit}(\hat p^{W}_i)$ is
 \[
-V_i  = \frac{D_i}{(\hat p^{HT}_i)^2(1-\hat p^{HT}_i)^2}
+V_i  = \frac{D_i}{(\hat p^{W}_i)^2(1-\hat p^{W}_i)^2}
 \]
 and we compute the confidence interval on the probability scale to be 
-\[
-(\text{expit}[\text{logit}(\hat p^{HT}_i) - z_{\alpha/2}V_i^{1/2}], \;\;
-\text{expit}[\text{logit}(\hat p^{HT}_i) + z_{\alpha/2}V_i^{1/2}]).
+\[(\quad \text{expit}[\text{logit}(\hat p^{W}_i) - z_{\alpha/2}V_i^{1/2}], \;\;
+\text{expit}[\text{logit}(\hat p^{W}_i) + z_{\alpha/2}V_i^{1/2}]\quad).
 \]
 
 Currently the package defaults to a two-stage stratified cluster sampling design, with the sampling clusters (enumeration areas) being stratified by Admin 1 areas and urban/rural status, which is the most common sampling design in the DHS. 
@@ -251,16 +251,18 @@ list(all = res_ad0$res.admin0,
 ## Area-level Fay-Herriot model {#sec:area-level}
 
 
-Fay-Herriot models provides smoothed estimates at the areal level using direct estimate $\hat p^{HT}_{i}$ as input. The direct estimates are modeled as a noisy observation of the true prevalence, with the variance of noise determined by the design-based variance. We consider the spatial Fay-Herriot model for the logit transformed direct estimates, which is defined as follows:
+Fay-Herriot models provides smoothed estimates at the areal level using direct estimate $\hat p^{W}_{i}$ as input. The direct estimates are modeled as a noisy observation of the true prevalence, with the variance of noise determined by the design-based variance. We consider the spatial Fay-Herriot model for the logit transformed direct estimates, which is defined as follows:
 
-$$\text{logit}(\hat p^{HT}_{i})|\lambda_{i} \sim\textrm{Normal}(\lambda_{i}, V_{i}^{HT}),$$
-$$\lambda_{i}= \mathbf x_i^{T} \mathbf{\beta} + e_i+S_i.$$
-Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, $\mathbf{x}_i$ represents area-level covariates, and $e_i$ and $S_i$ are  unstructured and structured spatial random effects. 
-
-As of now the package allows only an overall intercept for the fixed effect. The default prior for the intercept is $N(0, 1000)$. The structured and non-structured random effects are implemented via the BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
+$$\text{logit}(\hat p^{W}_{i})|\lambda_{i} \sim\textrm{Normal}(\lambda_{i}, V_{i}^{HT}),$$
+$$\lambda_{i}= \alpha + e_i+S_i.$$
+Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, and $e_i$ and $S_i$ are unstructured and structured spatial random effects. Inference is carried out using Bayesian methods and so the model specific is completed by priors on $\alpha$ and the variance components, see @wakefield2020small for details of Bayesian version. Area level Fay-Herriot model are viewed as the most reliable model choice, since they acknowledge the design through the sue of a weighted estimate and its associated variance. See chapters 4-6 of @rao2015sae. 
 
 
-The `fhModel()` calculates spatial Fay Herriot estimates at different administrative levels using `SUMMER::smoothSurvey()`. Users can specify either only i.i.d. random effect (i.e., no $S_i$ term) or the Besag-York-Mollié (BYM) model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregated to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more details in Section \@ref(sec:aggregation). 
+
+As of now the package allows only an overall intercept $\alpha$, but future versions of the package will allow add area level covariates to be included. The default prior for the intercept is $N(0, 1000)$. The structured and non-structured random effects are implemented used Besag-York-Mollié (BYM) via BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
+
+
+The `fhModel()` calculates spatial Fay-Herriot estimates at different administrative levels using `SUMMER::smoothSurvey()`. Users can specify either only i.i.d. random effects (i.e., no $S_i$ term) or the BYM2 model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregated to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more details in Section \@ref(sec:aggregation). 
 
 
 ```{r}
@@ -281,28 +283,32 @@ head(smth_res_ad1_bym2$res.admin1)
 
 ```
 
+Columns 2-5 represent the posterior mean, posterior variance, posterior median and 2.5\%, and 97.5\% posterior quantiles, respectively. The posterior variance can be viewed as an analogue of the mean squared error (MSE) summary.
+
 
 ## Cluster-level model {#sec:cluster-level}
 
-Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$.
+Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. In terms of traditional SEA model, cluster-level models are a type of unit-level model. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$. The sampling model i"
 
 $$Y_c|p_c,d\sim \textrm{BetaBinomial}(n_c,p_c,d),$$
 $$p_c=\textrm{expit}(\alpha+\mathbf{x}_c\beta+e_{i[s_c]}+S_{i[s_c]}),$$
 
-where $\alpha$ is the intercept, $\mathbf{x}_c$ are cluster-specific covariates and $i[s_c]$ indexes the area within which the cluster $s_c$ resides. Similar to the area-level model, $e_i$ and $S_i$ are the iid and spatial random effects with the same prior as before. The overdispersion parameter, $d=\frac{1}{\alpha+\beta+1}$, is between 0 and 1 and represent the the intracluster correlation between Bernoulli draws within cluster.
+where $\alpha$ is the intercept, $\mathbf{x}_c$ are cluster-specific covariates and $i[s_c]$ indexes the area within which the cluster $s_c$ resides. Similar to the area-level model, $e_i$ and $S_i$ are unstructured and structured spatial random effects with the same prior as before. Future versions of the package will allow covariates to be included. The overdispersion parameter, $d=\frac{1}{\alpha+\beta+1}$, is between 0 and 1 and represent the the intracluster correlation between Bernoulli draws within cluster.
 <!-- , corr($z_k,z_{k'}$), where $z_k$ is the binary response in $y_c$, $y_c=\sum_{k=1}^{n_c}z_k$). -->
-The defaul prior for $d$ is $\text{logit}(d) \sim \text{Normal}(0,0.4)$.  
+The default prior for $d$ is $\text{logit}(d) \sim \text{Normal}(0,0.4)$.  
+
+Unit-level models will produce biased estimates if the specified model does not hold for all units in the population. In the DHS, urban clusters are often oversampled. If such oversampling occurs and the outcome associated with urban/rural, then bias will result if the model does not allow for differences between urban/rural. A fully adjusted model would include interaction terms representing the crossing of Admin 1 areas x urban/rural. However, for reasons of parsimony we include area-level random effects and a single urban/rural fixed effect. To emphasize, bias will only arise when oversampling of urban (or rural) areas occurs, and the indicator has an association with urban/rural. One may check whether one needs to include urban/rural terms in the model, and then aggregate by urban/rural. 
 
 
 Currently, the package allows the specification of the fixed effect to contain either an overall intercept only (i.e., unstratified model), or with an additional urban-rural effect (i.e., stratified model). For the stratified model, $p_c$ is parameterized by 
 $$p_c=\textrm{expit}(\alpha+\gamma\times I(s_c \in \textrm{urban})+x_c\beta+e_{i[s_c]}+S_{i[s_c]}).$$
 
-The area-level risk is defined as $$p_i=q_i\times \text{expit}(\alpha+\gamma+e_{i[s_c]}+S_{i[s_c]})+(1-q_i)\times \text{expit}(\alpha+e_{i[s_c]}+S_{i[s_c]}),$$ where $q_i$ is the proportion of urban population as defined by the survey design in area $i$.
+The area-level risk is defined as $$p_i=q_i\times \text{expit}(\alpha+\gamma+e_{i[s_c]}+S_{i[s_c]})+(1-q_i)\times \text{expit}(\alpha+e_{i[s_c]}+S_{i[s_c]}),$$ where $q_i$ is the proportion of urban population in area i where "urban" is defined by the survey design sampling frame.
 
-The `clusterModel()` function fits the cluster-level model above. Users can specify whether to include the urban-rural stratification by setting `stratification = TRUE`, and either i.i.d. or BYM model by setting `model = "bym2"` or `model = "iid"`. For the the overdispersion parameter $d$, users can change the prior mean and precision through `overdisp.mean` and `overdisp.prec`. 
+The `clusterModel()` function fits the cluster-level model above. Users can specify whether to include the urban-rural stratification by setting `stratification = TRUE`, and either i.i.d. or the BYM2 model by setting `model = "bym2"` or `model = "iid"`. For the the overdispersion parameter $d$, users can change the prior mean and precision through `overdisp.mean` and `overdisp.prec`. 
 
 
-We first fit the non-stratified model in both Admin 1 and Admin 2 below. 
+We first fit the non-stratified model in both Admin 1 and Admin 2 below. These models differ only in the admin level at which the spatial random effects enter, with the cluster-level model being the same in each case.
 
 
 ```{r}
@@ -338,7 +344,7 @@ head(cl_res_ad2$res.admin2)
 
 We can use `mapPlot()` function from the SUMMER package to visualize estimates and standard errors. We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
 
-```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level estimates", out.width = "100%"}
+```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level posterior mean estimates", out.width = "100%"}
 poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
 
 # Make all plots share the same color range
@@ -356,7 +362,7 @@ g1 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1,
 
 g2 <- mapPlot(data = smth_res_ad1_bym2$res.admin1, geo = poly.adm1,
               by.data = "admin1.name", by.geo = "NAME_1", 
-              variable = "mean", legend.label = "Admin 1 Fay–Herriot", 
+              variable = "mean", legend.label = "Admin 1 Fay–herriot", 
               ylim =ylim, removetab = TRUE)
 
 g3 <- mapPlot(data = cl_res_ad1$res.admin1, geo = poly.adm1, 
@@ -373,9 +379,9 @@ g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2,
 ```
 
 
-The `scatterPlot()` function takes results from two model outputs, and produce a scatter plot of the selected variable. Here we visualize the comparison of the estimates and standard deviations.
+The `scatterPlot()` function takes results from two model outputs, and produce a scatter plot of the selected variable. Here we visualize the comparison of the posterior estimates and posterior standard deviations.
 
-```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 Fay–Herriot"}
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 Fay–Herriot posterior summaries"}
 s1 <- scatterPlot(
       res1=res_ad1$res.admin1,
       res2=smth_res_ad1_bym2$res.admin1,
@@ -393,14 +399,17 @@ s2 <- scatterPlot(
       value2="sd",
       by.res1="admin1.name",
       by.res2="admin1.name",
-      title="Admin1: Spatial Fay–Herriot vs Direct SE",
+      title="Admin1: Spatial Fay–erriot vs Direct SE",
       label1="Direct Est",
       label2="Spatial Fay–Herriot")
 s1 +s2
 ```
  
 
-```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level estimates"}
+In the left plot of Figure 2, we see the expected shrinkage (attenuation) of the spatial Fay–Herriot posterior mean estimates as compared to the direct estimates. In the right plot we see the reduction in uncertainty which arises from using all of the data in a single Model.
+
+
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level posterior estimates"}
 s1 <- scatterPlot(
       res1=res_ad1$res.admin1,
       res2=cl_res_ad1$res.admin1,
@@ -418,14 +427,14 @@ s2 <- scatterPlot(
       value2="sd",
       by.res1="admin1.name",
       by.res2="admin1.name",
-      title="Admin1: Cluster-level model vs Direct SE",
+      title="Admin1: Cluster-Level model vs Direct SE",
       label1="Direct Est",
       label2="Cluster-level model")
 s1 +s2
 ```
 
 
-
+In the Figure 3, we can see the same broad conclusion, as noted for figure 2 namely, shrinkage of the estimates and a reduction in uncertainty. 
 
 
 # More Models for Admin 2 Estimates {#sec:model2}
@@ -445,7 +454,7 @@ res_ad2 <- directEST(data = data,
 
 ## Admin 2 area-level Fay-Herriot model {#sec:area-level2}
 
-Fay-Herriot model at admin2 level can be fit by treating areas without direct estimates as missing data, though it is usually not recommended due to data sparsity. In addition, numerical issue arise when design-based variance of direct estimate is close to zero and logit precision become too large. A potential fix for this issue is to identify regions with too small design variance(< 1e-30), and delete the clusters in these regions, before fitting the model. However, this step creates additional bias in the results if the number of clusters deleted is large.
+A Fay-Herriot model at Admin 2 level can be fitted by treating areas without direct estimates as missing data, though it is usually not recommended due to data sparsity. In addition, numerical issue arise when design-based variance of direct estimate is close to zero and logit precision become too large. A potential fix for this issue is to identify regions with too small design variance(< 1e-30), and delete the clusters in these regions, before fitting the model. However, this step creates additional bias in the results if the number of clusters deleted is large.
 
 
 ```{r}
@@ -773,8 +782,8 @@ For direct estimates, we caution that we almost always prefer directly computing
 
 Let $i$ denote the index for the lower admin level and $k[i]$ be the index for the corresponding upper admin level, then aggregated estimates for the $k$-th upper admin area is 
 
-$$ \hat p^{agg}_{k}=\frac {\sum_{k[i] = k} \hat p^{HT}_{i}E_i}{\sum_{k[i] = k} \text{E}_i},$$
-where $E_i=\widehat{\text{pop}_{i}} \times \textbf{1}(\hat p^{HT}_{i} \neq \text{NA})$, i.e., the point estimates are obtained by weighted average of non-missing direct estimates in the area, where the weights are either given by external population information, or estimated by survey weights. The standard error and confidence intervals are computed by simulation using samples from the design-based asymptotic sampling distributions of $\text{logit}(\hat p^{HT}_i)$.
+$$ \hat p^{agg}_{k}=\frac {\sum_{k[i] = k} \hat p^{W}_{i}E_i}{\sum_{k[i] = k} \text{E}_i},$$
+where $E_i=\widehat{\text{pop}_{i}} \times \textbf{1}(\hat p^{W}_{i} \neq \text{NA})$, i.e., the point estimates are obtained by weighted average of non-missing direct estimates in the area, where the weights are either given by external population information, or estimated by survey weights. The standard error and confidence intervals are computed by simulation using samples from the design-based asymptotic sampling distributions of $\text{logit}(\hat p^{W}_i)$.
  
 The `directEST()` function allows aggregation by survey weight directly by specifying `weight = "survey"`, without going through the steps discussed in Section \@ref(sec:survey-weight-fraction). We compute the direct estimates at admin1 level and aggregate them to national estimates. When using survey weight, the aggregated point estimate at national level is the same as the national level direct estimate, but the uncertainty calculation are different as discussed above. 
 
@@ -987,7 +996,7 @@ intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
 We can use `SUMMER::mapPlot` to show the model estimates and standard errors.
 
 
-```{r,fig.show='hold',fig.dim = c(6, 4),tidy = FALSE, fig.cap="Comparing aggregated Admin 2 stratified cluster-level estiamtes, aggregated Admin 2 direct estiamtes, aggregated Admin 2 Fay-Herriot, and Admin 1direct estiamtes", out.width = "100%"}
+```{r,fig.show='hold',fig.dim = c(6, 4),tidy = FALSE, fig.cap="Comparing aggregated Admin 2 stratified cluster-level estiamtes, aggregated Admin 2 direct estimates, aggregated Admin 2 Fay-Herriot, and Admin 1 direct estiamtes", out.width = "100%"}
 min= min(res_ad2agg$agg.admin1$direct.est,cl_res_ad2_T$agg.admin1$mean,
          res_ad1agg$res.admin1$direct.est,smth_res_ad2_agg$agg.admin1$mean)
 max= max(res_ad2agg$agg.admin1$direct.est,cl_res_ad2_T$agg.admin1$mean,
