@@ -389,7 +389,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
 }
 
 
-    colnames(admin2.bb.res)[colnames(admin2.bb.res) == 'admin2.name.full'] <- 'admin2.name.full'
+    # colnames(admin2.bb.res)[colnames(admin2.bb.res) == 'admin2.name.full'] <- 'admin2.name.full'
 
 
     if(aggregation==F){

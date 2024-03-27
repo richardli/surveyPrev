@@ -17,7 +17,6 @@ vignette: >
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=TRUE, cache = TRUE, out.width = "100%")
-
 ```
 
 \clearpage
@@ -107,6 +106,7 @@ head(surveyPrevIndicators)
 ```
 
 ```{r indic, eval = TRUE, table.width = "100%", echo = FALSE}
+data(surveyPrevIndicators)
 is_html_output = function() {
   knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
 }
@@ -117,7 +117,7 @@ if(is_html_output()){
 }else{
   kbl(surveyPrevIndicators, align = 'ccl', 
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  column_spec(4, width = "25em")
+  column_spec(4, width = "20em")
 }
 ```
 
