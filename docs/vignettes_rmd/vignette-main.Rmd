@@ -388,7 +388,7 @@ s1 <- scatterPlot(
       value2="mean",
       by.res1="admin1.name",
       by.res2="admin1.name",
-      title="Admin1: Spatial Fay Herriot vs Direct estimate",
+      title="Admin1: Spatial Fay-Herriot vs Direct estimate",
       label1="Direct Est",
       label2="Spatial Fay-Herriot")
 s2 <- scatterPlot(
@@ -408,7 +408,7 @@ s1 +s2
 In the left plot of Figure 3.2, we see the expected shrinkage (attenuation) of the spatial Fay–Herriot posterior mean estimates as compared to the direct estimates. In the right plot we see the reduction in uncertainty which arises from using all of the data in a single Model.
 
 
-```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level posterior estimates"}
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level posterior estimates"}
 s1 <- scatterPlot(
       res1=res_ad1$res.admin1,
       res2=cl_res_ad1$res.admin1,
@@ -561,7 +561,7 @@ s1 <- scatterPlot(
       value2="mean",
       by.res1="admin2.name.full",
       by.res2="admin2.name.full",
-      title="Admin2: Spatial Fay Herriot vs Direct estimate",
+      title="Admin2: Spatial Fay-Herriot vs Direct estimate",
       label1="Direct Est",
       label2="Spatial Fay-Herriot")
 s2 <- scatterPlot(
@@ -601,7 +601,7 @@ s2 <- scatterPlot(
 s1 + s2
 ```
 
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 unstratified cluster-level estimates"}
+```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 Fay–Herriot estimates and Admin 2 unstratified cluster-level estimates"}
 s1 <- scatterPlot(
     res1=smth_res_ad2$res.admin2,
     res2=cl_res_ad2$res.admin2,
