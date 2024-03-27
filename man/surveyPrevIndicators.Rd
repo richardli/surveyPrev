@@ -5,7 +5,7 @@
 \alias{surveyPrevIndicators}
 \title{Table of built-in indicators.}
 \format{
-An object of class \code{data.frame} with 22 rows and 3 columns.
+An object of class \code{data.frame} with 22 rows and 4 columns.
 }
 \usage{
 data(surveyPrevIndicators)

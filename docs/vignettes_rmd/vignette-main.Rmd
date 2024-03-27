@@ -117,7 +117,7 @@ if(is_html_output()){
 }else{
   kbl(surveyPrevIndicators, align = 'ccl', 
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  column_spec(3, width = "25em")
+  column_spec(4, width = "25em")
 }
 ```
 
@@ -216,7 +216,7 @@ and we compute the confidence interval on the probability scale to be
 \text{expit}[\text{logit}(\hat p^{W}_i) + z_{\alpha/2}V_i^{1/2}]\quad).
 \]
 
-Currently the package defaults to a two-stage stratified cluster sampling design, with the sampling clusters (enumeration areas) being stratified by Admin 1 areas and urban/rural status, which is the most common sampling design in the DHS. 
+Currently the package defaults to a two-stage stratified cluster sampling design, with the sampling clusters (enumeration areas) being stratified by Admin 1 areas and urban/rural strata, which is the most common sampling design in the DHS. 
 
 
 ```{r}
@@ -227,7 +227,7 @@ head(res_ad1$res.admin1)
 ```
 
 
-For national level (`admin = 0`), the function can additioanlly produce urban- and rural-specific direct estimates by specifying argument `strata`. 
+For national level (`admin = 0`), the function can additionally produce urban- and rural-specific direct estimates by specifying argument `strata`. 
 
 ```{r}
 res_ad0 <- directEST(data=data,
@@ -259,7 +259,7 @@ Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, and $e_i$ and $S
 
 
 
-As of now the package allows only an overall intercept $\alpha$, but future versions of the package will allow add area level covariates to be included. The default prior for the intercept is $N(0, 1000)$. The structured and non-structured random effects are implemented used Besag-York-Mollié (BYM) via BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
+As of now the package allows only an overall intercept $\alpha$, but future versions of the package will allow area level covariates to be included. The default prior for the intercept is $N(0, 1000)$. The structured and non-structured random effects are implemented used Besag-York-Mollié (BYM) via BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
 
 
 The `fhModel()` calculates spatial Fay-Herriot estimates at different administrative levels using `SUMMER::smoothSurvey()`. Users can specify either only i.i.d. random effects (i.e., no $S_i$ term) or the BYM2 model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregated to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more details in Section \@ref(sec:aggregation). 
@@ -288,7 +288,7 @@ Columns 2-5 represent the posterior mean, posterior variance, posterior median a
 
 ## Cluster-level model {#sec:cluster-level}
 
-Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. In terms of traditional SEA model, cluster-level models are a type of unit-level model. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$. The sampling model i"
+Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. In terms of traditional SEA model, cluster-level models are a type of unit-level model. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$. The sampling model i:
 
 $$Y_c|p_c,d\sim \textrm{BetaBinomial}(n_c,p_c,d),$$
 $$p_c=\textrm{expit}(\alpha+\mathbf{x}_c\beta+e_{i[s_c]}+S_{i[s_c]}),$$
@@ -297,8 +297,7 @@ where $\alpha$ is the intercept, $\mathbf{x}_c$ are cluster-specific covariates 
 <!-- , corr($z_k,z_{k'}$), where $z_k$ is the binary response in $y_c$, $y_c=\sum_{k=1}^{n_c}z_k$). -->
 The default prior for $d$ is $\text{logit}(d) \sim \text{Normal}(0,0.4)$.  
 
-Unit-level models will produce biased estimates if the specified model does not hold for all units in the population. In the DHS, urban clusters are often oversampled. If such oversampling occurs and the outcome associated with urban/rural, then bias will result if the model does not allow for differences between urban/rural. A fully adjusted model would include interaction terms representing the crossing of Admin 1 areas x urban/rural. However, for reasons of parsimony we include area-level random effects and a single urban/rural fixed effect. To emphasize, bias will only arise when oversampling of urban (or rural) areas occurs, and the indicator has an association with urban/rural. One may check whether one needs to include urban/rural terms in the model, and then aggregate by urban/rural. 
-
+Unit-level models will produce biased estimates if the specified model does not hold for all units in the population. In the DHS, urban clusters are often oversampled. If such oversampling occurs and the outcome associated with urban/rural, then bias will result when the model does not allow for differences between urban/rural. A fully adjusted model would include interaction terms representing the crossing of Admin 1 areas x urban/rural. However, for reasons of parsimony we include area-level random effects and a single urban/rural fixed effect. To emphasize, bias will only arise when oversampling of urban (or rural) areas occurs, and the indicator has an association with urban/rural. One may check whether one needs to include urban/rural terms in the model, and then aggregate by urban/rural. 
 
 Currently, the package allows the specification of the fixed effect to contain either an overall intercept only (i.e., unstratified model), or with an additional urban-rural effect (i.e., stratified model). For the stratified model, $p_c$ is parameterized by 
 $$p_c=\textrm{expit}(\alpha+\gamma\times I(s_c \in \textrm{urban})+x_c\beta+e_{i[s_c]}+S_{i[s_c]}).$$
@@ -406,7 +405,7 @@ s1 +s2
 ```
  
 
-In the left plot of Figure 2, we see the expected shrinkage (attenuation) of the spatial Fay–Herriot posterior mean estimates as compared to the direct estimates. In the right plot we see the reduction in uncertainty which arises from using all of the data in a single Model.
+In the left plot of Figure 3.2, we see the expected shrinkage (attenuation) of the spatial Fay–Herriot posterior mean estimates as compared to the direct estimates. In the right plot we see the reduction in uncertainty which arises from using all of the data in a single Model.
 
 
 ```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level posterior estimates"}
@@ -434,7 +433,7 @@ s1 +s2
 ```
 
 
-In the Figure 3, we can see the same broad conclusion, as noted for figure 2 namely, shrinkage of the estimates and a reduction in uncertainty. 
+In the Figure 3.3, we can see the same broad conclusion, as noted for figure 2 namely, shrinkage of the estimates and a reduction in uncertainty. 
 
 
 # More Models for Admin 2 Estimates {#sec:model2}
