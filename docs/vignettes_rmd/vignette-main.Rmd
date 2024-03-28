@@ -28,7 +28,7 @@ In this vignette, we describe how prevalence mapping using DHS data can be carri
 2. Area-level Fay-Herriot model in Section \@ref(sec:area-level).
 3. Cluster-level model in Section \@ref(sec:cluster-level).
 
-Then in Section \@ref(sec:aggregation) we discuss how to aggregate the result for a given model to produce estimates at higher admin levels.
+Then in Section \@ref(sec:vis) we show several tools for visualization of different estimates, and in Section  \@ref(sec:aggregation) we discuss how to aggregate the result for a given model to produce estimates at higher admin levels.
 
 
 
@@ -42,7 +42,7 @@ The following pieces of data are needed to produce SAE for DHS surveys:
 
 + **DHS survey data**: Depending on the indicator, different types of DHS files are used as input. This can be done within R, so there is no need to download files locally from the DHS website. See \@ref(sec:DHS) on downloading DHS data for details.
 + **Spatial polygon files** for the desired admin level: These can be downloaded from GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)]. 
-+ **Population map** (Optional): These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are only required for the stratified cluster-level model described in Section \@ref(sec:cluster-level-stratified) and for result aggregation described in Section \@ref(sec:aggregation).
++ **Population map** (Optional): These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are only required for the stratified cluster-level model described in Section \@ref(sec:cluster-level-strat) and for result aggregation described in Section \@ref(sec:aggregation).
 
 
 ## Install _**surveyPrev**_  
@@ -321,7 +321,7 @@ head(smth_res_ad2$res.admin2)
 
 # Cluster-level model {#sec:cluster-level}
 
-## Unstratified model
+## Unstratified model {#sec:cluster-level-unstrat}
 
 Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. In terms of traditional SAE literature, cluster-level models are a type of unit-level model. We start with describing an unstratified model without taking into account the urban/rural stratification in the sampling design.
 
@@ -361,7 +361,7 @@ head(cl_res_ad2$res.admin2)
 ```
 
 
-## Stratified model
+## Stratified model {#sec:cluster-level-strat}
 
 Cluster-level models will produce biased estimates if the specified model does not hold for all units in the population. In the DHS, urban clusters are often oversampled. If such oversampling occurs and the outcome associated with urban/rural, then bias will result when the model does not allow for differences between urban/rural. To emphasize, bias will only arise when oversampling of urban (or rural) areas occurs, and the indicator has an association with urban/rural. One may check whether one needs to include urban/rural terms in the model, and then aggregate by urban/rural. 
 
@@ -726,7 +726,7 @@ ggplot(out3, aes(x = SurveyWeight, y = WorldPop, size = population)) +
 ```
 
 
-## Aggregating Direct estimates {#sec:direct3}
+## Aggregating direct estimates {#sec:direct3}
 
 For direct estimates, we caution that we almost always prefer directly computing direct estimates at the desired level, rather than aggregating direct estimates at finer levels. Nevertheless, here we describe how the aggregated direct estimates are computed. 
 
@@ -923,14 +923,14 @@ intervalPlot(admin = 1, group = FALSE, compare = TRUE, model = list(
 Finally, we put together all the different Admin 1 level results based on both Fay-Herriot and cluster-level models. When comparing many estimates, it is usually useful to highlight groups of similar models. This can be done by specifying a `group` object in the fitted models, and set `group = TRUE` in `intervalPlot()`.
 
 ```{r,fig.show='hold',fig.dim = c(10, 7), tidy = FALSE, fig.cap="Comparing different model estimates at national level", out.width = "100%"}
-res_ad1$group <- "Direct Est"
+res_ad1$group <- "Direct Estimate"
 smth_res_ad1_spatial_survey$group <- "Fay-Herriot"
 smth_res_ad2_agg_survey$group <- "Fay-Herriot"
 smth_res_ad2_agg_pop$group <- "Fay-Herriot"
-cl_res_ad1_pop$group <- "Cluster-level"
-cl_res_ad2_pop$group <- "Cluster-level"
-cl_res_ad1_T_pop$group <- "Cluster-level"
-cl_res_ad2_T_pop$group <- "Cluster-level"
+cl_res_ad1_pop$group <- "Cluster-Level"
+cl_res_ad2_pop$group <- "Cluster-Level"
+cl_res_ad1_T_pop$group <- "Cluster-Level"
+cl_res_ad2_T_pop$group <- "Cluster-Level"
 intervalPlot(admin = 1, group = TRUE, compare = TRUE, model = list(
                  "Admin 1 direct estimates" = res_ad1,
                  "Admin 1 FH model" = smth_res_ad1_spatial_survey,
