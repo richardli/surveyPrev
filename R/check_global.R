@@ -78,7 +78,10 @@ utils::globalVariables(c("admin1.name",
 						"v012", 
 						"v313", 
 						"v626a", 
-						"bo10" 
+						"bo10", 
+						"pop.census", 
+						"urban.frac", 
+						"urban" 
 						))
 
  
