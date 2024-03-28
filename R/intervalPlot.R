@@ -110,9 +110,12 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
 
     if(group){
+      allgroup <- NULL
       for (i in 1:length(model)) {
         dt[i,]$group= model[[i]]$group
+        allgroup <- c(allgroup, model[[i]]$group)
       }
+      dt$group <- factor(dt$group, levels = unique(allgroup))
     }
 
     rownames(dt)<-dt$model
@@ -151,7 +154,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
                   upper=rep(NA, n.region.all), 
                   model=rep(NA, n.region.all),
                   group=rep(NA, n.region.all))
-
+    allgroup <- NULL
     for (i in 1:length(model)) {
       if( is.null(model[[i]]$agg.admin1)){
         if(colnames(model[[i]]$res.admin1)[2]=="direct.est"){
@@ -191,11 +194,13 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
      if(group){
         if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
         dt[(1+ (i-1)*dd):(i*dd),]$group= model[[i]]$group
+        allgroup <- c(allgroup, model[[i]]$group)
       }
     }
 
     dt=na.omit(dt)
     dt$model <- factor(dt$model, levels = names(model))
+    if(!is.null(group)) dt$group <- factor(dt$group, levels = unique(allgroup))
 
     if(group){
 
