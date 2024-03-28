@@ -1,5 +1,5 @@
 ---
-title: "Spatial smoothing of DHS indicators using the **surveyPrev** package"
+title: "Prevalence mapping for DHS indicators using the **surveyPrev** package"
 author: "Qianyu Dong, Zehang Richard Li, Andrea Boskovic, Jon Wakefield"
 date: "`r Sys.Date()`"
 bibliography: main.bib
@@ -22,13 +22,13 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALS
 \clearpage
 # Overview
 
-In this vignette, we describe how prevalence mapping using DHS data can be carried out. Produce mapping in Small Area Estimation(SAE) for proportions of some indicator of interest. The vignette is organized as follows. In Section \@ref(sec:data) we first describe the data preparation steps to obtain and process the relevant DHS survey data in R. In Section \@ref(sec:model) we describe the following models:
+In this vignette, we describe how prevalence mapping using DHS data can be carried out. Prevalence mapping is Small Area Estimation (SAE) for proportions of some indicator of interest. The vignette is organized as follows. In Section \@ref(sec:data) we first describe the data preparation steps to obtain and process the relevant DHS survey data in R. We then describe three classes of models
 
 1. Direct estimates in Section \@ref(sec:direct).
 2. Area-level Fay-Herriot model in Section \@ref(sec:area-level).
 3. Cluster-level model in Section \@ref(sec:cluster-level).
 
-In Section \@ref(sec:model2), we describe additional models for estimating prevalence at Admin 2 level. Section \@ref(sec:aggregation) is about aggregation model to produce estimates at higher admin levels.
+Then in Section \@ref(sec:aggregation) we discuss how to aggregate the result for a given model to produce estimates at higher admin levels.
 
 
 
@@ -37,12 +37,12 @@ In Section \@ref(sec:model2), we describe additional models for estimating preva
   
 ## Prerequisites
 
-As of the current version of the package, the following pieces of data are needed to produce SAE for DHS surveys:
+The following pieces of data are needed to produce SAE for DHS surveys:
 
 
 + **DHS survey data**: Depending on the indicator, different types of DHS files are used as input. This can be done within R, so there is no need to download files locally from the DHS website. See \@ref(sec:DHS) on downloading DHS data for details.
 + **Spatial polygon files** for the desired admin level: These can be downloaded from GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)]. 
-+ **Population map**: These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are required for aggregation.
++ **Population map** (Optional): These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are only required for the stratified cluster-level model described in Section \@ref(sec:cluster-level-stratified) and for result aggregation described in Section \@ref(sec:aggregation).
 
 
 ## Install _**surveyPrev**_  
@@ -67,7 +67,7 @@ library(surveyPrev)
 ```
 
 
-One of the key required packages, `INLA` is not available on CRAN or GitHub, but can be installed with the following code [@rue2009inla]. 
+One of the key required packages, `INLA` is not available on CRAN or GitHub, and needs to be installed with the following code [@rue2009inla]. 
 
 ```{r pkg, eval = FALSE, tidy = FALSE}
 install.packages("INLA", repos=c(getOption("repos"), 
@@ -75,7 +75,7 @@ install.packages("INLA", repos=c(getOption("repos"),
 library(INLA)
 ```
 
-The following packages are also needed to run the examples in this vignette.
+The following packages are needed to run the example analysis described in this vignette.
 
 ```{r, message=FALSE,warning=FALSE, eval = TRUE}
 library(geodata)
@@ -85,6 +85,7 @@ library(rdhs)
 library(ggplot2)
 library(patchwork)
 library(dplyr)
+library(tidyr)
 library(kableExtra)
 ```
 
@@ -98,7 +99,7 @@ data(surveyPrevIndicators)
 num=dim((surveyPrevIndicators))[1]
 ```
 
-Currently, the `surveyPrev` package supports `r num` indicators. The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset. Either the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. The full list of indicators and their IDs are summarized in Table \@ref(tab:indic).
+Currently, the `surveyPrev` package supports `r num` indicators. The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset. The ID column correspond to the indicator IDs in the DHS API and are more standardized. The alternative ID column provides convenient and more readable indicator names for only a subset of indicators. Both can be used to retrieve the indicator in the functions described later. The full list of indicators and their IDs are summarized in the Table below.
 
 ```{r, eval = FALSE}
 data(surveyPrevIndicators)
@@ -111,15 +112,17 @@ is_html_output = function() {
   knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
 }
 if(is_html_output()){
-  kbl(surveyPrevIndicators, align = 'ccl', 
+  kbl(surveyPrevIndicators[, c("ID", "alternative.ID", "Description", "Topic")], align = 'llll', 
     caption = "List of built-in indicators in the surveyPrev package.") %>%
   kable_styling()
 }else{
-  kbl(surveyPrevIndicators, align = 'ccl', 
+  kbl(surveyPrevIndicators[, c("ID", "alternative.ID", "Description", "Topic")], align = 'llll', 
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  column_spec(4, width = "20em")
+  column_spec(3, width = "20em") %>%
+  column_spec(4, width = "8em")
 }
 ```
+
 
 
 In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator can be extracted with `indicator = "ancvisit4+"` or `indicator = "RH_ANCN_W_N4P"`. 
@@ -180,12 +183,12 @@ poly.adm2 <- sf::st_as_sf(poly.adm2)
 
 
 
-The `clusterInfo()` function extracts Admin 1 and Admin 2 area information for each cluster. To avoid confusion in countries that have duplicated region names, we create new labels for Admin 2 regions using the variable `admin2.name.full`.  The clusters with invalid GPS locations are saved in the `wrong.points` object. 
+The `clusterInfo()` function extracts Admin 1 and Admin 2 area information for each cluster. To avoid confusion in countries that have duplicated region names, we create new labels for Admin 2 regions using the variable `admin2.name.full`.  The clusters with invalid GPS locations are saved in the `wrong.points` object and not used in any models. 
 
 ```{r}
 cluster.info <- clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2)
 head(cluster.info$data)
-head(cluster.info$wrong.points)
+cluster.info$wrong.points
 ```
 
 
@@ -199,10 +202,9 @@ head(admin.info2$data)
 
 
 
-# Prevalence Estimation{#sec:model}
+# Direct estimates {#sec:direct}
 
-## Direct estimates {#sec:direct}
-
+## National and Admin 1 direct estimates
 For $y_j$ be the binary outcome of interest for the $j^{\text{th}}$ individual in the survey and $w_j$ be the design weight associated with this individual.  For a given area denoted as $i$, we have the weighted estimator:
 
 $$ \hat p^{W}_{i}=\frac {\sum_{j \in S_i} y_j w_j}{\sum_{j \in S_i} w_j}$$
@@ -247,15 +249,27 @@ list(all = res_ad0$res.admin0,
       rural = res_ad0_rural$res.admin0)
 ```
 
+## Admin 2 direct estimates {#sec:direct2} 
 
-## Area-level Fay-Herriot model {#sec:area-level}
+In general, direct estimates at Admin 2 are unstable. For countries with a large number of Admin 2 areas, some of the direct estimates can be undefined if there is no cluster in the area.
 
+```{r}
+res_ad2 <- directEST(data = data,
+                     cluster.info = cluster.info,
+                     admin = 2,
+                     aggregation = FALSE)
+```
+
+
+# Area-level Fay-Herriot model {#sec:area-level}
+
+## Admin 1 Fay-Herriot estimates
 
 Fay-Herriot models provides smoothed estimates at the areal level using direct estimate $\hat p^{W}_{i}$ as input. The direct estimates are modeled as a noisy observation of the true prevalence, with the variance of noise determined by the design-based variance. We consider the spatial Fay-Herriot model for the logit transformed direct estimates, which is defined as follows:
 
 $$\text{logit}(\hat p^{W}_{i})|\lambda_{i} \sim\textrm{Normal}(\lambda_{i}, V_{i}^{HT}),$$
 $$\lambda_{i}= \alpha + e_i+S_i.$$
-Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, and $e_i$ and $S_i$ are unstructured and structured spatial random effects. Inference is carried out using Bayesian methods and so the model specific is completed by priors on $\alpha$ and the variance components, see @wakefield2020small for details of Bayesian version. Area level Fay-Herriot model are viewed as the most reliable model choice, since they acknowledge the design through the sue of a weighted estimate and its associated variance. See chapters 4-6 of @rao2015sae. 
+Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, and $e_i$ and $S_i$ are unstructured and structured spatial random effects. Inference is carried out using Bayesian methods and so the model specific is completed by priors on $\alpha$, $e$ and $S$, and their hyperpriors. More details of the Bayesian model setup can be found in @wakefield2020small. Area level Fay-Herriot model are viewed as the most reliable model choice, since they acknowledge the design through the sue of a weighted estimate and its associated variance. See chapters 4 to 6 of @rao2015sae. 
 
 
 
@@ -280,34 +294,49 @@ smth_res_ad1_iid <- fhModel(data,
                         model = "iid",
                         aggregation =FALSE)
 head(smth_res_ad1_bym2$res.admin1) 
-
 ```
 
-Columns 2-5 represent the posterior mean, posterior variance, posterior median and 2.5\%, and 97.5\% posterior quantiles, respectively. The posterior variance can be viewed as an analogue of the mean squared error (MSE) summary.
+Columns 2-6 represent the posterior mean, posterior variance, posterior median and 2.5\%, and 97.5\% posterior quantiles, respectively. The posterior variance can be viewed as an analogue of the mean squared error (MSE) summary.
 
 
-## Cluster-level model {#sec:cluster-level}
 
-Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. In terms of traditional SEA model, cluster-level models are a type of unit-level model. Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$. The sampling model i:
+## Admin 2 Fay-Herriot estimates {#sec:area-level2}
 
-$$Y_c|p_c,d\sim \textrm{BetaBinomial}(n_c,p_c,d),$$
-$$p_c=\textrm{expit}(\alpha+\mathbf{x}_c\beta+e_{i[s_c]}+S_{i[s_c]}),$$
+A Fay-Herriot model at Admin 2 level can be fitted by treating areas without direct estimates as missing data, though it is usually not recommended due to data sparsity. In addition, numerical issue arise when design-based variance of direct estimate is close to zero and logit precision become too large. A potential fix for this issue is to identify regions with too small design variance(< 1e-30), and delete the clusters in these regions, before fitting the model. However, this step creates additional bias in the results if the number of clusters deleted is large.
 
-where $\alpha$ is the intercept, $\mathbf{x}_c$ are cluster-specific covariates and $i[s_c]$ indexes the area within which the cluster $s_c$ resides. Similar to the area-level model, $e_i$ and $S_i$ are unstructured and structured spatial random effects with the same prior as before. Future versions of the package will allow covariates to be included. The overdispersion parameter, $d=\frac{1}{\alpha+\beta+1}$, is between 0 and 1 and represent the the intracluster correlation between Bernoulli draws within cluster.
+
+```{r}
+bad_admin2 <- subset(res_ad2$res.admin2, direct.var < 1e-30)$admin2.name.full
+# identify clusters in these regions
+bad_clusters <- subset(cluster.info$data, admin2.name.full %in% bad_admin2)$cluster
+# Run FH model without these clusters
+smth_res_ad2 <- fhModel(subset(data, !cluster %in% bad_clusters),
+                    cluster.info = cluster.info,
+                    admin.info = admin.info2,
+                    admin = 2,
+                    model = "bym2",
+                    aggregation = FALSE)
+head(smth_res_ad2$res.admin2)
+```
+
+# Cluster-level model {#sec:cluster-level}
+
+## Unstratified model
+
+Cluster-level models assume smoothing models for counts of events in each cluster [@wakefield2020small; @li2020summer]. In terms of traditional SAE literature, cluster-level models are a type of unit-level model. We start with describing an unstratified model without taking into account the urban/rural stratification in the sampling design.
+
+Let $Y_c$ be the number of events in cluster $c$, and $n_c$ be the number of individuals at risk, where $c= 1,\dots,C$. The unstratified model assumes the hierarchical structure:
+
+$$Y_c \mid p_c,d\sim \textrm{BetaBinomial}(n_c,p_c,d),$$
+$$p_c=\textrm{expit}(\alpha+e_{i[s_c]}+S_{i[s_c]}),$$
+
+where $\alpha$ is the intercept, and $i[s_c]$ indexes the area within which the cluster $s_c$ resides. Similar to the area-level model, $e_i$ and $S_i$ are unstructured and structured spatial random effects with the same prior as before. The Beta-binomial distribution arise from a hierarchical model where the probability follows a $\text{Beta}(a, b)$ prior. The overdispersion parameter, $d=\frac{1}{\alpha+\beta+1}$, is between 0 and 1 and represent the the intracluster correlation between Bernoulli draws within cluster.
 <!-- , corr($z_k,z_{k'}$), where $z_k$ is the binary response in $y_c$, $y_c=\sum_{k=1}^{n_c}z_k$). -->
 The default prior for $d$ is $\text{logit}(d) \sim \text{Normal}(0,0.4)$.  
 
-Unit-level models will produce biased estimates if the specified model does not hold for all units in the population. In the DHS, urban clusters are often oversampled. If such oversampling occurs and the outcome associated with urban/rural, then bias will result when the model does not allow for differences between urban/rural. A fully adjusted model would include interaction terms representing the crossing of Admin 1 areas x urban/rural. However, for reasons of parsimony we include area-level random effects and a single urban/rural fixed effect. To emphasize, bias will only arise when oversampling of urban (or rural) areas occurs, and the indicator has an association with urban/rural. One may check whether one needs to include urban/rural terms in the model, and then aggregate by urban/rural. 
+The `clusterModel()` function fits the cluster-level model above. Unstratified model can be specified by setting `stratification = FALSE`, and either i.i.d. or the BYM2 model by setting `model = "bym2"` or `model = "iid"`. For the the overdispersion parameter $d$, users can change the prior mean and precision through `overdisp.mean` and `overdisp.prec`. 
 
-Currently, the package allows the specification of the fixed effect to contain either an overall intercept only (i.e., unstratified model), or with an additional urban-rural effect (i.e., stratified model). For the stratified model, $p_c$ is parameterized by 
-$$p_c=\textrm{expit}(\alpha+\gamma\times I(s_c \in \textrm{urban})+x_c\beta+e_{i[s_c]}+S_{i[s_c]}).$$
-
-The area-level risk is defined as $$p_i=q_i\times \text{expit}(\alpha+\gamma+e_{i[s_c]}+S_{i[s_c]})+(1-q_i)\times \text{expit}(\alpha+e_{i[s_c]}+S_{i[s_c]}),$$ where $q_i$ is the proportion of urban population in area i where "urban" is defined by the survey design sampling frame.
-
-The `clusterModel()` function fits the cluster-level model above. Users can specify whether to include the urban-rural stratification by setting `stratification = TRUE`, and either i.i.d. or the BYM2 model by setting `model = "bym2"` or `model = "iid"`. For the the overdispersion parameter $d$, users can change the prior mean and precision through `overdisp.mean` and `overdisp.prec`. 
-
-
-We first fit the non-stratified model in both Admin 1 and Admin 2 below. These models differ only in the admin level at which the spatial random effects enter, with the cluster-level model being the same in each case.
+We fit the unstratified model in both Admin 1 and Admin 2 below. These models differ only in the admin level at which the spatial random effects enter, with the cluster-level model being the same in each case.
 
 
 ```{r}
@@ -328,152 +357,24 @@ cl_res_ad2 <- clusterModel(data=data,
                    admin = 2,
                    aggregation =FALSE,
                    CI = 0.95)
-```
-
-
-The estimates can be extracted as follows
-
-```{r}
-head(cl_res_ad1$res.admin1)
 head(cl_res_ad2$res.admin2)
 ```
 
 
-## Visualizing prevalence estimates {#sec:vis}
+## Stratified model
 
-We can use `mapPlot()` function from the SUMMER package to visualize estimates and standard errors. We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
+Cluster-level models will produce biased estimates if the specified model does not hold for all units in the population. In the DHS, urban clusters are often oversampled. If such oversampling occurs and the outcome associated with urban/rural, then bias will result when the model does not allow for differences between urban/rural. To emphasize, bias will only arise when oversampling of urban (or rural) areas occurs, and the indicator has an association with urban/rural. One may check whether one needs to include urban/rural terms in the model, and then aggregate by urban/rural. 
 
-```{r ,fig.dim = c(6, 4),fig.cap="Comparing Admin 1 direct estimates, Admin 1 Fay–Herriot, Admin 1 and Admin 2 unstratified cluster-level posterior mean estimates", out.width = "100%"}
-poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
+A fully adjusted model would include interaction terms representing the crossing of Admin 1 areas and urban/rural status. However, for reasons of parsimony we include area-level random effects and a single urban/rural fixed effect. The sampling model becomes
 
-# Make all plots share the same color range
-min= min(res_ad1$res.admin1$direct.est,smth_res_ad1_bym2$mean,
-         cl_res_ad1$res.admin1$mean,cl_res_ad2$res.admin2$mean)
-max= max(res_ad1$res.admin1$direct.est,smth_res_ad1_bym2$mean,
-         cl_res_ad1$res.admin1$mean,cl_res_ad2$res.admin2$mean)
-ylim=c(min,max)
+$$Y_c|p_c,d\sim \textrm{BetaBinomial}(n_c,p_c,d),$$
+$$p_c=\textrm{expit}(\alpha+\gamma\times I(s_c \in \textrm{urban})+x_c\beta+e_{i[s_c]}+S_{i[s_c]}).$$
 
 
-g1 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1,
-              by.data = "admin1.name",  by.geo = "NAME_1", 
-              variable = "direct.est", legend.label = "Admin 1 Direct",
-              ylim =ylim, removetab = TRUE)
-
-g2 <- mapPlot(data = smth_res_ad1_bym2$res.admin1, geo = poly.adm1,
-              by.data = "admin1.name", by.geo = "NAME_1", 
-              variable = "mean", legend.label = "Admin 1 Fay–herriot", 
-              ylim =ylim, removetab = TRUE)
-
-g3 <- mapPlot(data = cl_res_ad1$res.admin1, geo = poly.adm1, 
-              by.data = "admin1.name", by.geo = "NAME_1", 
-              variable = "mean",  legend.label = "Admin 1 unstratified", 
-              ylim = ylim, removetab = TRUE)
-
-g4 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2, 
-              by.data = "admin2.name.full", by.geo = "admin2.name.full",
-              variable = "mean", legend.label = "Admin 2 unstratified", 
-              ylim = ylim, removetab = TRUE)
-
-(g1 + g2) / (g3 + g4)
-```
+The area-level risk is defined as $$p_i=q_i\times \text{expit}(\alpha+\gamma+e_{i[s_c]}+S_{i[s_c]})+(1-q_i)\times \text{expit}(\alpha+e_{i[s_c]}+S_{i[s_c]}),$$ where $q_i$ is the proportion of urban population in area $i$ where "urban" is defined by the survey design sampling frame. 
 
 
-The `scatterPlot()` function takes results from two model outputs, and produce a scatter plot of the selected variable. Here we visualize the comparison of the posterior estimates and posterior standard deviations.
-
-```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 Fay–Herriot posterior summaries"}
-s1 <- scatterPlot(
-      res1=res_ad1$res.admin1,
-      res2=smth_res_ad1_bym2$res.admin1,
-      value1="direct.est",
-      value2="mean",
-      by.res1="admin1.name",
-      by.res2="admin1.name",
-      title="Admin1: Spatial Fay-Herriot vs Direct estimate",
-      label1="Direct Est",
-      label2="Spatial Fay-Herriot")
-s2 <- scatterPlot(
-      res1=res_ad1$res.admin1,
-      res2=smth_res_ad1_bym2$res.admin1,
-      value1="direct.se",
-      value2="sd",
-      by.res1="admin1.name",
-      by.res2="admin1.name",
-      title="Admin1: Spatial Fay–erriot vs Direct SE",
-      label1="Direct Est",
-      label2="Spatial Fay–Herriot")
-s1 +s2
-```
- 
-
-In the left plot of Figure 3.2, we see the expected shrinkage (attenuation) of the spatial Fay–Herriot posterior mean estimates as compared to the direct estimates. In the right plot we see the reduction in uncertainty which arises from using all of the data in a single Model.
-
-
-```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 5, fig.width = 10,fig.cap="Comparing Admin 1 direct estimates and Admin 1 unstratified cluster-level posterior estimates"}
-s1 <- scatterPlot(
-      res1=res_ad1$res.admin1,
-      res2=cl_res_ad1$res.admin1,
-      value1="direct.est",
-      value2="mean",
-      by.res1="admin1.name",
-      by.res2="admin1.name",
-      title="Admin1: Cluster-level model vs Direct estimate",
-      label1="Direct Est",
-      label2="Cluster-level model")
-s2 <- scatterPlot(
-      res1=res_ad1$res.admin1,
-      res2=cl_res_ad1$res.admin1,
-      value1="direct.se",
-      value2="sd",
-      by.res1="admin1.name",
-      by.res2="admin1.name",
-      title="Admin1: Cluster-Level model vs Direct SE",
-      label1="Direct Est",
-      label2="Cluster-level model")
-s1 +s2
-```
-
-
-In the Figure 3.3, we can see the same broad conclusion, as noted for figure 2 namely, shrinkage of the estimates and a reduction in uncertainty. 
-
-
-# More Models for Admin 2 Estimates {#sec:model2}
-In this section, we discuss additional models that can be fit to estimate prevalences at the Admin 2 level. These models either require additional care from the users in examining the assumptions and results, or require additional information not readily available from the DHS data alone. 
-
-## Admin 2 direct estimates {#sec:direct2} 
-
-In general, direct estimates at Admin 2 are unstable. For countries with a large number of Admin 2 areas, some of the direct estimates can be undefined if there is no cluster in the area.
-
-```{r}
-res_ad2 <- directEST(data = data,
-                   cluster.info = cluster.info,
-                   admin = 2,
-                   aggregation = FALSE)
-```
-
-
-## Admin 2 area-level Fay-Herriot model {#sec:area-level2}
-
-A Fay-Herriot model at Admin 2 level can be fitted by treating areas without direct estimates as missing data, though it is usually not recommended due to data sparsity. In addition, numerical issue arise when design-based variance of direct estimate is close to zero and logit precision become too large. A potential fix for this issue is to identify regions with too small design variance(< 1e-30), and delete the clusters in these regions, before fitting the model. However, this step creates additional bias in the results if the number of clusters deleted is large.
-
-
-```{r}
-bad_admin2 <- subset(res_ad2$res.admin2, direct.var < 1e-30)$admin2.name.full
-# identify clusters in these regions
-bad_clusters <- subset(cluster.info$data, admin2.name.full %in% bad_admin2)$cluster
-# Run FH model without these clusters
-smth_res_ad2 <- fhModel(subset(data, !cluster %in% bad_clusters),
-                    cluster.info = cluster.info,
-                    admin.info = admin.info2,
-                    admin = 2,
-                    model = "bym2",
-                    aggregation = FALSE)
-head(smth_res_ad2$res.admin2)
-```
-
-
-## Admin 2 cluster-level model with urban/rural stratification {#sec:cluster-level2}
-
-In situations where the urban and rural prevalence are different, the urban/rural stratification variable needs to be included in the model. This can be achieved by setting `stratification = TRUE`. The returned results then consist of urban-specific, rural-specific, and the overall area-level prevalences. In order to facilitate aggregation for cluster-level model with urban/rural effects, we need to know the fraction of urban population by each administrative region. This computation can be non-trivial and requires external information (i.e., the urban/rural definition by census), so we omit this step from this document for now and assume such information is already obtained from a difference source. he urban proportions for women of age 15 to 49 in Zambia in 2018 has been pre-computed and saved in `ZambiaPopWomen$admin1_urban` and `ZambiaPopWomen$admin2_urban`.
+Stratified cluster-level model can be fit by setting `stratification = TRUE`. The returned results then consist of urban-specific, rural-specific, and the overall area-level prevalences. In order to facilitate aggregation for cluster-level model with urban/rural effects, we need to know the fraction of urban population by each administrative region. This computation can be non-trivial and requires external information (i.e., the urban/rural definition by census), so we omit this step from this document for now and assume such information is already obtained from a difference source. he urban proportions for women of age 15 to 49 in Zambia in 2018 has been pre-computed and saved in `ZambiaPopWomen$admin1_urban` and `ZambiaPopWomen$admin2_urban`.
 
 ```{r}
 head(ZambiaPopWomen$admin2_urban)
@@ -501,129 +402,201 @@ cl_res_ad2_T <- clusterModel(data=data,
                    CI = 0.95)
 ```
 
-The `compare=FALSE` in `intervalPlot()`is specifically designed for cluster models with urban/rural stratification. It presents a comparison of Admin 2 estimates with credible intervals within an Admin 1 region. 
 
-```{r,fig.show='hold', fig.height = 15, fig.width = 10, fig.cap="Comparing Admin 2 estimates with credible intervals within an Admin 1 region"}
+# Visualizing prevalence estimates {#sec:vis}
+
+We can use `mapPlot()` function from the **SUMMER** package to visualize estimates and standard errors. 
+
+```{r ,fig.dim = c(9, 5),fig.cap="Comparing Admin 1 direct estimates, Fay–Herriot model, and unstratified cluster-level posterior mean estimates", out.width = "100%"}
+# Arrange all estimates into a long-format data frame
+out1 <- res_ad1$res.admin1[, c("admin1.name", "direct.est", "cv")]
+colnames(out1)[2] <- "mean"
+out1$model <- "Direct Estimates"
+out2 <- smth_res_ad1_bym2$res.admin1[, c("admin1.name", "mean", "cv")]
+out2$model <- "Fay-Herriot Model"
+out3 <- cl_res_ad1$res.admin1[, c("admin1.name", "mean", "cv")]
+out3$model <- "Unstratified Cluster-level Model"
+
+g1 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
+              by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE, 
+              variable = "model", value = "mean", legend.label = "Mean")
+
+g2 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
+              by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE, 
+              variable = "model", value = "cv", legend.label = "CV")
+g1 / g2 
+```
+
+We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
+
+```{r ,fig.dim = c(10, 5),fig.cap="Comparing Admin 2 direct estimates, Fay–Herriot model, unstratified and stratified cluster-level posterior mean estimates", out.width = "100%"}
+poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
+
+# Arrange all estimates into a long-format data frame
+out1 <- res_ad2$res.admin2[, c("admin2.name.full", "direct.est", "cv")]
+colnames(out1)[2] <- "mean"
+out1$model <- "Direct Estimates"
+out2 <- smth_res_ad2$res.admin2[, c("admin2.name.full", "mean", "cv")]
+out2$model <- "Fay-Herriot Model"
+out3 <- cl_res_ad2$res.admin2[, c("admin2.name.full", "mean", "cv")]
+out3$model <- "Unstratified Cluster-level Model"
+out4 <- cl_res_ad2_T$res.admin2[, c("admin2.name.full", "mean", "cv")]
+out4$model <- "Stratified Cluster-level Model"
+
+g1 <- mapPlot(data = rbind(out1, out2, out3, out4), geo = poly.adm2,
+              by.data = "admin2.name.full",  by.geo = "admin2.name.full", 
+              is.long = TRUE, variable = "model", value = "mean", 
+              legend.label = "Mean", ncol = 4)
+
+g2 <- mapPlot(data = rbind(out1, out2, out3, out4), geo = poly.adm2,
+              by.data = "admin2.name.full",  by.geo = "admin2.name.full", 
+              is.long = TRUE, variable = "model", value = "cv", 
+              legend.label = "CV", ncol = 4)
+g1 / g2 
+```
+
+
+The `scatterPlot()` function takes results from two model outputs, and produce a scatter plot of the selected variable. For example, we can compare the direct estimates with the Fay-Herriot model (top row) and Cluster-level model (bottom row) in terms of their point estimates and standard deviations. In the two plots on the left, we see the expected shrinkage (attenuation) of the spatial Fay–Herriot posterior mean estimates as compared to the direct estimates. In the plots on the right we see the reduction in uncertainty which arises from using all of the data in a single Model.
+
+
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 8, fig.width = 8, out.width = "100%", fig.cap="Comparing  direct estimates with Fay-Herriot model (top row) and Unstratified cluster-level model (bottom row)."}
+s1 <- scatterPlot(
+          res1=res_ad1$res.admin1,
+          res2=smth_res_ad1_bym2$res.admin1,
+          value1="direct.est",
+          value2="mean",
+          by.res1="admin1.name",
+          by.res2="admin1.name",
+          title="Fay-Herriot vs Direct estimate",
+          label1="Direct Est",
+          label2="Spatial Fay-Herriot")
+s2 <- scatterPlot(
+          res1=res_ad1$res.admin1,
+          res2=smth_res_ad1_bym2$res.admin1,
+          value1="direct.se",
+          value2="sd",
+          by.res1="admin1.name",
+          by.res2="admin1.name",
+          title="Fay–Herriot vs Direct SE",
+          label1="Direct Est",
+          label2="Spatial Fay–Herriot")
+s3 <- scatterPlot(
+          res1=res_ad1$res.admin1,
+          res2=cl_res_ad1$res.admin1,
+          value1="direct.est",
+          value2="mean",
+          by.res1="admin1.name",
+          by.res2="admin1.name",
+          title="Cluster-level model vs Direct estimate",
+          label1="Direct Est",
+          label2="Cluster-level model")
+s4 <- scatterPlot(
+          res1=res_ad1$res.admin1,
+          res2=cl_res_ad1$res.admin1,
+          value1="direct.se",
+          value2="sd",
+          by.res1="admin1.name",
+          by.res2="admin1.name",
+          title="Cluster-level model vs Direct SE",
+          label1="Direct Est",
+          label2="Cluster-level model")
+(s1 + s2 ) / (s3 + s4)
+```
+ 
+
+Similar smoothing patterns can be observed when comparing estimates at Admin 2 level.
+
+
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 8, fig.width = 8, out.width = "100%", fig.cap="Comparing  direct estimates with Fay-Herriot model (top row) and Unstratified cluster-level model (bottom row). Red triangles corresponding to areas where direct estimates are not available."}
+s1 <- scatterPlot(
+          res1=res_ad2$res.admin2,
+          res2=smth_res_ad2$res.admin2,
+          value1="direct.est",
+          value2="mean",
+          by.res1="admin2.name.full",
+          by.res2="admin2.name.full",
+          title="Fay-Herriot vs Direct estimate",
+          label1="Direct Est",
+          label2="Spatial Fay-Herriot")
+s2 <- scatterPlot(
+          res1=res_ad2$res.admin2,
+          res2=smth_res_ad2$res.admin2,
+          value1="direct.se",
+          value2="sd",
+          by.res1="admin2.name.full",
+          by.res2="admin2.name.full",
+          title="Fay–Herriot vs Direct SE",
+          label1="Direct Est",
+          label2="Spatial Fay–Herriot")
+s3 <- scatterPlot(
+        res1=res_ad2$res.admin2,
+        res2=cl_res_ad2_T$res.admin2,
+        value1="direct.est",
+        value2="mean",
+        by.res1="admin2.name.full",
+        by.res2="admin2.name.full",
+        title="Cluster-level model vs Direct estimate",
+        label1="Direct Est",
+        label2="Cluster-level model")
+s4 <- scatterPlot(
+        res1=res_ad2$res.admin2,
+        res2=cl_res_ad2_T$res.admin2,
+        value1="direct.se",
+        value2="sd",
+        by.res1="admin2.name.full",
+        by.res2="admin2.name.full",
+        title="Cluster-level model vs Direct SE",
+        label1="Direct Est",
+        label2="Cluster-level model")
+(s1 + s2 ) / (s3 + s4)
+```
+
+Finally, we compare the unstratified and stratified cluster-level model at Admin 2 level. We can observe mild differences but the estimates are mostly similar between the two models.
+```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8, out.width = "100%", fig.cap="Comparing unstratified and stratified cluster-level model at Admin 2 level."}
+s1 <- scatterPlot(
+          res1=cl_res_ad2$res.admin2,
+          res2=cl_res_ad2_T$res.admin2,
+          value1="mean",
+          value2="mean",
+          by.res1="admin2.name.full",
+          by.res2="admin2.name.full",
+          title="Stratified vs Unstratified model estimate",
+          label1="Unstratified model estimates",
+          label2="Stratified model estimates")
+s2 <- scatterPlot(
+          res1=cl_res_ad2$res.admin2,
+          res2=cl_res_ad2_T$res.admin2,
+          value1="sd",
+          value2="sd",
+          by.res1="admin2.name.full",
+          by.res2="admin2.name.full",
+          title="Stratified vs Unstratified model SD",
+          label1="Unstratified model estimates",
+          label2="Stratified model estimates")
+(s1 + s2 )  
+```
+
+
+Another visualization function `intervalPlot()` can provide interval plots at different admin levels for model comparison with `compare=T`. Input should be a list of model outputs by `surveyPrev` with self defined model name, (e.g.`model=list("name 1"= fit1,"name 2"= fit2)`).
+
+
+```{r,fig.show='hold',fig.dim = c(8, 4), tidy = FALSE, fig.cap="Comparing different Admin 1 estimates.", out.width = "100%"}
+intervalPlot(admin = 1, compare = TRUE, model = list(
+      "Direct estimate model"= res_ad1,
+      "Fay-Herriot model"= smth_res_ad1_bym2,
+      "Unstratified Cluster-level model"= cl_res_ad1))
+```
+
+
+For stratified cluster-level models, `intervalPlot()` visualizes the urban, rural, and overall Admin 2 estimates within each Admin 1 region, when setting `compare = FALSE`. 
+
+```{r,fig.show='hold', fig.height = 15, fig.width = 10, fig.cap="Comparing Admin 2 estimates arranged by the corresponding Admin 1 regions.", out.width = "100%"}
 plots <- intervalPlot(compare = FALSE, model = list("model"=cl_res_ad2_T))
 patchwork::wrap_plots(plots, ncol = 2)
 ```
 
 
 
-## Visualizing Admin 2 prevalence estimates  {#sec:vis2}
-
-We can compare the estimates on a map using `mapPlot()` function in **SUMMER** as before.
-
-```{r ,warning=FALSE,echo=TRUE,fig.show="hold",fig.dim = c(6, 4), out.width = "100%", fig.cap="Comparing Admin 2 direct estimates, Admin 2 Fay–Herriot, Admin 2 unstratified and stratified cluster-level estimates"}
-min= min(res_ad2$res.admin2$direct.est,smth_res_ad2$res.admin2$mean,
-         cl_res_ad2$res.admin2$mean,
-         cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",]$mean)
-max= max(res_ad2$res.admin2$direct.est,smth_res_ad2$res.admin2$mean,
-         cl_res_ad2$res.admin2$mean,
-           cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",]$mean)
-ylim=c(min,max)
-
-
-g1 <- mapPlot(data = res_ad2$res.admin2, geo = poly.adm2, 
-              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
-              variable = "direct.est", legend.label = "Admin 2 Direct", 
-              ylim =ylim, removetab = TRUE)
-
-g2 <- mapPlot(data = smth_res_ad2$res.admin2, geo = poly.adm2, 
-              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
-              variable = "mean", legend.label = "Admin 2 Fay–Herriot", 
-              ylim =ylim, removetab = TRUE)
-
-g3 <- mapPlot(data = cl_res_ad2$res.admin2, geo = poly.adm2,
-              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
-              variable = "mean", legend.label = "Admin 2 unstratified", 
-              ylim = ylim, removetab = TRUE)
-
-
-g4 <- mapPlot(data = cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",], 
-              geo = poly.adm2, by.data = "admin2.name.full", by.geo = "admin2.name.full", 
-              variable = "mean", legend.label = "Admin 2 stratified", 
-              ylim = ylim, removetab = TRUE)
-
-(g1 + g2)/(g3+ g4)
-
-
-```
-
-
-The following are model comparisons using `scatterPlot()`. Admin 2 direct estimates may not cover all Admin 2 areas, the red triangle points on the edges meaning missing direct estimates.
-
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 Fay–Herriot estimates"}
-s1 <- scatterPlot(
-      res1=res_ad2$res.admin2,
-      res2=smth_res_ad2$res.admin2,
-      value1="direct.est",
-      value2="mean",
-      by.res1="admin2.name.full",
-      by.res2="admin2.name.full",
-      title="Admin2: Spatial Fay-Herriot vs Direct estimate",
-      label1="Direct Est",
-      label2="Spatial Fay-Herriot")
-s2 <- scatterPlot(
-      res1=res_ad2$res.admin2,
-      res2=smth_res_ad2$res.admin2,
-      value1="direct.se",
-      value2="sd",
-      by.res1="admin2.name.full",
-      by.res2="admin2.name.full",
-      title="Admin2: Spatial Fay–Herriot vs Direct SE",
-      label1="Direct Est",
-      label2="Spatial Fay–Herriot")
-s1 + s2
-```
-
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 direct estimates and Admin 2 unstratified cluster-level estimates"}
-s1 <- scatterPlot(
-    res1=res_ad2$res.admin2,
-    res2=cl_res_ad2$res.admin2,
-    value1="direct.est",
-    value2="mean",
-    by.res1="admin2.name.full",
-    by.res2="admin2.name.full",
-    title="Admin2: Cluster-level model vs Direct estimate",
-    label1="Direct Est",
-    label2="Cluster-level model")
-s2 <- scatterPlot(
-    res1=res_ad2$res.admin2,
-    res2=cl_res_ad2$res.admin2,
-    value1="direct.se",
-    value2="sd",
-    by.res1="admin2.name.full",
-    by.res2="admin2.name.full",
-    title="Admin2: Cluster-level model vs Direct SE",
-    label1="Direct Est",
-    label2="Cluster-level model")
-s1 + s2
-```
-
-```{r, warning=FALSE,echo=FALSE,fig.show="hold", fig.height = 5, fig.width = 10, fig.cap="Comparing Admin 2 Fay–Herriot estimates and Admin 2 unstratified cluster-level estimates"}
-s1 <- scatterPlot(
-    res1=smth_res_ad2$res.admin2,
-    res2=cl_res_ad2$res.admin2,
-    value1="mean",
-    value2="mean",
-    by.res1="admin2.name.full",
-    by.res2="admin2.name.full",
-    title="Admin2: Cluster-level model vs Fay–Herriot estimate",
-    label1="Admin 2 Fay–Herriot",
-    label2="Cluster-level model")
-s2 <- scatterPlot(
-    res1=smth_res_ad2$res.admin2,
-    res2=cl_res_ad2$res.admin2,
-    value1="sd",
-    value2="sd",
-    by.res1="admin2.name.full",
-    by.res2="admin2.name.full",
-    title="Admin2: Cluster-level model vs Fay–Herriot SE",
-    label1="Admin 2 Fay–Herriot",
-    label2="Cluster-level model")
-s1 + s2
-```
 
 
 # Aggregation to higher admin levels {#sec:aggregation}
@@ -719,63 +692,41 @@ head(admin.info2$data)
 
 The following maps display the 15-49 female population and aggregated DHS survey weights ratio within upper admin levels.
 
-```{r,fig.show='hold',fig.dim = c(6, 4), fig.cap="survey weight ratio and population ratio at Admin 1 and Admin 2", out.width = "100%"}
-admin.info1$data$r.population=
-  admin.info1$data$population/sum(admin.info1$data$population)
-admin.info1.survey$data$r.SurveyWeight=
-  admin.info1.survey$data$population/sum(admin.info1.survey$data$population)
-admin.info2$data$r.population=
-  admin.info2$data$population/admin.info2$data$population.admin1
-admin.info2.survey$data$r.SurveyWeight=
-  admin.info2.survey$data$population/admin.info2.survey$data$population.admin1
-min= min(admin.info1.survey$darta$r.SurveyWeight, admin.info1$data$r.population)
-max= max(admin.info1.survey$darta$r.SurveyWeight, admin.info1$data$r.population)
-ylim=c(min,max)
-g1 <- mapPlot(data = admin.info1.survey$data, geo = poly.adm1, 
+```{r,fig.show='hold',fig.dim = c(7.5, 6), fig.cap="survey weight ratio and population ratio at Admin 1 and Admin 2", out.width = "100%"}
+out1 <- rbind(cbind(admin.info1$data, type = "WorldPop"), 
+             cbind(admin.info1.survey$data, type = "SurveyWeight"))
+out1 <- out1 %>% group_by(type) %>% mutate(pop.frac = population / sum(population)) 
+g1 <- mapPlot(data = out1, geo = poly.adm1, size = 0.1, 
               by.data = "admin1.name", by.geo = "NAME_1", 
-              variable = "r.SurveyWeight",  legend.label = "rario SurveyWeight",
-              removetab = TRUE, ylim = ylim)
-g2 <- mapPlot(data= admin.info1$data, geo = poly.adm1, by.data = "admin1.name", 
-              by.geo = "NAME_1", variable = "r.population", 
-              legend.label = "rario Population", removetab = TRUE, ylim = ylim)
-min= min(admin.info2.survey$admin.info$r.SurveyWeight, admin.info2$data$r.population)
-max= max(admin.info2.survey$admin.info$r.SurveyWeight, admin.info2$data$r.population)
-ylim2=c(min,max)
-g3 <- mapPlot(data = admin.info2$data, geo = poly.adm2, 
-              by.data = "admin2.name.full", by.geo = "admin2.name.full", 
-              variable = "r.population", legend.label = "rario population",
-              removetab = TRUE, ylim = ylim2)
+              variable = "type",  value = "pop.frac", is.long = TRUE,
+              legend.label = "Population Fraction")
 
-g4 <- mapPlot(data = admin.info2.survey$data, geo = poly.adm2, 
+out2 <- rbind(cbind(admin.info2$data, type = "WorldPop"), 
+             cbind(admin.info2.survey$data, type = "SurveyWeight"))
+out2 <- out2 %>% group_by(type) %>% mutate(pop.frac = population / sum(population)) 
+g2 <- mapPlot(data = out2, geo = poly.adm2, size = 0.1, 
               by.data = "admin2.name.full", by.geo = "admin2.name.full", 
-              variable = "r.SurveyWeight", legend.label = "rario SurveyWeight", 
-              removetab = TRUE, ylim = ylim2)
-(g1 + g2) /(g4 + g3)
+              variable = "type",  value = "pop.frac", is.long = TRUE,
+              legend.label = "Population Fraction")
+g1 / g2
 ```
 
 
-The scatter plots show the comparison of Admin 2 survey weight ratio & 15-49 female population ratio within Admin 1. Noticed that DHS data may have missing Admin 2 areas. For example, Zambia has 112 out of 115 Admin 2 areas for this survey (red points in the scatter plots). Users have to be aware of that this is an incomplete set of weights for aggregation to from Admin 2 to Admin 1. 
+The scatter plot below examines the fraction of population residing in each Admin 1 areas, computed by both WorldPop raster and survey weights. Noticed that DHS data may have missing Admin 2 areas. For example, Zambia has 112 out of 115 Admin 2 areas for this survey (red points in the scatter plots). Users have to be aware of that this is an incomplete set of weights for aggregation to from Admin 2 to Admin 1. 
 
 
-```{r, fig.show='hold',fig.dim = c(4, 4),tidy=FALSE, fig.cap="Admin 2 survey weight ratio and 15-49 female population ratio", out.width = "50%", fig.align = 'center'}
-
-df<-left_join(admin.info2$data,admin.info2.survey$data,by="admin2.name.full")
-df$pop_r=df$population.x/df$population.admin1.x 
-df$survey_weight_r=df$population.y/df$population.admin1.y
-missing.admin2=df[!admin.info2$data$admin2.name.full %in%
-                    cluster.info$cluster.info$admin2.name.full, ]
-
-ggplot(df, aes(survey_weight_r,pop_r)) +
-  geom_point(alpha = 0.5,size =df$population.x/50000)+
-   geom_point(data = missing.admin2, aes(survey_weight_r,pop_r), color = "red",
-              size=missing.admin2$population.x/50000)+
+```{r, fig.show='hold',fig.dim = c(6, 4), fig.cap="Comparing two sets of Admin 2 15-49 female population fractions within Admin 1 area.", out.width = "80%", fig.align = 'center'}
+out2$pop.frac.within <- out2$population / out2$population.admin1
+out3 <- tidyr::spread(out2[, c("admin2.name.full", "pop.frac.within", "type")], 
+                      type, pop.frac.within)
+out3 <- left_join(out3, admin.info2$data[, c("admin2.name.full", "population")])
+ggplot(out3, aes(x = SurveyWeight, y = WorldPop, size = population)) +
+    geom_point(alpha = 0.5, color = "red")+
     geom_abline(slope = 1, intercept = 0, linetype = "dashed")
 ```
 
 
-## Aggregated estimates
-
-### Direct estimates {#sec:direct3}
+## Aggregating Direct estimates {#sec:direct3}
 
 For direct estimates, we caution that we almost always prefer directly computing direct estimates at the desired level, rather than aggregating direct estimates at finer levels. Nevertheless, here we describe how the aggregated direct estimates are computed. 
 
@@ -795,7 +746,6 @@ res_ad1agg <- directEST(data = data,
                    aggregation = TRUE)
 head(res_ad1agg$res.admin1)
 res_ad1agg$agg.natl
-
 ```
 
 ```{r}
@@ -807,7 +757,6 @@ res_ad1agg_bysurvey <- directEST(data = data,
                    aggregation = TRUE)
 
 head(res_ad1agg_bysurvey$agg.natl)
-head(res_ad0$res.admin0)
 ```
 
 
@@ -848,240 +797,156 @@ intervalPlot(admin = 0, group = FALSE, compare = TRUE,
 
 
 
+## Aggregating area-level Fay-Herriot estimates {#sec:area-level3}
 
-### Area-level Fay-Herriot estimates {#sec:area-level3}
-
-Aggregation of the Fay-Herriot model can be similarly carried out as model based results. 
+Aggregation of the Fay-Herriot model can be similarly carried out as model based results. We first re-fit the Admin 1 model with the two updated `admin.info` objects.
 
 ```{r}
 smth_res_ad1_spatial <- fhModel(data,
-                        cluster.info = cluster.info,
-                        admin.info = admin.info1,
-                        admin = 1,
-                        model = "bym2",
-                        aggregation = TRUE)
-
-
-smth_res_ad1_spatial.survey <- fhModel(data,
-                        cluster.info = cluster.info,
-                        admin.info = admin.info1.survey,
-                        admin = 1,
-                        model = "bym2",
-                        aggregation = TRUE)
-
+                                cluster.info = cluster.info,
+                                admin.info = admin.info1,
+                                admin = 1,
+                                model = "bym2",
+                                aggregation = TRUE)
+smth_res_ad1_spatial_survey <- fhModel(data,
+                                      cluster.info = cluster.info,
+                                      admin.info = admin.info1.survey,
+                                      admin = 1,
+                                      model = "bym2",
+                                      aggregation = TRUE)
 ```
 
 
-
+We also re-fit the Admin 2 model with the two updated `admin.info` objects.
 ```{r}
 # Run FH model without problematic clusters
-smth_res_ad2_agg <- fhModel(subset(data, !cluster %in% bad_clusters),
-                    cluster.info = cluster.info,
-                    admin.info = admin.info2,
-                    admin = 2,
-                    model = "bym2",
-                    aggregation = TRUE)
-
-
-smth_res_ad2_agg.survey <- fhModel(subset(data, !cluster %in% bad_clusters),
-                    cluster.info = cluster.info,
-                    admin.info = admin.info2.survey,
-                    admin = 2,
-                    model = "bym2",
-                    aggregation = TRUE)
-
+smth_res_ad2_agg_pop <- fhModel(subset(data, !cluster %in% bad_clusters),
+                                cluster.info = cluster.info,
+                                admin.info = admin.info2,
+                                admin = 2,
+                                model = "bym2",
+                                aggregation = TRUE)
+smth_res_ad2_agg_survey <- fhModel(subset(data, !cluster %in% bad_clusters),
+                                  cluster.info = cluster.info,
+                                  admin.info = admin.info2.survey,
+                                  admin = 2,
+                                  model = "bym2",
+                                  aggregation = TRUE)
 ```
 
-
+And we can compare all four models when aggregating to national level, with the national direct estimate as an additional comparison.
 ```{r,fig.cap="Comparing different aggregated Fay-Herriot estimates at national level", fig.dim = c(7, 4), out.width = "100%"}
-intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
+intervalPlot(admin = 0, group = FALSE, compare = TRUE, model = list(
             "Admin 0 direct estimates" = res_ad0,
-            "Admin 2 FH model, aggregated by survey" = smth_res_ad2_agg.survey,
-            "Admin 1 FH model, aggregated by survey" = smth_res_ad1_spatial.survey,
-            "Admin 2 FH model, aggregated by pop" = smth_res_ad2_agg,
-            "Admin 1 FH model, aggregated by pop" = smth_res_ad1_spatial
-          ))
+            "Admin 2 FH model, aggregated by survey" = smth_res_ad2_agg_survey,
+            "Admin 1 FH model, aggregated by survey" = smth_res_ad1_spatial_survey,
+            "Admin 2 FH model, aggregated by pop" = smth_res_ad2_agg_pop,
+            "Admin 1 FH model, aggregated by pop" = smth_res_ad1_spatial))
+```
 
+We can also compare all four set of results at the Admin 1 level, with the Admin 1 direct estimate as an additional comparison.
+```{r,fig.cap="Comparing different aggregated Fay-Herriot estimates at national level", fig.dim = c(10, 5), out.width = "100%"}
+intervalPlot(admin = 1, group = FALSE, compare = TRUE, model = list(
+            "Admin 1 direct estimates" = res_ad1,
+            "Admin 1 FH model" = smth_res_ad1_spatial_survey,
+            "Admin 2 FH model, aggregated by survey" = smth_res_ad2_agg_survey,
+            "Admin 2 FH model, aggregated by pop" = smth_res_ad2_agg_pop))
 ```
 
 
 
 
 
-### Cluster-level model {#sec:cluster-level3}
-Here we first fit the unstratified cluster-level model at both Admin 1 and Admin 2, and aggregate to higher levels using both types of weights.
+## Aggregating cluster-level model {#sec:cluster-level3}
+In the same manner, we fit the unstratified and stratified cluster-level model at both Admin 1 and Admin 2 levels. For simplicity of presentation, here we use only the population fractions derived from WorldPop. Results aggregating with survey weights produce very similar results and can be obtained by replacing `admin.info` argument with the corresponding object computed survey weights, i.e., `admin.info1.survey` and `admin.info2.survey`.
 
 ```{r}
-cl_res_ad1 <- clusterModel(data=data,
-                   cluster.info=cluster.info,
-                   admin.info = admin.info1,
-                   stratification = FALSE,
-                   model = "bym2",
-                   admin = 1, 
-                   aggregation = TRUE,
-                   CI = 0.95)
-
-cl_res_ad1.survey <- clusterModel(data=data,
-                   cluster.info=cluster.info,
-                   admin.info = admin.info1.survey,
-                   stratification = FALSE,
-                   model = "bym2",
-                   admin = 1, 
-                   aggregation = TRUE,
-                   CI = 0.95)
-
-cl_res_ad2 <- clusterModel(data=data,
-                   cluster.info= cluster.info,
-                   admin.info = admin.info2,
-                   model = "bym2",
-                   stratification = FALSE,
-                   admin = 2, 
-                   aggregation = TRUE,
-                   CI = 0.95)
-
-cl_res_ad2.survey <- clusterModel(data=data,
-                   cluster.info= cluster.info,
-                   admin.info = admin.info2.survey,
-                   model = "bym2",
-                   stratification = FALSE,
-                   admin = 2, 
-                   aggregation = TRUE,
-                   CI = 0.95)
-
-```
-Similarly we fit the stratified cluster-level model at both Admin 1 and Admin 2, and aggregate to higher levels. Since the urban/rural fractions were computed using population raster, here we use only population weights to aggregate for consistency.
-
-
-```{r}
-cl_res_ad1_T <- clusterModel(data=data,
-                   cluster.info=cluster.info,
-                   admin.info = admin.info1,
-                   model = "bym2",
-                   stratification = TRUE,
-                   admin = 1, 
-                   aggregation = TRUE,
-                   CI = 0.95)
-
-
-cl_res_ad2_T <- clusterModel(data=data,
-                   cluster.info = cluster.info,
-                   admin.info = admin.info2,
-                   model = "bym2",
-                   stratification = TRUE,
-                   admin = 2, 
-                   aggregation = TRUE,
-                   CI = 0.95)
+cl_res_ad1_pop <- clusterModel(data=data,
+                               cluster.info=cluster.info,
+                               admin.info = admin.info1,
+                               stratification = FALSE,
+                               model = "bym2",
+                               admin = 1, 
+                               aggregation = TRUE,
+                               CI = 0.95)
+cl_res_ad2_pop <- clusterModel(data=data,
+                               cluster.info= cluster.info,
+                               admin.info = admin.info2,
+                               model = "bym2",
+                               stratification = FALSE,
+                               admin = 2, 
+                               aggregation = TRUE,
+                               CI = 0.95)
+cl_res_ad1_T_pop <- clusterModel(data=data,
+                                 cluster.info=cluster.info,
+                                 admin.info = admin.info1,
+                                 model = "bym2",
+                                 stratification = TRUE,
+                                 admin = 1, 
+                                 aggregation = TRUE,
+                                 CI = 0.95)
+cl_res_ad2_T_pop <- clusterModel(data=data,
+                                 cluster.info = cluster.info,
+                                 admin.info = admin.info2,
+                                 model = "bym2",
+                                 stratification = TRUE,
+                                 admin = 2, 
+                                 aggregation = TRUE,
+                                 CI = 0.95)
 ```
 
-Finally we compare the six aggregated models with the national direct estimates
+Finally we compare the different aggregated national estimates with the national direct estimates
 
 
 ```{r,tidy = FALSE, fig.cap="Comparing different aggregated cluster-level estimates at national level", fig.dim = c(7, 4), out.width = "100%"}
-intervalPlot(admin = 0, group=FALSE, compare=TRUE, model = list(
+intervalPlot(admin = 0, group = FALSE, compare = TRUE, model = list(
             "Admin 0 direct estimates" = res_ad0,
-             "Admin 2 unstratified model, aggregated by survey" = cl_res_ad2.survey,
-             "Admin 1 unstratified model, aggregated by survey" = cl_res_ad1.survey,
-             "Admin 2 unstratified model, aggregated by pop" = cl_res_ad2,
-             "Admin 1 unstratified model, aggregated by pop" = cl_res_ad1,
-             "Admin 2 stratified model, aggregated by pop" = cl_res_ad2_T,
-             "Admin 1 stratified model, aggregated by pop" = cl_res_ad1_T))
+             "Admin 1 unstratified model, aggregated by pop" = cl_res_ad1_pop,
+             "Admin 2 unstratified model, aggregated by pop" = cl_res_ad2_pop,
+             "Admin 1 stratified model, aggregated by pop" = cl_res_ad1_T_pop,
+             "Admin 2 stratified model, aggregated by pop" = cl_res_ad2_T_pop))
 ```
 
 
-## Visualizing aggregation results {#sec:vis3}
+And we can also compare the different model estimates at the Admin 1 level, together with the Admin 1 direct estimates
 
-
-
-We can use `SUMMER::mapPlot` to show the model estimates and standard errors.
-
-
-```{r,fig.show='hold',fig.dim = c(6, 4),tidy = FALSE, fig.cap="Comparing aggregated Admin 2 stratified cluster-level estiamtes, aggregated Admin 2 direct estimates, aggregated Admin 2 Fay-Herriot, and Admin 1 direct estiamtes", out.width = "100%"}
-min= min(res_ad2agg$agg.admin1$direct.est,cl_res_ad2_T$agg.admin1$mean,
-         res_ad1agg$res.admin1$direct.est,smth_res_ad2_agg$agg.admin1$mean)
-max= max(res_ad2agg$agg.admin1$direct.est,cl_res_ad2_T$agg.admin1$mean,
-         res_ad1agg$res.admin1$direct.est,smth_res_ad2_agg$agg.admin1$mean)
-ylim=c(min,max)
-
-g1 <- mapPlot(data = cl_res_ad2_T$agg.admin1, geo = poly.adm1, 
-              by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", 
-              legend.label = "Pop Aggregated\nAdmin2 stratified", 
-              ylim =ylim, removetab = TRUE)
-
-g2 <- mapPlot(data = res_ad2agg$agg.admin1, geo = poly.adm1,
-              by.data = "admin1.name", by.geo = "NAME_1",
-              variable = "direct.est", 
-              legend.label = "Pop Aggregated\nAdmin2 Direct",
-              ylim =ylim, removetab = TRUE)
-
-g3 <- mapPlot(data = res_ad1$res.admin1, geo = poly.adm1, 
-              by.data = "admin1.name", by.geo = "NAME_1",
-              variable = "direct.est", legend.label = "Admin1 Direct", 
-              ylim = ylim, removetab = TRUE)
-
-g4 <- mapPlot(data = smth_res_ad2_agg$agg.admin1, geo = poly.adm1, 
-              by.data = "admin1.name", by.geo = "NAME_1", variable = "mean", 
-              legend.label = "Admin 2 Fay-Herriot", 
-              ylim = ylim, removetab = TRUE)
-
-(g3 + g2) / (g1 + g4)
+```{r,tidy = FALSE, fig.cap="Comparing different cluster-level estimates at Admin 1 level", fig.dim = c(10, 5), out.width = "100%"}
+intervalPlot(admin = 1, group = FALSE, compare = TRUE, model = list(
+             "Admin 1 direct estimates" = res_ad1,
+             "Admin 1 unstratified model" = cl_res_ad1_pop,
+             "Admin 2 unstratified model, aggregated by pop" = cl_res_ad2_pop,
+             "Admin 1 stratified model" = cl_res_ad1_T_pop,
+             "Admin 2 stratified model, aggregated by pop" = cl_res_ad2_T_pop))
 ```
 
 
-`intervalPlot()` can provide interval plots at different admin levels for model comparison with `compare=T`. Input should be a list of model outputs by `surveyPrev` with self defined model name, (e.g.`model=list("name 1"= fit1,"name 2"= fit2)`). Then by setting `admin=0,1`, the returned plot will be at given level. You can also group your model by adding group object in your model results like `fit1$model="group1"` and set `group=T`. See following examples at national level and Admin 1 level.
+Finally, we put together all the different Admin 1 level results based on both Fay-Herriot and cluster-level models. When comparing many estimates, it is usually useful to highlight groups of similar models. This can be done by specifying a `group` object in the fitted models, and set `group = TRUE` in `intervalPlot()`.
 
-
-```{r,fig.show='hold',fig.dim = c(8, 4), tidy = FALSE, fig.cap="Comparing different model estimates at national level", out.width = "100%"}
-cl_res_ad2_T$group="cluster"
-cl_res_ad2$group="cluster"
-cl_res_ad1_T$group="cluster"
-cl_res_ad1$group="cluster"
-res_ad2agg$group="direct est"
-res_ad1agg$group="direct est"
-smth_res_ad1_spatial$group="fh"
-smth_res_ad2_agg$group="fh"
-res_ad0$group="direct est"
-
-intervalPlot(admin = 0, group=TRUE, compare=TRUE, model = list(
-            "Admin 0 direct estimate model"=res_ad0,
-      "Aggregated Admin 2 cluster-level model, stratified"=cl_res_ad2_T,
-      "Aggregated Admin 2 cluster-level model, not stratified"=cl_res_ad2,
-      "Aggregated Admin 1 cluster-level model, stratified"=cl_res_ad1_T,
-      "Aggregated Admin 1 cluster-level model, not stratified"=cl_res_ad1,
-      "Aggregated Admin 2 direct estimate model"=res_ad2agg,
-      "Aggregated Admin 1 direct estimate model"=res_ad1agg,
-      "Aggregated Admin 1 Fay-Herriot model"=smth_res_ad1_spatial,
-      "Aggregated Admin 2 Fay-Herriot model"=smth_res_ad2_agg
-) )
-
-
-
-```
-
-```{r,fig.show='hold',fig.dim = c(12, 5),tidy = FALSE, fig.cap="Comparing different model estimates at Admin 1 level"}
-
-intervalPlot(admin = 1, group=TRUE, compare=TRUE, model = list(
-                  "Ad2 cls strat bym2"=cl_res_ad2_T,
-                  "Ad2 cls not strat bym2"=cl_res_ad2,
-                  "Ad1 cls strat bym2"=cl_res_ad1_T,
-                  "Ad1 cls, not strat bym2 "=cl_res_ad1,
-                  "Ad2 dir.est  "=res_ad2agg,
-                  "Ad1 dir.est  "=res_ad1agg,
-                  "Ad1 fh bym2"=smth_res_ad1_spatial,
-                  "Ad2 fh bym2"=smth_res_ad2_agg))
-
+```{r,fig.show='hold',fig.dim = c(10, 7), tidy = FALSE, fig.cap="Comparing different model estimates at national level", out.width = "100%"}
+res_ad1$group <- "Direct Est"
+smth_res_ad1_spatial_survey$group <- "Fay-Herriot"
+smth_res_ad2_agg_survey$group <- "Fay-Herriot"
+smth_res_ad2_agg_pop$group <- "Fay-Herriot"
+cl_res_ad1_pop$group <- "Cluster-level"
+cl_res_ad2_pop$group <- "Cluster-level"
+cl_res_ad1_T_pop$group <- "Cluster-level"
+cl_res_ad2_T_pop$group <- "Cluster-level"
+intervalPlot(admin = 1, group = TRUE, compare = TRUE, model = list(
+                 "Admin 1 direct estimates" = res_ad1,
+                 "Admin 1 FH model" = smth_res_ad1_spatial_survey,
+                 "Admin 2 FH model, aggregated by survey" = smth_res_ad2_agg_survey,
+                 "Admin 2 FH model, aggregated by pop" = smth_res_ad2_agg_pop,
+                 "Admin 1 unstratified model" = cl_res_ad1_pop,
+                 "Admin 2 unstratified model, aggregated by pop" = cl_res_ad2_pop,
+                 "Admin 1 stratified model" = cl_res_ad1_T_pop,
+                 "Admin 2 stratified model, aggregated by pop" = cl_res_ad2_T_pop))
 ```
 
 
-```{r,fig.show='hold', fig.height = 15, fig.width = 10, fig.cap="Comparing Admin 2 estimates with credible intervals within an Admin 1 region with aggregated results"}
-plots<-intervalPlot(compare = FALSE,model = list("model"=cl_res_ad2_T))
-patchwork::wrap_plots(plots, ncol = 2)
-```
+\clearpage
+# Acknowledgement {-}
+We thank Ben Mayala and Trevor Croft from the Demographic and Health Surveys (DHS) program for useful discussions in creating this R package.
 
-
-
-
-
-\newpage
 # References
 
 
