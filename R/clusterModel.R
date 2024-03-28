@@ -10,8 +10,8 @@
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param stratification whether or not to include urban/rural stratum.
 #' @param aggregation whether or not report aggregation results.
-#' @param overdisp.mean prior mean for logit (d).
-#' @param overdisp.prec prior precision for logit (d).
+#' @param overdisp.mean prior mean for logit(d), where d is the intracluster correlation.
+#' @param overdisp.prec prior precision for logit(d), where d is the intracluster correlation.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #' @import dplyr

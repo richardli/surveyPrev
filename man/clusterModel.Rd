@@ -34,9 +34,9 @@ clusterModel(
 
 \item{aggregation}{whether or not report aggregation results.}
 
-\item{overdisp.mean}{prior mean for logit (d).}
+\item{overdisp.mean}{prior mean for logit(d), where d is the intracluster correlation.}
 
-\item{overdisp.prec}{prior precision for logit (d).}
+\item{overdisp.prec}{prior precision for logit(d), where d is the intracluster correlation.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

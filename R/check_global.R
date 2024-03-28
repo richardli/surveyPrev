@@ -77,7 +77,8 @@ utils::globalVariables(c("admin1.name",
 						"sh104b", 
 						"v012", 
 						"v313", 
-						"v626a" 
+						"v626a", 
+						"bo10" 
 						))
 
  

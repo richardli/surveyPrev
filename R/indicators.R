@@ -53,7 +53,7 @@ NMR<- function(Rdata){
 
   BRdata <- Rdata%>%
     mutate(wt = v005/1000000)%>%
-    mutate(bo10 =dhsData$v008-120-b3)%>%
+    mutate(bo10 = Rdata$v008-120-b3)%>%
     filter(bo10<0)
 
   BRdata$value<- ifelse(BRdata$b7==0, 1, 0)

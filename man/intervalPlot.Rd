@@ -4,12 +4,7 @@
 \alias{intervalPlot}
 \title{Get scatter plot for any two model results}
 \usage{
-intervalPlot(
-  admin = 0,
-  compare = F,
-  model = list(list(`name 1` = fit1, `name 1` = fit2)),
-  group = F
-)
+intervalPlot(admin = 0, compare = FALSE, model = NULL, group = FALSE)
 }
 \arguments{
 \item{admin}{level of plot}
