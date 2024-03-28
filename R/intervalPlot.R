@@ -67,7 +67,7 @@
 #'
 
 
-intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "name 1"= fit2)), group=F){
+intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
 
   if(compare){
@@ -116,18 +116,19 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
     }
 
     rownames(dt)<-dt$model
+    dt$model <- factor(dt$model, levels = names(model))
 
 
     if(group){
       ggplot(dt, aes(y = model, x = mean,group = group)) +
         geom_point(aes(shape=group)) +
-        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 0.5)+
+        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 1, height = 0.1)+
         theme_bw()
 
     }else{
       ggplot(dt, aes(y = model, x = mean)) +
         geom_point(aes()) +
-        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 0.5)+
+        geom_errorbarh(aes(xmin = lower , xmax = upper), alpha = 1, height = 0.1)+
         theme_bw()
     }
 
@@ -136,7 +137,20 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
 
   }else if (admin==1){
 
-    dt=data.frame(admin1.name=rep(NA,500),mean=rep(NA,500), lower=rep(NA,500), upper=rep(NA,500), model=rep(NA,500),group=rep(NA,500))
+    n.region.all <- 0
+    for(i in 1:length(model)){
+      n.region <- dim(model[[i]]$agg.admin1)[1]
+      if(is.null(n.region)) n.region <- dim(model[[i]]$res.admin1)[1] 
+      if(is.null(n.region)) stop(paste0("The following object in the list `model` cannot be parsed: ", i))    
+      n.region.all <- n.region.all + n.region 
+    }
+
+    dt <- data.frame(admin1.name=rep(NA, n.region.all),
+                  mean=rep(NA, n.region.all), 
+                  lower=rep(NA, n.region.all), 
+                  upper=rep(NA, n.region.all), 
+                  model=rep(NA, n.region.all),
+                  group=rep(NA, n.region.all))
 
     for (i in 1:length(model)) {
       if( is.null(model[[i]]$agg.admin1)){
@@ -156,9 +170,7 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
 
 
         dt[(1+ (i-1)*dd):(i*dd),]= model[[i]]$res.admin1[,c("admin1.name","mean","lower","upper","model")]
-        if(group){
-          dt[(1+ (i-1)*dd):(i*dd),]$group= model[[i]]$group
-        }
+       
       }else{
 
         if(colnames(model[[i]]$agg.admin1)[2]=="direct.est"){
@@ -175,23 +187,23 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
 
         dd=dim(model[[i]]$agg.admin1)[1]
         dt[(1+ (i-1)*dd):(i*dd),]= model[[i]]$agg.admin1[,c("admin1.name","mean","lower","upper","model")]
-        if(group){
-          dt[(1+ (i-1)*dd):(i*dd),]$group= model[[i]]$group
-        }
+      }
+     if(group){
+        if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
+        dt[(1+ (i-1)*dd):(i*dd),]$group= model[[i]]$group
       }
     }
 
     dt=na.omit(dt)
+    dt$model <- factor(dt$model, levels = names(model))
 
     if(group){
 
-      ggplot(dt, aes(x = admin1.name, y = mean, group = model, color = group  ,shape=model)) +
+      ggplot(dt, aes(x = admin1.name, y = mean, color = group, shape=model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
         geom_errorbar(aes(ymin = lower,
-                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8))+
-        # scale_color_manual(values = pal_npg("nrc")(10) )+
-        # scale_color_manual(values = pal_npg("nrc")(10) )+
+                          ymax = upper), alpha = 0.8, position = position_dodge(width = 0.8), width = 0.1)+
         scale_color_brewer(palette="Set1") +
         theme_bw() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -211,7 +223,7 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
         geom_errorbar(aes(ymin = lower,
-                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8))+
+                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8), width = 0.1)+
         scale_color_brewer(palette="Set1") +
         theme_bw() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -225,13 +237,9 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
 
     }
 
-  }else{
+  }else if(admin == 2){
 
-
-
-
-
-
+    stop("Admin 2 interval plot not implemented.")
 
   }
 
@@ -258,7 +266,7 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
           geom_point( position = position_dodge(width = 0.5),size = .8) +
           # geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="#d95f02",linewidth = .8) +
           # geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +
-          geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.2) +
+          geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.1) +
           scale_color_brewer(palette = "Set1") +
           labs(title = unique(dat$admin1.name)) +
           xlab("") + ylab("") +
@@ -295,7 +303,7 @@ intervalPlot <- function(admin= 0, compare=F, model=list( list("name 1"= fit1, "
           geom_point( position = position_dodge(width = 0.5),size = .8) +
           geom_hline(  aes(yintercept =line1,linetype = "dashed"),color="#d95f02",linewidth = .8) +
           geom_hline( aes(yintercept =line2, linetype = "solid"),color="#d95f02",linewidth = .8) +
-          geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.2) +
+          geom_errorbar(aes(ymin = lower , ymax = upper), alpha = 0.7,position = position_dodge(width = 0.5), width = 0.1) +
           scale_color_brewer(palette = "Set1") +
           labs(title = unique(dat$admin1.name)) +
           xlab("") + ylab("") +
