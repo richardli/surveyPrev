@@ -12,7 +12,7 @@
 
 <meta name="author" content="Qianyu Dong, Zehang Richard Li, Andrea Boskovic, Jon Wakefield" />
 
-<meta name="date" content="2024-03-27" />
+<meta name="date" content="2024-03-28" />
 
 <title>Prevalence mapping for DHS indicators using the surveyPrev package</title>
 
@@ -573,7 +573,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Prevalence mapping for DHS indicators using the <strong>surveyPrev</strong> package</h1>
 <h4 class="author">Qianyu Dong, Zehang Richard Li, Andrea Boskovic, Jon Wakefield</h4>
-<h4 class="date">2024-03-27</h4>
+<h4 class="date">2024-03-28</h4>
 
 
 <div id="TOC">
@@ -1228,7 +1228,7 @@ The default prior for <span class="math inline">\(d\)</span> is <span class="mat
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a>cl_res_ad1 <span class="ot">&lt;-</span> <span class="fu">clusterModel</span>(<span class="at">data=</span>data,</span>
 <span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>                   <span class="at">cluster.info=</span>cluster.info,</span>
 <span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>                   <span class="at">admin.info  =</span> admin.info1,</span>
-<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a>                   <span class="at">stratification =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a>                   <span class="at">stratification =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a>                   <span class="at">model =</span> <span class="st">&quot;bym2&quot;</span>,</span>
 <span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a>                   <span class="at">admin =</span> <span class="dv">1</span>,</span>
 <span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a>                   <span class="at">aggregation =</span><span class="cn">FALSE</span>,</span>
@@ -1244,19 +1244,19 @@ The default prior for <span class="math inline">\(d\)</span> is <span class="mat
 <span id="cb28-17"><a href="#cb28-17" tabindex="-1"></a>                   <span class="at">CI =</span> <span class="fl">0.95</span>)</span>
 <span id="cb28-18"><a href="#cb28-18" tabindex="-1"></a><span class="fu">head</span>(cl_res_ad2<span class="sc">$</span>res.admin2)</span></code></pre></div>
 <pre><code>##        admin2.name.full      mean            median         sd         var
-## 1      Central_Chibombo 0.6447181 0.647875828439117 0.04588817 0.002105725
-## 2      Central_Chisamba 0.5961785 0.597969817430619 0.05516443 0.003043114
-## 3      Central_Chitambo 0.5793000  0.58035716519137 0.06878539 0.004731430
-## 4  Central_Itezhi-tezhi 0.6461382 0.653987018725062 0.07337104 0.005383309
-## 5         Central_Kabwe 0.5441090 0.546898691070639 0.04632037 0.002145577
-## 6 Central_Kapiri Mposhi 0.5597779 0.560518427066348 0.04550203 0.002070435
+## 1      Central_Chibombo 0.6447278 0.645459832371088 0.04589240 0.002106112
+## 2      Central_Chisamba 0.5961801 0.603631785093879 0.05516969 0.003043695
+## 3      Central_Chitambo 0.5793036 0.584895124966493 0.06878930 0.004731968
+## 4  Central_Itezhi-tezhi 0.6461320 0.649476783856104 0.07338169 0.005384872
+## 5         Central_Kabwe 0.5441131 0.544558610489759 0.04632241 0.002145766
+## 6 Central_Kapiri Mposhi 0.5597721 0.560038825260371 0.04550537 0.002070739
 ##       lower     upper         cv admin1.name   admin2.name population urban
-## 1 0.5516955 0.7314706 0.07117557     Central      Chibombo         NA    NA
-## 2 0.4837269 0.6997313 0.09253005     Central      Chisamba         NA    NA
-## 3 0.4375928 0.7063463 0.11873881     Central      Chitambo         NA    NA
-## 4 0.4919570 0.7803803 0.11355318     Central  Itezhi-tezhi         NA    NA
-## 5 0.4517093 0.6329214 0.08513068     Central         Kabwe         NA    NA
-## 6 0.4684160 0.6465121 0.08128587     Central Kapiri Mposhi         NA    NA</code></pre>
+## 1 0.5516949 0.7314860 0.07118105     Central      Chibombo         NA    NA
+## 2 0.4837185 0.6997426 0.09253863     Central      Chisamba         NA    NA
+## 3 0.4375861 0.7063550 0.11874481     Central      Chitambo         NA    NA
+## 4 0.4919297 0.7803908 0.11357074     Central  Itezhi-tezhi         NA    NA
+## 5 0.4517089 0.6329288 0.08513378     Central         Kabwe         NA    NA
+## 6 0.4684057 0.6465143 0.08129268     Central Kapiri Mposhi         NA    NA</code></pre>
 </div>
 <div id="sec:cluster-level-strat" class="section level2" number="5.2">
 <h2><span class="header-section-number">5.2</span> Stratified model</h2>

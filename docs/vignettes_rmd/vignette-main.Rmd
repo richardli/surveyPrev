@@ -343,7 +343,7 @@ We fit the unstratified model in both Admin 1 and Admin 2 below. These models di
 cl_res_ad1 <- clusterModel(data=data,
                    cluster.info=cluster.info,
                    admin.info  = admin.info1,
-                   stratification = TRUE,
+                   stratification = FALSE,
                    model = "bym2",
                    admin = 1,
                    aggregation =FALSE,
