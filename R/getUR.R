@@ -102,7 +102,7 @@ getUR <- function(tiff.census, tiff.survey, prop.census, fact = 10, poly.adm1, p
 	coords <- sp::SpatialPoints(pop_grid[, c("x", "y")])
 	
 
-	if(max(table(pop.census$admin1)) > 1) stop("There are duplicated areas in 'prop.census' table.")
+	if(max(table(prop.census$admin1)) > 1) stop("There are duplicated areas in 'prop.census' table.")
 
 
 	# Match Admin 1 name
@@ -137,7 +137,7 @@ getUR <- function(tiff.census, tiff.survey, prop.census, fact = 10, poly.adm1, p
 	pop_grid$urban <- 0
 	for(i in 1:length(admin1.id)){
 	    sub <- which(pop_grid$admin1.name == admin1.id[i])
-	    thres <- pop.census$frac[pop.census$admin1 == admin1.id[i]]
+	    thres <- prop.census$frac[prop.census$admin1 == admin1.id[i]]
 	    vals <- pop_grid$pop[sub]
 	    sort.obj <- sort.int(vals, decreasing = TRUE, index.return = TRUE, method = "radix")
 
