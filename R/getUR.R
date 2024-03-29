@@ -126,8 +126,8 @@ getUR <- function(tiff.census, tiff.survey, prop.census, fact = 10, poly.adm1, p
 	pop_grid <- subset(pop_grid, !is.na(admin1.key))
 
 
-	if(sum(admin1.id %in% urban.frac$admin1 == FALSE) > 1){
-	    stop("The following areas are not in the 'prop.census' table:\n", paste(admin1.id[which(admin1.id %in% urban.frac$admin1 == FALSE)], collapse = ", "))
+	if(sum(admin1.id %in% prop.census$admin1 == FALSE) > 1){
+	    stop("The following areas are not in the 'prop.census' table:\n", paste(admin1.id[which(admin1.id %in% prop.census$admin1 == FALSE)], collapse = ", "))
 	} 
 
 
