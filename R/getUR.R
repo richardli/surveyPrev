@@ -13,7 +13,7 @@
 #' 
 #' @importFrom raster extract
 #' @importFrom sp SpatialPoints SpatialPolygons getSpPPolygonsIDSlots
-#' 
+#' @export
 #' @examples
 #' 
 #' \dontrun{
