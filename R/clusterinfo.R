@@ -20,7 +20,7 @@
 #'                             poly.adm2 = ZambiaAdm2)
 #' }
 #' @export
-clusterInfo <- function(geo, poly.adm1, poly.adm2) {
+clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = "NAME_2") {
  #  # SpatialPointsDataFrame for point shape file for each cluster
  #  points<-geo
  #  cluster.info<-points@data%>%dplyr::select(cluster=DHSCLUST, LONGNUM, LATNUM)
@@ -56,6 +56,9 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
  # # return(cluster.info)
  #  return(list(cluster.info=cluster.info,wrong.points=wrong.points))
 
+
+
+
   poly.adm1<- sf::st_as_sf(poly.adm1)
   poly.adm2<-sf::st_as_sf(poly.adm2)
   points_sf <- sf::st_as_sf(geo)
@@ -72,14 +75,14 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2) {
   admin1.sf <- st_join(cluster.info, poly.adm1) %>%
     sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
 
-  cluster.info$admin1.name <- admin1.sf$NAME_1
+  cluster.info$admin1.name <- as.data.frame( admin1.sf)[,by.adm1]
 
   # Spatial join for admin2
   admin2.sf <- st_join(cluster.info, poly.adm2) %>%
     sf::st_transform(st_crs(poly.adm2)) # Transform CRS if needed
 
   # Add admin2 name to cluster.info
-   cluster.info$admin2.name <- admin2.sf$NAME_2
+   cluster.info$admin2.name <- as.data.frame( admin2.sf)[,by.adm2]
    cluster.info$admin2.name.full <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
 
    #removing wrong.points that has no coordinates

@@ -3,8 +3,25 @@
 #Family Planning ch7
 ################
 
-#unmet_family FP_NADA_W_UNT IRdata
-#women with an unmet need for family planning for spacing and limiting
+#'FP_NADA_W_UNT
+#'#unmet_family  IRdata
+#'women with an unmet need for family planning for spacing and limiting
+#'
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "FP_NADA_W_UNT",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::fp_unmet_tot)
+#' }
+#' @export
+
 fp_unmet_tot<- function(Rdata){
   IRdata <- Rdata %>%
     mutate(wt = v005/1000000)
@@ -27,9 +44,27 @@ fp_unmet_tot<- function(Rdata){
   return(IRdata)
 }
 
-
-#FP_CUSM_W_MOD IRdata
-#Modern contraceptive prevalence rate (Married women currently using any modern method of contraception)
+#'FP_CUSM_W_MOD
+#'IRdata
+#'Modern contraceptive prevalence rate (Married women currently using any modern method of contraception)
+#'
+#'
+#'
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "FP_CUSM_W_MOD",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::fp_cruse_mod)
+#' }
+#' @export
+#'
 fp_cruse_mod <- function(Rdata){
   IRdata <- Rdata %>%
     mutate(wt = v005/1000000)
@@ -47,8 +82,25 @@ fp_cruse_mod <- function(Rdata){
 ################
 #Infant and Child Mortality ch8
 ################
-# nmr CM_ECMR_C_NNR BR (not from dhs github)
-# Neonatal mortality rate !!!!!!
+#' CM_ECMR_C_NNR
+#' nmr CM_ECMR_C_NNR BR (not from dhs github)
+#' Neonatal mortality rate !!!!!!
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CM_ECMR_C_NNR",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::NMR)
+#' }
+#' @export
+#'
+
 NMR<- function(Rdata){
 
   BRdata <- Rdata%>%
@@ -66,8 +118,25 @@ NMR<- function(Rdata){
 ################
 #Maternal Healthcare  cp9
 ################
-#ancvisit4+ RH_ANCN_W_N4P  IR
-#Antenatal visits for pregnancy: 4+ visits
+#'RH_ANCN_W_N4P
+#'ancvisit4+ RH_ANCN_W_N4P  IR
+#'Antenatal visits for pregnancy: 4+ visits
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "RH_ANCN_W_N4P",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::rh_anc_4vs)
+#' }
+#' @export
+#'
+
 rh_anc_4vs<- function(Rdata){
   IRdata <- Rdata%>%
     mutate(wt = v005/1000000) %>%
@@ -111,8 +180,25 @@ colnames(IRdata)[colnames(IRdata) == 'rh_anc_4vs'] <- "value"
 return(IRdata)
 }
 
-#RH_DELA_C_SKP  IR or BR
-#Assistance during delivery from a skilled provider !!!!!!!
+#'RH_DELA_C_SKP
+#'IR or BR
+#'Assistance during delivery from a skilled provider
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "RH_DELA_C_SKP",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::rh_del_pvskill)
+#' }
+#' @export
+#'
+
 rh_del_pvskill <- function(Rdata){
 
   BRdata <- Rdata %>%
@@ -180,7 +266,23 @@ return(BRdata)
 #Child Health cp10
 ################
 
-#CH_DIAT_C_ORT  KR  Diarrhea treatment (Children under five with diarrhea treated with either ORS or RHF)
+#'CH_DIAT_C_ORT
+#'KR  Diarrhea treatment (Children under five with diarrhea treated with either ORS or RHF)
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CH_DIAT_C_ORT",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ch_diar_ors_rhf)
+#' }
+#' @export
+#'
 ch_diar_ors_rhf<-function(Rdata){
 
   KRdata <- Rdata %>%
@@ -215,9 +317,25 @@ ch_diar_ors_rhf<-function(Rdata){
 
 
 
-#CH_VACC_C_DP1 KR
-#Percentage of children 12-23 (or 24-35) months who had received DPT 1 vaccination
-#"Pentavalent 1rd dose vaccination according to either source"
+#'CH_VACC_C_DP1
+#' KR
+#'Percentage of children (age 12-23)
+#'Pentavalent 1rd dose vaccination according to either source"
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CH_VACC_C_DP1",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ch_pent1_either)
+#' }
+#' @export
+#'
 ch_pent1_either<-function(Rdata){
 
   KRdata <- Rdata %>%
@@ -288,9 +406,26 @@ ch_pent1_either<-function(Rdata){
 }
 
 
-#DPT3 CH_VACC_C_DP3 KR
-#Percentage of children 12-23 (or 24-35) months who had received DPT 3 vaccination
-#"Pentavalent 3rd dose vaccination according to either source"
+#'CH_VACC_C_DP3
+#'DPT3  KR
+#'Percentage of children (age 12-23)
+#'Pentavalent 3rd dose vaccination according to either source"
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CH_VACC_C_DP3",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ch_pent3_either)
+#' }
+#' @export
+
+
 ch_pent3_either<-function(Rdata){
 
    KRdata <- Rdata %>%
@@ -391,11 +526,28 @@ ch_pent3_either<-function(Rdata){
 
 
 
-#MCV: Measles
-#CH_VACC_C_MSL  Measles vaccination received
-#Percentage of children 12-23 (or 24-35) months who had received MCV 1 (Measles containing vaccine)
-#ch_meas_either   CH_VAC.do  KR
-#"Measles vaccination according to either source"
+#'CH_VACC_C_MSL
+#'MCV: Measles
+#'Measles vaccination received
+#'Percentage of children (age 12-23)
+#'ch_meas_either   CH_VAC.do  KR
+#'"Measles vaccination according to either source"
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CH_VACC_C_MSL",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ch_meas_either)
+#' }
+#' @export
+#'
+
 ch_meas_either<-function(Rdata){
 
   # weight variable
@@ -458,9 +610,11 @@ ch_meas_either<-function(Rdata){
 
 
 #PCV:Pneumococcal
-#Percentage of children 12-23 (or 24-35) months who had received PCV 3 vaccination
+#Percentage of children (age 12-23)
 #ch_pneumo3_either   CH_VAC.do  KR
 #Pneumococcal 3rd dose vaccination according to either source
+
+
  ch_pneumo3_either<-function(Rdata){
 
    # weight variable
@@ -534,7 +688,7 @@ ch_meas_either<-function(Rdata){
  }
 
 #RotaC1?
-#Percentage of children 12-23 (or 24-35) months who had received RotaC vaccination
+#Percentage of children (age 12-23)
 #ch_rotav1_either
 #Rotavirus 1st dose vaccination according to either source
  ch_rotav1_either<-function(Rdata){
@@ -614,9 +768,26 @@ ch_meas_either<-function(Rdata){
 
 
 
-#CH_VACS_C_BAS
-#Children with all 8 basic vaccinations (age 12-23 or 24-35?, see DHS Statistics Guide for different definitions)
-#"All basic vaccinations according to either source"
+#'CH_VACS_C_BAS
+#'Children with all 8 basic vaccinations (age 12-23)
+#'"All basic vaccinations according to either source"
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CH_VACS_C_BAS",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ch_allvac_either)
+#' }
+#' @export
+#'
+
+
 ch_allvac_either<-function(Rdata){
 
   # weight variable
@@ -727,8 +898,24 @@ ch_allvac_either<-function(Rdata){
 
 }
 
-#CH_VACS_C_NON KR
-#Children with no vaccinations (age 12-23 or 24-35?, see DHS Statistics Guide for different definitions)
+#'CH_VACS_C_NON
+#'KR
+#'Children with no vaccinations (age 12-23)
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CH_VACS_C_NON",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ch_novac_either)
+#' }
+#' @export
+#'
 
 ch_novac_either<-function(Rdata){
 
@@ -854,11 +1041,29 @@ ch_novac_either<-function(Rdata){
 ##Nutrition  ch11
 ################
 
-#stunting
-#Children stunted	CN_NUTS_C_HA2
-#NT_CH_NUT.do PR "Stunted child under 5 years"
-#Stunting rate (Prevalence of stunted (HAZ < -2) children under five (0-59 months))
-#Percentage of children under age five stunted (below -2 standard deviations of height-for-age according to the WHO standard).
+#'CN_NUTS_C_HA2
+#'stunting
+#'Children stunted
+#'NT_CH_NUT.do PR "Stunted child under 5 years"
+#'Stunting rate (Prevalence of stunted (HAZ < -2) children under five (0-59 months))
+#'Percentage of children under age five stunted (below -2 standard deviations of height-for-age according to the WHO standard).
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CN_NUTS_C_HA2",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::nt_ch_stunt)
+#' }
+#' @export
+#'
+
+
 nt_ch_stunt<-function(Rdata){
   PRdata <- Rdata %>%
     mutate(wt = hv005/1000000)
@@ -877,11 +1082,27 @@ nt_ch_stunt<-function(Rdata){
 }
 
 
-# wasting
-# Children wasted CN_NUTS_C_WH2
-# NT_CH_NUT.do PR "Wasted child under 5 years"
-#Wasting rate (Prevalence of stunted (HAZ < -2) children under five (0-59 months))
-#Percentage of children under age five with a weight-for-height z-score (WHZ) more than two standard deviations below the median WHO growth standards.
+#' CN_NUTS_C_WH2
+#' wasting
+#' Children wasted
+#' NT_CH_NUT.do PR "Wasted child under 5 years"
+#'Wasting rate (Prevalence of wasted (HAZ < -2) children under five (0-59 months))
+#'Percentage of children under age five with a weight-for-height z-score (WHZ) more than two standard deviations below the median WHO growth standards.
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CN_NUTS_C_WH2",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::nt_ch_wast)
+#' }
+#' @export
+#'
 
 nt_ch_wast<-function(Rdata){
     PRdata <- Rdata %>%
@@ -902,10 +1123,26 @@ nt_ch_wast<-function(Rdata){
 
 
 
-#womananemia
-#AN_ANEM_W_ANY
-#nt_wm_any_anem "Any anemia - women"  NT_WM_NUT.do
-#Percentage of women aged 15-49 classified as having any anemia
+#'AN_ANEM_W_ANY
+#'womananemia
+#'nt_wm_any_anem "Any anemia - women"  NT_WM_NUT.do
+#'Percentage of women aged 15-49 classified as having any anemia
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "AN_ANEM_W_ANY",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::nt_wm_any_anem)
+#' }
+#' @export
+#'
+
 nt_wm_any_anem <- function(Rdata){
 
   IRdata <- Rdata %>%
@@ -923,9 +1160,26 @@ nt_wm_any_anem <- function(Rdata){
   return(IRdata)
 }
 
-#CN_BRFS_C_EXB Children exclusively breastfed
-# NT_IYCF.do KR "Exclusively breastfed - last-born under 6 months"
-# Children exclusively breastfed (Prevalence of exclusive breastfeeding of children under six months of age)
+#'CN_BRFS_C_EXB
+#' Children exclusively breastfed
+#' NT_IYCF.do KR "Exclusively breastfed - last-born under 6 months"
+#' Children exclusively breastfed (Prevalence of exclusive breastfeeding of children under six months of age)
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CN_BRFS_C_EXB",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::nt_ebf)
+#' }
+#' @export
+#'
+
 nt_ebf<- function(Rdata){
 
   KRdata=Rdata
@@ -990,9 +1244,26 @@ colnames(KRiycf)[colnames(KRiycf) == 'nt_ebf'] <- "value"
 }
 
 
-#CN_ANMC_C_ANY  Children with any anemia
-#"Any anemia - child 6-59 months" PR NT_CH_NUT.do
-# Children under five with any anemia
+#'CN_ANMC_C_ANY
+#'Children with any anemia
+#'"Any anemia - child 6-59 months" PR NT_CH_NUT.do
+#' Children under five with any anemia
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "CN_ANMC_C_ANY",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::nt_ch_any_anem)
+#' }
+#' @export
+
+
 nt_ch_any_anem<-function(Rdata){
 
   PRdata <- Rdata %>%
@@ -1009,9 +1280,26 @@ colnames(PRdata)[colnames(PRdata) == 'nt_ch_any_anem'] <- "value"
 return(PRdata)
 }
 
-#AN_NUTS_W_THN Women who are thin according to BMI (<18.5)
-#NT_WM_NUT.do "Thin BMI - women" IR !!!!!!!!
-# Underweight (Prevalence of underweight (BMI < 18.5) women of reproductive age)
+#' AN_NUTS_W_THN
+#' Women who are thin according to BMI (<18.5)
+#' NT_WM_NUT.do "Thin BMI - women" IR !!!!!!!!
+#' Underweight (Prevalence of underweight (BMI < 18.5) women of reproductive age)
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "AN_NUTS_W_THN",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::nt_wm_thin)
+#' }
+#' @export
+#'
+
 nt_wm_thin<-function(Rdata){
 
   IRdata <- Rdata %>%
@@ -1050,12 +1338,28 @@ return(IRdata)
 ##Malaria  ch12
 ################
 
-#Households with at least one insecticide-treated mosquito net (ITN) for every two persons who stayed in the household the previous night
-#ML_ITNA_P_ACC
-#Persons with access to an insecticide-treated mosquito net (ITN)
-# ML_NETS_HH.do  HR
-#Households with >1 ITN per 2 household members
-#Percentage of households with at least one ITN for every 2 persons who stayed in the household last night
+#'ML_ITNA_P_ACC
+#'Households with at least one insecticide-treated mosquito net (ITN) for every two persons who stayed in the household the previous night
+#'Persons with access to an insecticide-treated mosquito net (ITN)
+#' ML_NETS_HH.do  HR
+#'Households with >1 ITN per 2 household members
+#'Percentage of households with at least one ITN for every 2 persons who stayed in the household last night
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "ML_ITNA_P_ACC",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ml_hhaccess)
+#' }
+#' @export
+#'
+
 ml_hhaccess<-function(Rdata){
     # Number of ITNs per household
   HRdata <- Rdata %>%
@@ -1108,13 +1412,29 @@ ml_hhaccess<-function(Rdata){
 ################
 
 #HIV prevalence among women
-#HA_HIVP_W_HIV
+#
  # HV_PREV.do IR+AR
 
-#hv_hiv_pos
-#"HIV positive test result"
+#'HA_HIVP_W_HIV
+#'hv_hiv_pos
+#'"HIV positive test result"
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "HA_HIVP_W_HIV",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::hv_hiv_pos)
+#' }
+#' @export
 
- hv_hiv_pos<-function(Rdata){
+
+hv_hiv_pos<-function(Rdata){
     IRdata <- Rdata$`Individual Recode`
     MRdata <- Rdata$`Men's Recode`
     ARdata<- Rdata$`HIV Test Results Recode`
@@ -2243,10 +2563,25 @@ ml_hhaccess<-function(Rdata){
 
  }
 
-#Percentage of households using an improved sanitation facility
-#WS_TLET_H_IMP
- #PH_SANI.do  PR
- #ph_sani_improve "Access to improved sanitation" country-specific
+#'WS_TLET_H_IMP
+#'Percentage of households using an improved sanitation facility
+#'PH_SANI.do  PR
+#'ph_sani_improve "Access to improved sanitation" country-specific
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "WS_TLET_H_IMP",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ph_sani_improve)
+#' }
+#' @export
+#'
 
  ph_sani_improve<-function(Rdata){
    WASHdata <- Rdata #same code can be used for PR or HR files, but must be specified here
@@ -2297,9 +2632,26 @@ ml_hhaccess<-function(Rdata){
  }
 
 
-#Population with access to a basic sanitation service (WS_TLET_P_BAS in DHS API)
- #PH_SANI.do  PR
- #ph_sani_basic "Basic sanitation facility"
+#'WS_TLET_P_BAS
+#'Population with access to a basic sanitation service WS_TLET_P_BAS in DHS API
+#'PH_SANI.do  PR
+#'ph_sani_basic "Basic sanitation facility"
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "WS_TLET_P_BAS",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::ph_sani_basic)
+#' }
+#' @export
+#'
+
  ph_sani_basic<-function(Rdata){
    WASHdata <- Rdata #same code can be used for PR or HR files, but must be specified here
 
@@ -2366,9 +2718,26 @@ ml_hhaccess<-function(Rdata){
  }
 
 
-#Population using a basic water source (WS_SRCE_P_BAS)
-# PH_WATER.do
- #ph_wtr_basic "Basic water service" PR
+#'WS_SRCE_P_BAS
+#'Population using a basic water source
+#' PH_WATER.do
+#'ph_wtr_basic "Basic water service" PR
+#' @param Rdata  data.frame from survryPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#'
+#' @author Qianyu Dong
+#' @examples
+#' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia",
+#'                                  indicator = "WS_SRCE_P_BAS",
+#'                                  year = 2018)
+#' data <- getDHSindicator(dhsData, indicator = NULL,
+#'                          FUN = surveyPrev::watersource_adj)
+#' }
+#' @export
+#'
+
  watersource_adj<-function(WASHdata){
 
 

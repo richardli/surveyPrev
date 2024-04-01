@@ -7,6 +7,9 @@
 #' @param cluster.info list that contains admin 1 and admin 2 information and coordinates for each cluster, output of clusterinfo function
 #' @param admin desired admin level for aggregation
 #' @param poly.adm spatial polygons dataframe
+#' @param by.adm the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".
+#' @param by.adm.upper the column name of column for Admin names for upper level of your desired output Admin level when admin=2, can be "NAME_1" when by.adm="NAME_2".
+#'
 #'
 #' @return This function returns the dataset that contain admin name and survey weight.
 #' @importFrom raster as.data.frame coordinates
@@ -28,23 +31,23 @@
 #' poly.adm1=ZambiaAdm1
 #' poly.adm2=ZambiaAdm2
 #'
-#' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2)
+#' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 #'
 #'
 #' agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
 #' agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
-#'                              poly.adm = poly.adm2)
+#'                              poly.adm = poly.adm2,  by.adm="NAME_2" ,by.adm.upper ="NAME_1")
 #' }
 #'
 #' @export
 
 
-aggSurveyWeight <- function(data, cluster.info, admin, poly.adm=NULL){
+aggSurveyWeight <- function(data, cluster.info, admin, poly.adm=NULL, by.adm=NULL ,by.adm.upper =NULL){
 
 
   #make admin2.name.full from poly.adm2
   if(!is.null(poly.adm)){
-    admin2.name.full=paste0(poly.adm$NAME_1,"_",poly.adm$NAME_2)
+    admin2.name.full=paste0(poly.adm@data[,by.adm.upper],"_",poly.adm@data[,by.adm])
   }
   if(admin==1)
   {

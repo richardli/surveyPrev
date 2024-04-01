@@ -4,7 +4,14 @@
 \alias{aggSurveyWeight}
 \title{Get survey weight by admin levels}
 \usage{
-aggSurveyWeight(data, cluster.info, admin, poly.adm = NULL)
+aggSurveyWeight(
+  data,
+  cluster.info,
+  admin,
+  poly.adm = NULL,
+  by.adm = NULL,
+  by.adm.upper = NULL
+)
 }
 \arguments{
 \item{data}{dataframe that contains the indicator of interests, output of getDHSindicator function}
@@ -14,6 +21,10 @@ aggSurveyWeight(data, cluster.info, admin, poly.adm = NULL)
 \item{admin}{desired admin level for aggregation}
 
 \item{poly.adm}{spatial polygons dataframe}
+
+\item{by.adm}{the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".}
+
+\item{by.adm.upper}{the column name of column for Admin names for upper level of your desired output Admin level when admin=2, can be "NAME_1" when by.adm="NAME_2".}
 }
 \value{
 This function returns the dataset that contain admin name and survey weight.
@@ -37,12 +48,12 @@ data<- getDHSindicator(dhsData, indicator = indicator)
 poly.adm1=ZambiaAdm1
 poly.adm2=ZambiaAdm2
 
-cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2)
+cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 
 
 agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
 agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
-                             poly.adm = poly.adm2)
+                             poly.adm = poly.adm2,  by.adm="NAME_2" ,by.adm.upper ="NAME_1")
 }
 
 }

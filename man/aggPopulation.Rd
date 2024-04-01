@@ -4,7 +4,7 @@
 \alias{aggPopulation}
 \title{Get population information}
 \usage{
-aggPopulation(tiff, fact = 10, SpatialPolygons, varname)
+aggPopulation(tiff, fact = 10, SpatialPolygons, by.adm, by.adm.upper = NULL)
 }
 \arguments{
 \item{tiff}{spatial raster of population estimates.}
@@ -13,7 +13,9 @@ aggPopulation(tiff, fact = 10, SpatialPolygons, varname)
 
 \item{SpatialPolygons}{spatial polygons dataframe.}
 
-\item{varname}{column name of district name in SpatialPolygons file.}
+\item{by.adm}{the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".}
+
+\item{by.adm.upper}{the column name of column for Admin names for upper level of your desired output Admin level when admin=2, can be "NAME_1" when by.adm="NAME_2".}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level
@@ -38,13 +40,14 @@ pop_raster <- pop_f_0 + pop_m_0
 agg.pop1 <- aggPopulation(
   tiff = pop_raster,
   SpatialPolygons = ZambiaAdm1,
-  varname = "NAME_1")
+  by.adm = "NAME_1")
 
 # admin2 population
 agg.pop2 <- aggPopulation(
   tiff = ZambiaPopWomen_raster,
   SpatialPolygons = ZambiaAdm2,
-  varname = "NAME_2")
+  by.adm = "NAME_2",
+  by.adm.upper="NAME_1")
 }
 
 }

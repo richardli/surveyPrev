@@ -4,12 +4,23 @@
 \alias{adminInfo}
 \title{Get admin information}
 \usage{
-adminInfo(poly.adm, admin, agg.pop = NULL, proportion = NULL)
+adminInfo(
+  poly.adm,
+  by.adm,
+  admin,
+  by.adm.upper = NULL,
+  agg.pop = NULL,
+  proportion = NULL
+)
 }
 \arguments{
-\item{poly.adm}{spatial polygons dataframe for admin 1 or admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.}
+\item{poly.adm}{spatial polygons dataframe for Admin levels such as Admin 1 or Admin 2. This object can be either an sp::SpatialPolygonsDataFrame object or an sf object.}
 
-\item{admin}{admin level}
+\item{by.adm}{the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".}
+
+\item{admin}{desired admin level for the output, can be 1 or 2.}
+
+\item{by.adm.upper}{the column name of column for Admin names for upper level of your desired output Admin level when admin=2, can be "NAME_1" when by.adm="NAME_2".}
 
 \item{agg.pop}{data frame of aggregated poplulation from aggPopulation function. It should have two columns: "admin2.name.full" and "population".}
 
@@ -26,7 +37,10 @@ This function get admin information including name, character, population and un
 # For sp::SpatialPolygonsDataFrame object
 data(ZambiaAdm1)
 class(ZambiaAdm1)
-info <- adminInfo(ZambiaAdm1, admin = 1)
+info <- adminInfo(ZambiaAdm1, admin = 1, by.adm="Name_1")
+data(ZambiaAdm2)
+class(ZambiaAdm2)
+info2 <- adminInfo(ZambiaAdm2, admin = 2,by.adm="Name_2",by.adm.upper="Name_1")
 
 # For sf object
 geo.sf <- sf::st_as_sf(ZambiaAdm1)
