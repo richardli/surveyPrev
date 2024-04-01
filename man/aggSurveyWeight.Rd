@@ -25,6 +25,21 @@ This function aggregate survey weight to particular admin levels
 \dontrun{
 
 # admin1 population
+
+year <- 2018
+country <- "Zambia"
+indicator="nmr"
+
+geo <- getDHSgeo(country = country, year = year)
+dhsData <- getDHSdata(country = country, indicator=indicator, year = year)
+data<- getDHSindicator(dhsData, indicator = indicator)
+
+poly.adm1=ZambiaAdm1
+poly.adm2=ZambiaAdm2
+
+cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2)
+
+
 agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
 agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
                              poly.adm = poly.adm2)
