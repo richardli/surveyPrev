@@ -97,7 +97,7 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
     poly.adm1<-geo
     admin.mat <- spdep::poly2nb(sp::SpatialPolygons(poly.adm1@polygons))
     admin.mat <- spdep::nb2mat(admin.mat, zero.policy = TRUE)
-    colnames(admin.mat) <- rownames(admin.mat) <-  poly.adm1$NAME_1
+    colnames(admin.mat) <- rownames(admin.mat) <-  geo@data[,by.adm]
 
   }
   else if(admin==2){
