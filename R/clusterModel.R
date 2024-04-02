@@ -120,10 +120,24 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
   admin_name_table$sID <- 1: dim(admin_name_table)[1] #sID is sorted by admin1.name then admin2.name alphabetically.
 
   # add new rows corresponding to each region
-  c.dat.tmp[(dim(c.dat.tmp)[1]+1):(dim(c.dat.tmp)[1]+nregion),paste0("admin",admin,".name")] <- admin_name_table[,which(colnames(admin_name_table)== paste0("admin",admin,".name"))]
-  c.dat.tmp$ID <- 1:dim(c.dat.tmp)[1]
-  c.dat.tmp$sID <-admin_name_table$sID[match(as.data.frame(c.dat.tmp)[,which(colnames(c.dat.tmp)== paste0("admin",admin,".name"))],
-                                             admin_name_table[,which(colnames(admin_name_table)== paste0("admin",admin,".name"))])]
+
+ if(admin==1){
+   c.dat.tmp[(dim(c.dat.tmp)[1]+1):(dim(c.dat.tmp)[1]+nregion),paste0("admin",admin,".name")] <- admin_name_table[,which(colnames(admin_name_table)== paste0("admin",admin,".name"))]
+   c.dat.tmp$ID <- 1:dim(c.dat.tmp)[1]
+   c.dat.tmp$sID <-admin_name_table$sID[match(as.data.frame(c.dat.tmp)[,which(colnames(c.dat.tmp)== paste0("admin",admin,".name"))],
+                                              admin_name_table[,which(colnames(admin_name_table)== paste0("admin",admin,".name"))])]
+
+
+ }else{
+   c.dat.tmp[(dim(c.dat.tmp)[1]+1):(dim(c.dat.tmp)[1]+nregion),"admin2.name.full"] <- admin_name_table[,which(colnames(admin_name_table)=="admin2.name.full")]
+   c.dat.tmp$ID <- 1:dim(c.dat.tmp)[1]
+   c.dat.tmp$sID <-admin_name_table$sID[match(as.data.frame(c.dat.tmp)[,which(colnames(c.dat.tmp)== "admin2.name.full")],
+                                              admin_name_table[,which(colnames(admin_name_table)== "admin2.name.full")])]
+
+
+
+ }
+
 
 
 
