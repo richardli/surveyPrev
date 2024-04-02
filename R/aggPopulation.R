@@ -44,6 +44,8 @@
 
 aggPopulation <- function(tiff, fact = 10, poly.adm, by.adm, by.adm.upper=NULL){
 
+  if("sf" %in% class(poly.adm)) poly.adm <- sf::as_Spatial(poly.adm)
+
   if(fact > 1){
     pop_aggre <- aggregate(tiff, fact = fact, sum)
   }else{

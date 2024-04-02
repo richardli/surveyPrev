@@ -44,10 +44,13 @@
 
 aggSurveyWeight <- function(data, cluster.info, admin, poly.adm=NULL, by.adm=NULL ,by.adm.upper =NULL){
 
+  if("sf" %in% class(poly.adm)) poly.adm <- sf::as_Spatial(poly.adm)
 
   #make admin2.name.full from poly.adm2
   if(!is.null(poly.adm)){
+    # poly.adm<-sf::st_as_sf(poly.adm)
     admin2.name.full=paste0(poly.adm@data[,by.adm.upper],"_",poly.adm@data[,by.adm])
+
   }
   if(admin==1)
   {
