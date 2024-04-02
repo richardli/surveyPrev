@@ -4,14 +4,14 @@
 \alias{aggPopulation}
 \title{Get population information}
 \usage{
-aggPopulation(tiff, fact = 10, SpatialPolygons, by.adm, by.adm.upper = NULL)
+aggPopulation(tiff, fact = 10, poly.adm, by.adm, by.adm.upper = NULL)
 }
 \arguments{
 \item{tiff}{spatial raster of population estimates.}
 
 \item{fact}{factor to aggregate pixels. Default to be 10, i.e., the population estimates will be saved on 1km by 1km grids if the input is 100m by 100m tiff. Larger values of aggregation factor improves the computation speed, but can introduce more errors when the regions defined by the polygon are small in size.}
 
-\item{SpatialPolygons}{spatial polygons dataframe.}
+\item{poly.adm}{spatial polygons dataframe.}
 
 \item{by.adm}{the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".}
 
@@ -39,13 +39,13 @@ pop_raster <- pop_f_0 + pop_m_0
 # admin1 population
 agg.pop1 <- aggPopulation(
   tiff = pop_raster,
-  SpatialPolygons = ZambiaAdm1,
+  poly.adm = ZambiaAdm1,
   by.adm = "NAME_1")
 
 # admin2 population
 agg.pop2 <- aggPopulation(
   tiff = ZambiaPopWomen_raster,
-  SpatialPolygons = ZambiaAdm2,
+  poly.adm = ZambiaAdm2,
   by.adm = "NAME_2",
   by.adm.upper="NAME_1")
 }

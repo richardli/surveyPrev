@@ -4,7 +4,7 @@
 #'
 #' @param tiff  spatial raster of population estimates.
 #' @param fact factor to aggregate pixels. Default to be 10, i.e., the population estimates will be saved on 1km by 1km grids if the input is 100m by 100m tiff. Larger values of aggregation factor improves the computation speed, but can introduce more errors when the regions defined by the polygon are small in size.
-#' @param SpatialPolygons spatial polygons dataframe.
+#' @param poly.adm spatial polygons dataframe.
 #' @param by.adm the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".
 #' @param by.adm.upper the column name of column for Admin names for upper level of your desired output Admin level when admin=2, can be "NAME_1" when by.adm="NAME_2".
 #'
@@ -28,13 +28,13 @@
 #' # admin1 population
 #' agg.pop1 <- aggPopulation(
 #'   tiff = pop_raster,
-#'   SpatialPolygons = ZambiaAdm1,
+#'   poly.adm = ZambiaAdm1,
 #'   by.adm = "NAME_1")
 #'
 #' # admin2 population
 #' agg.pop2 <- aggPopulation(
 #'   tiff = ZambiaPopWomen_raster,
-#'   SpatialPolygons = ZambiaAdm2,
+#'   poly.adm = ZambiaAdm2,
 #'   by.adm = "NAME_2",
 #'   by.adm.upper="NAME_1")
 #' }
@@ -42,7 +42,7 @@
 #' @export
 
 
-aggPopulation <- function(tiff, fact = 10, SpatialPolygons, by.adm, by.adm.upper=NULL){
+aggPopulation <- function(tiff, fact = 10, poly.adm, by.adm, by.adm.upper=NULL){
 
   if(fact > 1){
     pop_aggre <- aggregate(tiff, fact = fact, sum)
@@ -54,15 +54,15 @@ aggPopulation <- function(tiff, fact = 10, SpatialPolygons, by.adm, by.adm.upper
 
   if(!is.null(by.adm.upper)){
     # varname<-"fullname"
-    SpatialPolygons$admin2.name.full<-paste0(SpatialPolygons@data[,by.adm.upper],"_",SpatialPolygons@data[,by.adm])
-      # paste0(SpatialPolygons$NAME_1,"_",SpatialPolygons$NAME_2)
+    poly.adm$admin2.name.full<-paste0(poly.adm@data[,by.adm.upper],"_",poly.adm@data[,by.adm])
+      # paste0(poly.adm$NAME_1,"_",poly.adm$NAME_2)
   }
 
 
   loc_df <- data.frame(x = pop_aggre.df$x, y = pop_aggre.df$y)
   sp::coordinates(loc_df) <- ~x+y
-  sp::proj4string(loc_df) <- proj4string(SpatialPolygons)
-  adm<-(over(loc_df, SpatialPolygons)[, by.adm])
+  sp::proj4string(loc_df) <- proj4string(poly.adm)
+  adm<-(over(loc_df, poly.adm)[, by.adm])
 
   pop_dt <- cbind(pop_aggre.df, adm)
   pop_dt <- pop_dt[!is.na(pop_dt$adm), ]
@@ -73,7 +73,7 @@ aggPopulation <- function(tiff, fact = 10, SpatialPolygons, by.adm, by.adm.upper
   if(!is.null(by.adm.upper)){
     # tab$admin1.name<-do.call(cbind, strsplit(tab$admin2.name.full, "_"))[1,]
     colnames(tab)[colnames(tab) =="adm"] <- 'NAME_2'
-    tab =left_join(tab,SpatialPolygons@data[,c( by.adm,by.adm.upper,"admin2.name.full")],by=by.adm)
+    tab =left_join(tab,poly.adm@data[,c( by.adm,by.adm.upper,"admin2.name.full")],by=by.adm)
     colnames(tab)[colnames(tab) ==by.adm] <- 'admin2.name'
     colnames(tab)[colnames(tab) ==by.adm.upper] <- 'admin1.name'
 
