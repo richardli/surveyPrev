@@ -33,7 +33,6 @@
 #'
 #' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 #'
-#'
 #' agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
 #' agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
 #'                              poly.adm = poly.adm2,  by.adm="NAME_2" ,by.adm.upper ="NAME_1")
@@ -75,14 +74,10 @@ aggSurveyWeight <- function(data, cluster.info, admin, poly.adm=NULL, by.adm=NUL
       mutate(surveyWeight=sum(weight))%>%
       distinct(admin2.name.full,surveyWeight,admin1.name,admin2.name)%>%
       group_by(admin1.name)
-    # %>%
-    #   mutate(surveyWeight.admin1=sum(surveyWeight))
+
 
     if(!is.null(admin2.name.full)& dim(weight_dt)[1]<length(admin2.name.full)){
       missing=admin2.name.full[!admin2.name.full %in% weight_dt$admin2.name.full]
-
-      # strsplit(missing, "_")
-
 
       hh= data.frame(admin2.name.full=missing,
          surveyWeight=rep(0,length(missing)),

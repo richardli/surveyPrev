@@ -186,7 +186,8 @@ poly.adm2 <- sf::st_as_sf(poly.adm2)
 The `clusterInfo()` function extracts Admin 1 and Admin 2 area information for each cluster. To avoid confusion in countries that have duplicated region names, we create new labels for Admin 2 regions using the variable `admin2.name.full`.  The clusters with invalid GPS locations are saved in the `wrong.points` object and not used in any models. 
 
 ```{r}
-cluster.info <- clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2)
+cluster.info <- clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2, 
+                            by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 head(cluster.info$data)
 cluster.info$wrong.points
 ```
@@ -195,8 +196,8 @@ cluster.info$wrong.points
 The `adminInfo()` function computes the spatial the adjacency matrix, and if supplied with additional information on population, combines needed information for each administrative area, including the name, population, and urban population fractions of each administrative area. The `admin.mat` object stores the adjacency matrix for spatial models. We will ignore the population information for now and focus on only information from the DHS data, and will return to the population information in Section \@ref(sec:aggregation). 
 
 ```{r}
-admin.info1 <- adminInfo(poly.adm = poly.adm1, admin = 1)
-admin.info2 <- adminInfo(poly.adm = poly.adm2, admin = 2)
+admin.info1 <- adminInfo(poly.adm = poly.adm1, admin = 1,by.adm = "NAME_1")
+admin.info2 <- adminInfo(poly.adm = poly.adm2, admin = 2,by.adm = "NAME_2",by.adm.upper = "NAME_1")
 head(admin.info2$data)
 ```
 
@@ -386,7 +387,8 @@ Given the urban/rural proportions, we first add the information into `admin.info
 ```{r, tidy = F}
 admin.info2 <- adminInfo(poly.adm = poly.adm2, 
                          admin = 2,
-                         proportion = ZambiaPopWomen$admin2_urban)
+                         proportion = ZambiaPopWomen$admin2_urban,
+                         by.adm="NAME_2",by.adm.upper="NAME_1")
 head(admin.info2$data)
 ```
 
@@ -409,22 +411,24 @@ We can use `mapPlot()` function from the **SUMMER** package to visualize estimat
 
 ```{r ,fig.dim = c(9, 5),fig.cap="Comparing Admin 1 direct estimates, Fay–Herriot model, and unstratified cluster-level posterior mean estimates", out.width = "100%"}
 # Arrange all estimates into a long-format data frame
-out1 <- res_ad1$res.admin1[, c("admin1.name", "direct.est", "cv")]
-colnames(out1)[2] <- "mean"
-out1$model <- "Direct Estimates"
-out2 <- smth_res_ad1_bym2$res.admin1[, c("admin1.name", "mean", "cv")]
-out2$model <- "Fay-Herriot Model"
-out3 <- cl_res_ad1$res.admin1[, c("admin1.name", "mean", "cv")]
-out3$model <- "Unstratified Cluster-level Model"
-
-g1 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
-              by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE, 
-              variable = "model", value = "mean", legend.label = "Mean")
-
-g2 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
-              by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE, 
-              variable = "model", value = "cv", legend.label = "CV")
-g1 / g2 
+res_ad1$res.admin1
+res_ad2$res.admin2
+# out1 <- res_ad1$res.admin1[, c("admin1.name", "direct.est", "cv")]
+# colnames(out1)[2] <- "mean"
+# out1$model <- "Direct Estimates"
+# out2 <- smth_res_ad1_bym2$res.admin1[, c("admin1.name", "mean", "cv")]
+# out2$model <- "Fay-Herriot Model"
+# out3 <- cl_res_ad1$res.admin1[, c("admin1.name", "mean", "cv")]
+# out3$model <- "Unstratified Cluster-level Model"
+# 
+# g1 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
+#               by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE,
+#               variable = "model", value = "mean", legend.label = "Mean")
+# 
+# g2 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
+#               by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE,
+#               variable = "model", value = "cv", legend.label = "CV")
+# g1 / g2
 ```
 
 We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
@@ -433,7 +437,7 @@ We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name 
 poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
 
 # Arrange all estimates into a long-format data frame
-out1 <- res_ad2$res.admin2[, c("admin2.name.full", "direct.est", "cv")]
+out1<- res_ad2$res.admin2[, c("admin2.name.full", "direct.est", "cv")]
 colnames(out1)[2] <- "mean"
 out1$model <- "Direct Estimates"
 out2 <- smth_res_ad2$res.admin2[, c("admin2.name.full", "mean", "cv")]
@@ -631,16 +635,15 @@ pop_f_45 <- raster(f_45_name)
 
 raster <- pop_f_45 + pop_f_40 + pop_f_35 + pop_f_30 + pop_f_25 + pop_f_20 + pop_f_15
 agg.pop1 <- aggPopulation(
-  tiff = raster,
-  SpatialPolygons = ZambiaAdm1,
-  varname = c("NAME_1")
-)
+   tiff = pop_raster,
+   poly.adm  = ZambiaAdm1,
+   by.adm  = "NAME_1")
 colnames(agg.pop1)[1] <- "admin1.name"
 agg.pop2 <- aggPopulation(
-  tiff = raster,
-  SpatialPolygons = ZambiaAdm2,
-  varname = c("NAME_2")
-)
+   tiff = pop_raster,
+   poly.adm = ZambiaAdm2,
+   by.adm  = "NAME_2",
+   by.adm.upper= "NAME_1")
 ```
 
 
@@ -660,7 +663,8 @@ An alternative approach to obtain population fractions is to simply use survey w
 
 ```{r, tidy = TRUE}
 agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
-agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,poly.adm = poly.adm2)
+agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
+                              poly.adm = poly.adm2, by.adm="NAME_2",by.adm.upper ="NAME_1")
 ```
 
 
@@ -669,21 +673,23 @@ As mentioned in Section \@ref(sec:data), the `adminInfo()` combine information f
 ```{r, tidy = F}
 admin.info1 <- adminInfo(poly.adm = poly.adm1, 
                          admin = 1,
+                         by.adm="NAME_1",
                          agg.pop  =ZambiaPopWomen$admin1_pop,
                          proportion = ZambiaPopWomen$admin1_urban )
 
 admin.info2 <- adminInfo(poly.adm = poly.adm2, 
-                         admin = 2,
+                         admin = 2,by.adm="NAME_2",by.adm.upper = "NAME_1",
                          agg.pop =ZambiaPopWomen$admin2_pop,
                          proportion = ZambiaPopWomen$admin2_urban)
 
 admin.info1.survey <- adminInfo(poly.adm = poly.adm1, 
                          admin = 1,
+                         by.adm="NAME_1",
                          agg.pop  =agg.survey1,
                          proportion = ZambiaPopWomen$admin1_urban )
 
 admin.info2.survey  <- adminInfo(poly.adm = poly.adm2, 
-                         admin = 2,
+                         admin = 2,by.adm="NAME_2",by.adm.upper = "NAME_1",
                          agg.pop =agg.survey2,
                          proportion = ZambiaPopWomen$admin2_urban)
 
@@ -802,13 +808,13 @@ intervalPlot(admin = 0, group = FALSE, compare = TRUE,
 Aggregation of the Fay-Herriot model can be similarly carried out as model based results. We first re-fit the Admin 1 model with the two updated `admin.info` objects.
 
 ```{r}
-smth_res_ad1_spatial <- fhModel(data,
+smth_res_ad1_spatial <- fhModel(data=data,
                                 cluster.info = cluster.info,
                                 admin.info = admin.info1,
                                 admin = 1,
                                 model = "bym2",
                                 aggregation = TRUE)
-smth_res_ad1_spatial_survey <- fhModel(data,
+smth_res_ad1_spatial_survey <- fhModel(data=data,
                                       cluster.info = cluster.info,
                                       admin.info = admin.info1.survey,
                                       admin = 1,
@@ -820,13 +826,13 @@ smth_res_ad1_spatial_survey <- fhModel(data,
 We also re-fit the Admin 2 model with the two updated `admin.info` objects.
 ```{r}
 # Run FH model without problematic clusters
-smth_res_ad2_agg_pop <- fhModel(subset(data, !cluster %in% bad_clusters),
+smth_res_ad2_agg_pop <- fhModel(data=subset(data, !cluster %in% bad_clusters),
                                 cluster.info = cluster.info,
                                 admin.info = admin.info2,
                                 admin = 2,
                                 model = "bym2",
                                 aggregation = TRUE)
-smth_res_ad2_agg_survey <- fhModel(subset(data, !cluster %in% bad_clusters),
+smth_res_ad2_agg_survey <- fhModel(data=subset(data, !cluster %in% bad_clusters),
                                   cluster.info = cluster.info,
                                   admin.info = admin.info2.survey,
                                   admin = 2,

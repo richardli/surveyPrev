@@ -81,7 +81,7 @@ if(is_html_output()){
 These indicators above can be directly processed within **surveyPrev** using `getDHSdata()` and `getDHSindicator()` functions. Both the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package. For example,  
 
 ```{r,message=FALSE,warning=FALSE}
-indicator <- "unmet_family"
+indicator <- "ancvisit4+"
 year <- 2018
 country <- "Zambia"
 dhsData1 <- getDHSdata(country = country, indicator = indicator, year = year)

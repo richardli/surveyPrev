@@ -42,12 +42,14 @@ agg.pop1 <- aggPopulation(
   poly.adm = ZambiaAdm1,
   by.adm = "NAME_1")
 
+
 # admin2 population
 agg.pop2 <- aggPopulation(
   tiff = ZambiaPopWomen_raster,
   poly.adm = ZambiaAdm2,
   by.adm = "NAME_2",
   by.adm.upper="NAME_1")
+
 }
 
 }

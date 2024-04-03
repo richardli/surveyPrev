@@ -102,17 +102,17 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     res.admin2=admin2_res
 
     ####message for aggregation=T but missing some components and return results without aggregation
-    if(aggregation==F){
+    if(aggregation==FALSE){
     }else{
       if((is.null(admin.info)||sum(is.na(admin.info$population))>0)& is.null(weight=="population")){
         message("Need population information for aggregation")
-        aggregation=F
+        aggregation=FALSE
       }
 
     }
 
 
-   if(aggregation==F){
+   if(aggregation==FALSE){
      # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
      res.admin2=list(res.admin2=res.admin2)
    }else{
@@ -301,9 +301,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin1_res$direct.se<-sqrt(admin1_res$HT.var)
 
 
-    admin1_res<-admin1_res
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
-    colnames(admin1_res)[colnames(admin1_res) == 'HT.est'] <- 'direct.est'
     colnames(admin1_res)[colnames(admin1_res) == 'HT.est'] <- 'direct.est'
     colnames(admin1_res)[colnames(admin1_res) == 'HT.var'] <- 'direct.var'
 
@@ -316,21 +314,22 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin1_res$direct.upper <- expit(admin1_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
     admin1_res$cv<-sqrt(admin1_res$direct.var)/admin1_res$direct.est
 
-
+    res.admin1=admin1_res
 
 
     ####message for aggregation=T but missing some components and return results without aggregation
-    if(aggregation==F){
+    if(aggregation==FALSE){
     }else{
       if((is.null(admin.info)||sum(is.na(admin.info$population))>0)& is.null(weight=="population") ){
         message("Need population information for aggregation")
-        aggregation=F
+        aggregation=FALSE
       }
     }
 
 
-    if(aggregation==F){
-      admin1_res=list(res.admin1=admin1_res)
+    if(aggregation==FALSE){
+      res.admin1=list(res.admin1=res.admin1)
+
     }else{
 
 
@@ -397,10 +396,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-    admin1_res=list(res.admin1=admin1_res, agg.natl=nation_agg)
+    res.admin1=(list(res.admin1=res.admin1, agg.natl=nation_agg))
 
     }
-    return(admin1_res)
+
+    return(res.admin1)
 
 }else if(admin==0){
     data$admin0.name="country"
