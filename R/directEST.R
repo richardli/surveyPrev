@@ -24,10 +24,8 @@
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
 #' data(ZambiaPopWomen)
-#' cluster.info <- clusterInfo(geo = geo,
-#'                             poly.adm1 = ZambiaAdm1,
-#'                             poly.adm2 = ZambiaAdm2)
-#'
+#' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,
+#' by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 #' dhsData <- getDHSdata(country = "Zambia",
 #'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
@@ -50,7 +48,7 @@
 #' @export
 
 
-directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE){
+directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE,...){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -70,6 +68,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
+    options(survey.adjust.domain.lonely=TRUE)
+    options(survey.lonely.psu="adjust")
+
     smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
@@ -80,7 +81,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                    Amat =NULL,
                                    CI = CI,
                                    is.unit.level=FALSE,
-                                   smooth=FALSE)
+                                   smooth=FALSE,...)
     admin2_res<-as.data.frame(smoothSurvey_res$HT)
     admin2_res$direct.se<-sqrt(admin2_res$HT.var)
 
@@ -285,7 +286,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     # design = design, survey::svymean, drop.empty.groups = FALSE)
 
   #  aggregate results
-    smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+
+       smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                  responseType ="binary",
                  responseVar= "value",
                  regionVar = "admin1.name",
@@ -337,9 +339,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       ### admin1 to national for admin1 result
       ### ### ### ### ### ### ### ### ### ###
 
-
-
-
      # make direct.logit.est to 36 or -36 for HT=1 or 0.
 
       for (i in 1:dim(admin1_res)[1]) {
@@ -355,9 +354,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
           admin1_res[i,]$direct.logit.var=0
         }
       }
-
-
-
 
     dd=data.frame(mean=admin1_res$direct.logit.est,sd=sqrt(admin1_res$direct.logit.var))
     draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(5000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
@@ -382,8 +378,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       weight_dt_mean<-weight_dt$prop%*%admin1_res$direct.est #for mean
 
     }
-
-
 
     nation_agg <- data.frame(
                              # admin1.name= "country",

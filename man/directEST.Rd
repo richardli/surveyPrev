@@ -12,7 +12,8 @@ directEST(
   CI = 0.95,
   weight = c("population", "survey")[1],
   admin.info = NULL,
-  aggregation = FALSE
+  aggregation = FALSE,
+  ...
 )
 }
 \arguments{
@@ -44,10 +45,8 @@ geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
 data(ZambiaPopWomen)
-cluster.info <- clusterInfo(geo = geo,
-                            poly.adm1 = ZambiaAdm1,
-                            poly.adm2 = ZambiaAdm2)
-
+cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,
+by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 dhsData <- getDHSdata(country = "Zambia",
                                  indicator = "ancvisit4+",
                                  year = 2018)
