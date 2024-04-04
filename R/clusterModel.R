@@ -250,6 +250,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
         upper= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin1.bb.res$mean<-as.numeric (admin1.bb.res$mean)
+      admin1.bb.res$median<-as.numeric (admin1.bb.res$median)
       admin1.bb.res$sd<-as.numeric (admin1.bb.res$sd)
       admin1.bb.res$var<-admin1.bb.res$sd^2
       admin1.bb.res$lower<-as.numeric (admin1.bb.res$lower)
@@ -324,6 +325,7 @@ clusterModel<-function(data,cluster.info, admin.info, admin, CI = 0.95, model = 
         upper= tail(imod$summary.fitted.values,n=nregion)[,5]))
 
       admin2.bb.res$mean<-as.numeric (admin2.bb.res$mean)
+      admin2.bb.res$median<-as.numeric (admin2.bb.res$median)
       admin2.bb.res$sd<-as.numeric (admin2.bb.res$sd)
       admin2.bb.res$var <- admin2.bb.res$sd^2
       admin2.bb.res$lower<-as.numeric (admin2.bb.res$lower)

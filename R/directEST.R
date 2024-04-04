@@ -86,8 +86,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin2_res$direct.se<-sqrt(admin2_res$HT.var)
 
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name.full' # region is the col name in smoothSurvey_res$HT
-    a<-strsplit(admin2_res$admin2.name.full,"_")
-    admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
+
     colnames(admin2_res)[colnames(admin2_res) == 'HT.est'] <- 'direct.est'
     colnames(admin2_res)[colnames(admin2_res) == 'HT.var'] <- 'direct.var'
     colnames(admin2_res)[colnames(admin2_res) == 'HT.logit.est'] <- 'direct.logit.est'
@@ -98,7 +97,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin2_res$direct.lower <- expit(admin2_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
     admin2_res$direct.upper <- expit(admin2_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
     admin2_res$cv<-sqrt(admin2_res$direct.var)/admin2_res$direct.est
-    # admin2_res$admin1.name
+
+    a<-strsplit(admin2_res$admin2.name.full,"_")
+    admin2_res$admin2.name<-matrix(unlist(a),ncol =2, byrow =T)[,2]#needed in mapplot()
+    admin2_res$admin1.name<-matrix(unlist(a),ncol =2, byrow =T)[,1]
+
 
     res.admin2=admin2_res
 

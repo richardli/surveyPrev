@@ -411,24 +411,22 @@ We can use `mapPlot()` function from the **SUMMER** package to visualize estimat
 
 ```{r ,fig.dim = c(9, 5),fig.cap="Comparing Admin 1 direct estimates, Fay–Herriot model, and unstratified cluster-level posterior mean estimates", out.width = "100%"}
 # Arrange all estimates into a long-format data frame
-res_ad1$res.admin1
-res_ad2$res.admin2
-# out1 <- res_ad1$res.admin1[, c("admin1.name", "direct.est", "cv")]
-# colnames(out1)[2] <- "mean"
-# out1$model <- "Direct Estimates"
-# out2 <- smth_res_ad1_bym2$res.admin1[, c("admin1.name", "mean", "cv")]
-# out2$model <- "Fay-Herriot Model"
-# out3 <- cl_res_ad1$res.admin1[, c("admin1.name", "mean", "cv")]
-# out3$model <- "Unstratified Cluster-level Model"
-# 
-# g1 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
-#               by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE,
-#               variable = "model", value = "mean", legend.label = "Mean")
-# 
-# g2 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
-#               by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE,
-#               variable = "model", value = "cv", legend.label = "CV")
-# g1 / g2
+out1 <- res_ad1$res.admin1[, c("admin1.name", "direct.est", "cv")]
+colnames(out1)[2] <- "mean"
+out1$model <- "Direct Estimates"
+out2 <- smth_res_ad1_bym2$res.admin1[, c("admin1.name", "mean", "cv")]
+out2$model <- "Fay-Herriot Model"
+out3 <- cl_res_ad1$res.admin1[, c("admin1.name", "mean", "cv")]
+out3$model <- "Unstratified Cluster-level Model"
+
+g1 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
+              by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE,
+              variable = "model", value = "mean", legend.label = "Mean")
+
+g2 <- mapPlot(data = rbind(out1, out2, out3), geo = poly.adm1,
+              by.data = "admin1.name",  by.geo = "NAME_1", is.long = TRUE,
+              variable = "model", value = "cv", legend.label = "CV")
+g1 / g2
 ```
 
 We note that for Admin 2 estimates, **surveyPrev** uses a recreated region name in the form of [admin1_name]\_[admin2_name] to avoid duplicated Admin 2 names. This new region identifier is assigned a column name of `admin2.name.full` in the output. Thus when plotting, we need to manually create the `admin2.name.full` in the spatial polygon object.
@@ -444,7 +442,7 @@ out2 <- smth_res_ad2$res.admin2[, c("admin2.name.full", "mean", "cv")]
 out2$model <- "Fay-Herriot Model"
 out3 <- cl_res_ad2$res.admin2[, c("admin2.name.full", "mean", "cv")]
 out3$model <- "Unstratified Cluster-level Model"
-out4 <- cl_res_ad2_T$res.admin2[, c("admin2.name.full", "mean", "cv")]
+out4 <- cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full", c("admin2.name.full", "mean", "cv")]
 out4$model <- "Stratified Cluster-level Model"
 
 g1 <- mapPlot(data = rbind(out1, out2, out3, out4), geo = poly.adm2,
@@ -534,7 +532,7 @@ s2 <- scatterPlot(
           label2="Spatial Fay–Herriot")
 s3 <- scatterPlot(
         res1=res_ad2$res.admin2,
-        res2=cl_res_ad2_T$res.admin2,
+        res2=cl_res_ad2$res.admin2,
         value1="direct.est",
         value2="mean",
         by.res1="admin2.name.full",
@@ -544,7 +542,7 @@ s3 <- scatterPlot(
         label2="Cluster-level model")
 s4 <- scatterPlot(
         res1=res_ad2$res.admin2,
-        res2=cl_res_ad2_T$res.admin2,
+        res2=cl_res_ad2$res.admin2,
         value1="direct.se",
         value2="sd",
         by.res1="admin2.name.full",
@@ -559,7 +557,7 @@ Finally, we compare the unstratified and stratified cluster-level model at Admin
 ```{r, warning=FALSE,echo=TRUE,fig.show="hold", fig.height = 4, fig.width = 8, out.width = "100%", fig.cap="Comparing unstratified and stratified cluster-level model at Admin 2 level."}
 s1 <- scatterPlot(
           res1=cl_res_ad2$res.admin2,
-          res2=cl_res_ad2_T$res.admin2,
+          res2=cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",],
           value1="mean",
           value2="mean",
           by.res1="admin2.name.full",
@@ -569,7 +567,7 @@ s1 <- scatterPlot(
           label2="Stratified model estimates")
 s2 <- scatterPlot(
           res1=cl_res_ad2$res.admin2,
-          res2=cl_res_ad2_T$res.admin2,
+          res2=cl_res_ad2_T$res.admin2[cl_res_ad2_T$res.admin2$type=="full",],
           value1="sd",
           value2="sd",
           by.res1="admin2.name.full",
@@ -699,6 +697,7 @@ head(admin.info2$data)
 The following maps display the 15-49 female population and aggregated DHS survey weights ratio within upper admin levels.
 
 ```{r,fig.show='hold',fig.dim = c(7.5, 6), fig.cap="survey weight ratio and population ratio at Admin 1 and Admin 2", out.width = "100%"}
+
 out1 <- rbind(cbind(admin.info1$data, type = "WorldPop"), 
              cbind(admin.info1.survey$data, type = "SurveyWeight"))
 out1 <- out1 %>% group_by(type) %>% mutate(pop.frac = population / sum(population)) 
@@ -710,6 +709,7 @@ g1 <- mapPlot(data = out1, geo = poly.adm1, size = 0.1,
 out2 <- rbind(cbind(admin.info2$data, type = "WorldPop"), 
              cbind(admin.info2.survey$data, type = "SurveyWeight"))
 out2 <- out2 %>% group_by(type) %>% mutate(pop.frac = population / sum(population)) 
+poly.adm2$admin2.name.full=paste0(poly.adm2$NAME_1,"_",poly.adm2$NAME_2)
 g2 <- mapPlot(data = out2, geo = poly.adm2, size = 0.1, 
               by.data = "admin2.name.full", by.geo = "admin2.name.full", 
               variable = "type",  value = "pop.frac", is.long = TRUE,
