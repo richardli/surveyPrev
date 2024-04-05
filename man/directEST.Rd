@@ -32,6 +32,8 @@ directEST(
 \item{admin.info}{list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function}
 
 \item{aggregation}{whether or not report aggregation results.}
+
+\item{...}{Additional arguments passed on to the `smoothSurvey` function}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

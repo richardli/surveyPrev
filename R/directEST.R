@@ -10,7 +10,7 @@
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param weight the weight used for aggregating result, "population" or "survey"
 #' @param aggregation whether or not report aggregation results.
-#'
+#' @param ... Additional arguments passed on to the `smoothSurvey` function
 #'
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

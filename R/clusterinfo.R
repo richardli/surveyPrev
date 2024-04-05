@@ -4,8 +4,9 @@
 #'
 #' @param geo  spatial point dataframe
 #' @param poly.adm1 spatial polygons dataframe for admin 1
-#' @param poly.adm2 spatial polygons dataframe for admin 2.
-#'
+#' @param poly.adm2 spatial polygons dataframe for admin 2 or other lower admin level.
+#' @param by.adm1 the column name of column for Admin names for admin 1
+#' @param by.adm2 the column name of column for Admin names for admin 2 or other lower admin level.
 #' @return This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @importFrom dplyr select
 #' @import sf

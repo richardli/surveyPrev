@@ -2738,7 +2738,7 @@ hv_hiv_pos<-function(Rdata){
 #' @export
 #'
 
- watersource_adj<-function(WASHdata){
+ watersource_adj<-function(Rdata){
 
 
 

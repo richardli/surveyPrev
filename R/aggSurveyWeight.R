@@ -31,11 +31,13 @@
 #' poly.adm1=ZambiaAdm1
 #' poly.adm2=ZambiaAdm2
 #'
-#' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,by.adm1 = "NAME_1",by.adm2 = "NAME_2")
+#' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,
+#' by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 #'
 #' agg.survey1<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=1)
 #' agg.survey2<-aggSurveyWeight(data=data,cluster.info=cluster.info,admin=2,
-#'                              poly.adm = poly.adm2,  by.adm="NAME_2" ,by.adm.upper ="NAME_1")
+#'                              poly.adm = poly.adm2,  by.adm="NAME_2",
+#'                              by.adm.upper ="NAME_1")
 #' }
 #'
 #' @export

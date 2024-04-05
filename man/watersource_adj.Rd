@@ -7,7 +7,7 @@ Population using a basic water source
 PH_WATER.do
 ph_wtr_basic "Basic water service" PR}
 \usage{
-watersource_adj(WASHdata)
+watersource_adj(Rdata)
 }
 \arguments{
 \item{Rdata}{data.frame from survryPrev::getDHSdata}

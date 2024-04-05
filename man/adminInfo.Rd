@@ -37,19 +37,19 @@ This function get admin information including name, character, population and un
 # For sp::SpatialPolygonsDataFrame object
 data(ZambiaAdm1)
 class(ZambiaAdm1)
-info <- adminInfo(poly.adm=ZambiaAdm1, admin = 1, by.adm="Name_1")
+info <- adminInfo(poly.adm=ZambiaAdm1, admin = 1, by.adm="NAME_1")
 data(ZambiaAdm2)
 class(ZambiaAdm2)
-info2 <- adminInfo(poly.adm=ZambiaAdm2, admin = 2,by.adm="Name_2",by.adm.upper="Name_1")
+info2 <- adminInfo(poly.adm=ZambiaAdm2, admin = 2,by.adm="NAME_2",by.adm.upper="NAME_1")
 
 # For sf object
 geo.sf <- sf::st_as_sf(ZambiaAdm1)
-info <- adminInfo(poly.adm=geo.sf, admin = 1,by.adm="Name_1")
+info <- adminInfo(poly.adm=geo.sf, admin = 1,by.adm="NAME_1")
 
 # To include the population information
 data(ZambiaPopWomen)
 info <- adminInfo(poly.adm = ZambiaAdm1,
-                  admin = 1,by.adm="Name_1",
+                  admin = 1,by.adm="NAME_1",
                   agg.pop = ZambiaPopWomen$admin1_pop,
                   proportion = ZambiaPopWomen$admin1_urban )
 }

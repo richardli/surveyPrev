@@ -11,7 +11,11 @@ clusterInfo(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1", by.adm2 = "NAME_2")
 
 \item{poly.adm1}{spatial polygons dataframe for admin 1}
 
-\item{poly.adm2}{spatial polygons dataframe for admin 2.}
+\item{poly.adm2}{spatial polygons dataframe for admin 2 or other lower admin level.}
+
+\item{by.adm1}{the column name of column for Admin names for admin 1}
+
+\item{by.adm2}{the column name of column for Admin names for admin 2 or other lower admin level.}
 }
 \value{
 This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
