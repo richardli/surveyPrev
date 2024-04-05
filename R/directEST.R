@@ -108,7 +108,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==FALSE){
     }else{
-      if((is.null(admin.info)||sum(is.na(admin.info$population))>0)& is.null(weight=="population")){
+      if((is.null(admin.info)||sum(is.na(admin.info$population))>0)|| is.null(weight=="population")){
         message("Need population information for aggregation")
         aggregation=FALSE
       }

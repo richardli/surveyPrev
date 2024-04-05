@@ -20,6 +20,7 @@
 #'                             poly.adm2 = ZambiaAdm2)
 #' }
 #' @export
+#'
 clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = "NAME_2") {
  #  # SpatialPointsDataFrame for point shape file for each cluster
  #  points<-geo
@@ -68,7 +69,10 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
     select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
   #filter(!(LATNUM < 0.0000001 & LONGNUM < 0.0000001))
 #removing wrong.points that has weird LONGNUM LATNUM
-  wrong.points <- which(points_sf$LATNUM < 0.0000001 & points_sf$LONGNUM < 0.0000001)
+
+  wrong.points <- cluster.info[which(cluster.info$LATNUM < 0.0000001 & cluster.info$LONGNUM < 0.0000001),]$cluster
+
+
 
 
 
@@ -90,7 +94,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
 
 
    #removing wrong.points that has no admin 1 name
-   wrong.points <- c(wrong.points, which(is.na(cluster.info$admin1.name)))
+   wrong.points <- c(wrong.points,cluster.info[ which(is.na(cluster.info$admin1.name)),]$cluster)
    cluster.info <- cluster.info[!(cluster.info$cluster %in% wrong.points),]
 
   # return(cluster.info)
