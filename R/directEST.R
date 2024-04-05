@@ -47,7 +47,6 @@
 #'
 #' @export
 
-
 directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE,...){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -64,7 +63,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     }
     #prepare data
     modt<- left_join(data,cluster.info$data,by="cluster")
-    modt<- modt[!(is.na(modt$LONGNUM)), ]
+    modt<- modt[!(is.na(modt$admin2.name)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
@@ -276,7 +275,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     }
 
     modt<- left_join(data,cluster.info$data,by="cluster")
-    modt<- modt[!(is.na(modt$LONGNUM)), ]
+    modt<- modt[!(is.na(modt$admin1.name)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
     modt<-  modt[order(modt$admin1.name), ]
 
