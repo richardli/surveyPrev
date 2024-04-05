@@ -16,7 +16,7 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=TRUE, cache = TRUE, out.width = "100%")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=TRUE, cache = FALSE, out.width = "100%")
 ```
 
 \clearpage
@@ -777,6 +777,8 @@ res_ad2agg <- directEST(data = data,
                    admin.info = admin.info2,
                    weight = "population",
                    aggregation = TRUE)
+
+
 res_ad2agg_bysurvey <- directEST(data = data,
                    cluster.info = cluster.info,
                    admin = 2, 

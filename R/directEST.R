@@ -190,7 +190,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        ## aggregation for mean
        if(weight=="population"){
          #weight using worldpop
-         weight_dt_mean<-left_join(admin2_res,distinct(admin.info), by="admin2.name.full")%>%
+         weight_dt_mean<-left_join(admin2_res[,c("admin2.name.full","direct.est")],distinct(admin.info), by="admin2.name.full")%>%
            group_by(admin1.name)%>%
            mutate(prop=round(population/sum(population),digits = 4))%>%
            mutate(value1=prop*direct.est)
@@ -201,7 +201,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
            distinct(admin2.name.full,sumweight2,admin1.name,admin2.name)%>%
            group_by(admin1.name)%>%
            mutate(prop=round(sumweight2/sum(sumweight2),digits = 4))%>%
-           left_join(admin2_res, by="admin2.name.full")%>%
+           left_join(admin2_res[,c("admin2.name.full","direct.est")], by="admin2.name.full")%>%
            mutate(value1=prop*direct.est)
 
        }
