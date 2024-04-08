@@ -42,7 +42,7 @@ The following pieces of data are needed to produce SAE for DHS surveys:
 
 + **DHS survey data**: Depending on the indicator, different types of DHS files are used as input. This can be done within R, so there is no need to download files locally from the DHS website. See \@ref(sec:DHS) on downloading DHS data for details.
 + **Spatial polygon files** for the desired admin level: These can be downloaded from GADM site^[[https://gadm.org/download_country.html](https://gadm.org/download_country.html)]. 
-+ **Population map** (Optional): These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are only required for the stratified cluster-level model described in Section \@ref(sec:cluster-level-strat) and for result aggregation described in Section \@ref(sec:aggregation).
++ **Population map (optional)**: These can be downloaded from WorldPop site^[[https://hub.worldpop.org/project/categories?id=8](https://hub.worldpop.org/project/categories?id=8)].These data are only required for the stratified cluster-level model described in Section \@ref(sec:cluster-level-strat) and for result aggregation described in Section \@ref(sec:aggregation).
 
 
 ## Install _**surveyPrev**_  
@@ -129,7 +129,7 @@ In this vignette, we consider estimating the percentage of women who had a live 
 
 
 ## Customized indicators
-Details on more common DHS indicators can be found in the Guide to DHS Statistics^[https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/) by searching for an indicator. User-specified function can also be used to process raw DHS data into new indicators. Please refer to the vignette on _Creating Customized Indicators for **surveyPrev**_ for more details.
+Details on more common DHS indicators can be found in the Guide to DHS Statistics at [https://dhsprogram.com/data/Guide-to-DHS-Statistics/](https://dhsprogram.com/data/Guide-to-DHS-Statistics/). User-specified function can also be used to process raw DHS data into new indicators. Please refer to the vignette on _Creating Customized Indicators for **surveyPrev**_ for more details.
 
 
 ## DHS survey data {#sec:DHS} 

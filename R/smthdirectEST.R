@@ -72,7 +72,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     #prepare data
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
-    modt$strata.full <- paste(modt$admin1.name, modt$strata)
+    modt$strata.full <- factor(paste(modt$admin1.name, modt$strata))
 
 
     # modt1<- left_join(admin.info2$admin.info,modt,by="admin2.name.full")

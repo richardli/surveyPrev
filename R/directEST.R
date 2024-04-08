@@ -64,7 +64,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     #prepare data
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$admin2.name)), ]
-    modt$strata.full <- paste(modt$admin1.name, modt$strata)
+    modt$strata.full <- factor(paste(modt$admin1.name, modt$strata))
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
     options(survey.adjust.domain.lonely=TRUE)
