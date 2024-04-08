@@ -1,6 +1,6 @@
 ---
 title: "Prevalence mapping for DHS indicators using the **surveyPrev** package"
-author: "Qianyu Dong, Zehang Richard Li, Andrea Boskovic, Jon Wakefield"
+author: "Qianyu Dong, Zehang Richard Li, Yunhan Wu, Andrea Boskovic, Jon Wakefield"
 date: "`r Sys.Date()`"
 bibliography: main.bib
 output: 
