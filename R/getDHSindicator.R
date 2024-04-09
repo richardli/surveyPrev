@@ -4,7 +4,7 @@
 #'
 #' @param Rdata Result from getDHSdata function, the raw DHS survry data from get_datasets.
 #' @param indicator Indicator of interests.
-#' @param FUN a function to process the DHS data into a binary indicator if not using one of the implemented indicators. See surveyPrev:::AN_ANEM_W_ANY for an example function to obtain the indicator for women classified as having any anemia.
+#' @param FUN a function to process the DHS data into a binary indicator if not using one of the implemented indicators. See surveyPrev::AN_ANEM_W_ANY for an example function to obtain the indicator for women classified as having any anemia.
 #' @return The function returns processed survey data that contains the indicator of interests.
 #'
 #' @importFrom naniar replace_with_na
@@ -22,12 +22,12 @@
 #'
 #'
 #' # User-specified function to process the data
-#' # For example see the internal function surveyPrev:::AN_ANEM_W_ANY
+#' # For example see the internal function surveyPrev::AN_ANEM_W_ANY
 #' dhsData2 <- getDHSdata(country = "Zambia",
 #'                                  indicator = NULL,
 #'                                  year = 2018)
 #' data2 <- getDHSindicator(dhsData2, indicator = NULL,
-#'                          FUN = surveyPrev:::AN_ANEM_W_ANY)
+#'                          FUN = surveyPrev::AN_ANEM_W_ANY)
 #' # which should be identical to the following
 #' dhsData3 <- getDHSdata(country = "Zambia",
 #'                                  indicator = "womananemia",

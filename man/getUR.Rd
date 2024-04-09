@@ -32,6 +32,9 @@ getUR(
 
 \item{varname2}{column name of district name in the admin 2 spatial polygon data frame}
 }
+\value{
+a list of two data frames for admin 1 and admin 2 urban ratios
+}
 \description{
 This function computes the urban proportion at a given survey year. It requires two population raster files and urban population fraction by admin 1 area from the census. The census year overall population raster is used to partition the grids into urban and rural pixels, based on the urban population fractions in a given area at the census year. The thresholding process is performed by first sorting the pixels from high to low population density, and find a threshold such that the fraction of population above this threshold matches the urban population fraction from the census. This step defines the urbanicity of each pixel. In the second step, for any given year's raster for a specific (sub-)population (e.g., specific age groups), we aggregate the population in the urban pixels defined in the previous step to compute urban proportion for the (sub-)population, within both admin1 and admin2 regions.
 }

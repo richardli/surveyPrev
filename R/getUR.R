@@ -10,6 +10,7 @@
 #' @param varname1 column name of district name in the admin 1 spatial polygon data frame
 #' @param varname2 column name of district name in the admin 2 spatial polygon data frame
 #' @param prop.census a data frame with two columns: `admin1` column correspond to the admin 1 names in the `poly.adm1` file. And `frac` column specifying the proportion of population in each admin 1 area during the census year. See examples for detail.
+#' @return a list of two data frames for admin 1 and admin 2 urban ratios
 #' 
 #' @importFrom raster extract
 #' @importFrom sp SpatialPoints SpatialPolygons getSpPPolygonsIDSlots
