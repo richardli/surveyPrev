@@ -126,7 +126,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
     if(aggregation==F){
       admin2.res=admin2_res
       # colnames(admin2.res)[colnames(admin2.res) == 'admin2.name.full'] <- 'admin2.name.full'
-      admin2.res=list(res.admin2=admin2.res)
+      draw.all=expit((fit2$draws.est[,-c(1,2)]))
+      
+      admin2.res=list(res.admin2=admin2.res,  model = fit2, admin2_post=draw.all)
 
     }else{
 
