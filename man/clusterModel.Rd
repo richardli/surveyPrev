@@ -8,21 +8,28 @@ clusterModel(
   data,
   cluster.info,
   admin.info,
+  X = NULL,
   admin,
   CI = 0.95,
   model = c("bym2", "iid"),
   stratification = FALSE,
   aggregation = FALSE,
   overdisp.mean = 0,
-  overdisp.prec = 0.4
+  overdisp.prec = 0.4,
+  pc.u = 1,
+  pc.alpha = 0.01,
+  pc.u.phi = 0.5,
+  pc.alpha.phi = 2/3
 )
 }
 \arguments{
-\item{data}{dataframe that contains the indicator of interests, output of getDHSindicator function}
+\item{data}{dataframe that contains the indicator of interests(column name is value), output of getDHSindicator function}
 
 \item{cluster.info}{dataframe that contains admin 1 and admin 2 information and coordinates for each cluster.}
 
 \item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
+
+\item{X}{dataframe that contains areal covariates, the first column should be the same admin name as in admin.info$data.}
 
 \item{admin}{admin level for the model}
 
@@ -37,6 +44,14 @@ clusterModel(
 \item{overdisp.mean}{prior mean for logit(d), where d is the intracluster correlation.}
 
 \item{overdisp.prec}{prior precision for logit(d), where d is the intracluster correlation.}
+
+\item{pc.u}{pc prior u for iid or bym2 precision.}
+
+\item{pc.alpha}{pc prior alpha for iid or bym2 precision.}
+
+\item{pc.u.phi}{pc prior u for bym2 mixing paramete.}
+
+\item{pc.alpha.phi}{pc prior u for bym2 mixing paramete.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
