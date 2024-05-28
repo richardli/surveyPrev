@@ -6,6 +6,7 @@
 #' @param cluster.info list contains data and wrong.points. data contains admin 1 and admin 2 information and coordinates for each cluster. wrong.points. contains cluster id for cluster without coordinates or admin 1 information. Output of getDHSindicator function
 #' @param admin.info list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function
 #' @param admin admin level for the model
+#' @param X dataframe that contains areal covariates, the first column should be the same admin name as in admin.info$data.
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param aggregation whether or not report aggregation results.
@@ -48,7 +49,7 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE){
+fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE){
 
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -104,7 +105,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                          Amat =Amat,
                          CI = CI,
                          smooth=T,
-                         save.draws = TRUE)
+                         save.draws = TRUE,
+                         X=X)
 
 
     admin2_res <- fit2$smooth
@@ -127,7 +129,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
       admin2.res=admin2_res
       # colnames(admin2.res)[colnames(admin2.res) == 'admin2.name.full'] <- 'admin2.name.full'
       draw.all=expit((fit2$draws.est[,-c(1,2)]))
-      
+
       admin2.res=list(res.admin2=admin2.res,  model = fit2, admin2_post=draw.all)
 
     }else{
@@ -202,7 +204,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, admin, CI = 0.95,  mo
                          strataVar = "strata.full",
                          Amat =Amat,
                          CI = CI,
-                         save.draws = TRUE)
+                         save.draws = TRUE,
+                         X=X)
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
