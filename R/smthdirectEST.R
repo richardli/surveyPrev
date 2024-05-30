@@ -10,7 +10,8 @@
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param aggregation whether or not report aggregation results.
-#'
+#' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
+
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
 #' @import dplyr
@@ -49,7 +50,7 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE){
+fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL){
 
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -74,7 +75,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- factor(paste(modt$admin1.name, modt$strata))
-
+    if(!is.null(alt.strata)){
+        modt$strata.full <- factor(modt[, alt.strata])
+    }
 
     # modt1<- left_join(admin.info2$admin.info,modt,by="admin2.name.full")
     # modt2<- modt1%>%
@@ -192,7 +195,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
-
+    if(!is.null(alt.strata)){
+        modt$strata.full <- factor(modt[, alt.strata])
+    }
     #model
     fit1 <- smoothSurvey(as.data.frame(modt),
                          responseType ="binary",

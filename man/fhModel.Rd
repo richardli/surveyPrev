@@ -12,7 +12,8 @@ fhModel(
   admin,
   CI = 0.95,
   model = c("bym2", "iid"),
-  aggregation = FALSE
+  aggregation = FALSE,
+  alt.strata = NULL
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ fhModel(
 \item{model}{smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").}
 
 \item{aggregation}{whether or not report aggregation results.}
+
+\item{alt.strata}{the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

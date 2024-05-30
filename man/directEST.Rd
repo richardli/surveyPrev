@@ -13,6 +13,7 @@ directEST(
   weight = c("population", "survey")[1],
   admin.info = NULL,
   aggregation = FALSE,
+  alt.strata = NULL,
   ...
 )
 }
@@ -33,6 +34,8 @@ directEST(
 
 \item{aggregation}{whether or not report aggregation results.}
 
+\item{alt.strata}{the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.}
+
 \item{...}{Additional arguments passed on to the `smoothSurvey` function}
 }
 \value{
@@ -43,11 +46,16 @@ This function calculate direct estimates at given admin level.
 }
 \examples{
 \dontrun{
+
+##
+## Direct estimation of ANC visit 4+ proportion
+##
+ 
 geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
 data(ZambiaPopWomen)
-cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,
+cluster.info<-clusterInfo(geo=geo, poly.adm1=ZambiaAdm1, poly.adm2=ZambiaAdm2,
 by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 dhsData <- getDHSdata(country = "Zambia",
                                  indicator = "ancvisit4+",
@@ -66,6 +74,22 @@ dhs_table <- get_api_table(country = "ZM",
                            simplify = TRUE)
 subset(dhs_table, ByVariableLabel == "Five years preceding the survey")
 
+##
+## Changing customized stratification variable
+##
+
+data_alt <- data
+# Assuming the stratification is done with only admin1 area
+# and not stratified by urban and rural
+# Note that this is not the correct stratification, but we use
+#  this as an illustration to create user-specified strata variable
+data_alt$new_strata <- data_alt$v024
+res_ad1_wrong <- directEST(data = data_alt,
+                  cluster.info = cluster.info,
+                  admin = 1,
+                  aggregation = FALSE, 
+                  alt.strata = "new_strata")
+res_ad1_wrong
 }
 
 }

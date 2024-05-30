@@ -10,6 +10,7 @@
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param weight the weight used for aggregating result, "population" or "survey"
 #' @param aggregation whether or not report aggregation results.
+#' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
 #' @param ... Additional arguments passed on to the `smoothSurvey` function
 #'
 #'
@@ -20,11 +21,16 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' 
+#' ##
+#' ## Direct estimation of ANC visit 4+ proportion
+#' ##
+#'  
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
 #' data(ZambiaPopWomen)
-#' cluster.info<-clusterInfo(geo=geo, poly.adm1=poly.adm1, poly.adm2=poly.adm2,
+#' cluster.info<-clusterInfo(geo=geo, poly.adm1=ZambiaAdm1, poly.adm2=ZambiaAdm2,
 #' by.adm1 = "NAME_1",by.adm2 = "NAME_2")
 #' dhsData <- getDHSdata(country = "Zambia",
 #'                                  indicator = "ancvisit4+",
@@ -43,11 +49,27 @@
 #'                            simplify = TRUE)
 #' subset(dhs_table, ByVariableLabel == "Five years preceding the survey")
 #'
+#' ##
+#' ## Changing customized stratification variable
+#' ##
+#'
+#' data_alt <- data
+#' # Assuming the stratification is done with only admin1 area
+#' # and not stratified by urban and rural
+#' # Note that this is not the correct stratification, but we use
+#' #  this as an illustration to create user-specified strata variable
+#' data_alt$new_strata <- data_alt$v024
+#' res_ad1_wrong <- directEST(data = data_alt,
+#'                   cluster.info = cluster.info,
+#'                   admin = 1,
+#'                   aggregation = FALSE, 
+#'                   alt.strata = "new_strata")
+#' res_ad1_wrong
 #' }
 #'
 #' @export
 
-directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE,...){
+directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL, ...){
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -65,6 +87,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$admin2.name)), ]
     modt$strata.full <- factor(paste(modt$admin1.name, modt$strata))
+    if(!is.null(alt.strata)){
+        modt$strata.full <- factor(modt[, alt.strata])
+    }
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
     options(survey.adjust.domain.lonely=TRUE)
@@ -277,6 +302,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     modt<- left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$admin1.name)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
+     if(!is.null(alt.strata)){
+        modt$strata.full <- factor(modt[, alt.strata])
+    }
     modt<-  modt[order(modt$admin1.name), ]
 
     # model
