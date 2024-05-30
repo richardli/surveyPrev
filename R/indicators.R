@@ -58,7 +58,7 @@ fp_unmet_tot<- function(Rdata){
 #' @examples
 #' \dontrun{
 #' dhsData <- getDHSdata(country = "Zambia",
-#'                                  indicator = "FP_CUSM_W_MOD",
+#'                                  indicator = "FP_CUSA_W_MOD",
 #'                                  year = 2018)
 #' data <- getDHSindicator(dhsData, indicator = NULL,
 #'                          FUN = surveyPrev::fp_cruse_mod)
