@@ -50,7 +50,7 @@ This function calculate direct estimates at given admin level.
 ##
 ## Direct estimation of ANC visit 4+ proportion
 ##
- 
+
 geo <- getDHSgeo(country = "Zambia", year = 2018)
 data(ZambiaAdm1)
 data(ZambiaAdm2)
@@ -87,7 +87,7 @@ data_alt$new_strata <- data_alt$v024
 res_ad1_wrong <- directEST(data = data_alt,
                   cluster.info = cluster.info,
                   admin = 1,
-                  aggregation = FALSE, 
+                  aggregation = FALSE,
                   alt.strata = "new_strata")
 res_ad1_wrong
 }

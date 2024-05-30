@@ -21,11 +21,11 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
-#' 
+#'
 #' ##
 #' ## Direct estimation of ANC visit 4+ proportion
 #' ##
-#'  
+#'
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' data(ZambiaAdm1)
 #' data(ZambiaAdm2)
@@ -62,7 +62,7 @@
 #' res_ad1_wrong <- directEST(data = data_alt,
 #'                   cluster.info = cluster.info,
 #'                   admin = 1,
-#'                   aggregation = FALSE, 
+#'                   aggregation = FALSE,
 #'                   alt.strata = "new_strata")
 #' res_ad1_wrong
 #' }
@@ -429,8 +429,12 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 }else if(admin==0){
     data$admin0.name="country"
     modt<- left_join(data,cluster.info$data,by="cluster")
-    modt<- modt[!(is.na(modt$LONGNUM)), ]
+    # modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
+
+    if (!is.null(alt.strata)) {
+      modt$strata.full <- factor(modt[, alt.strata])
+    }
 
 
     if(strata=="all"){
