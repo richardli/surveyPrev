@@ -86,7 +86,8 @@ fp_cruse_mod <- function(Rdata){
 #' nmr CM_ECMR_C_NNR BR (not from dhs github)
 #' Neonatal mortality rate !!!!!!
 #' @param Rdata  data.frame from survryPrev::getDHSdata
-#'
+#' @param nmr.year This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey. 
+
 #' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
@@ -101,11 +102,11 @@ fp_cruse_mod <- function(Rdata){
 #' @export
 #'
 
-NMR<- function(Rdata){
+NMR<- function(Rdata, nmr.year){
 
   BRdata <- Rdata%>%
     mutate(wt = v005/1000000)%>%
-    mutate(bo10 = Rdata$v008-120-b3)%>%
+    mutate(bo10 = Rdata$v008-12*nmr.year-b3)%>%
     filter(bo10<0)
 
   BRdata$value<- ifelse(BRdata$b7==0, 1, 0)

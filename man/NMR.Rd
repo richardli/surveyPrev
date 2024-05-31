@@ -6,10 +6,12 @@
 nmr CM_ECMR_C_NNR BR (not from dhs github)
 Neonatal mortality rate !!!!!!}
 \usage{
-NMR(Rdata)
+NMR(Rdata, nmr.year)
 }
 \arguments{
 \item{Rdata}{data.frame from survryPrev::getDHSdata}
+
+\item{nmr.year}{This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey.}
 }
 \value{
 A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator

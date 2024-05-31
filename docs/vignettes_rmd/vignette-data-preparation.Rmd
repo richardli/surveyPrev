@@ -101,7 +101,9 @@ Details on how standard DHS indicators are defined can be found in the [Guide to
 To use **surveyPrev** to create a new indicator not already built into the package, we need to specify
 
 1. which DHS data file to download, 
-2. a customized function to process the indicator from the raw HDS survey data.
+2. a set of rules to create the indicator from DHS standard recode; or a customized function to process the indicator from the raw HDS survey data. 
+
+We will discuss and give examples for both ways to create the new indicator below.
 
 ## DHS dataset types
 
@@ -127,8 +129,56 @@ knitr::kable(d,
 ```
 
 
-## Function to process the indicator
 
+## Option 1: Specifying data processing rules
+
+For many standard indicators, the specification can be summarized into the following three steps:
+
+1. Filter the data for relevant individuals based on certain selection criterion.
+2. Specify a yes response, i.e., outcome value = 1, if certain conditions hold.
+3. Specify a no response, i.e., outcome value = 0, if certain conditions hold.
+
+If an indicator can be specified in this way, with the conditions depending on variables in the DHS data, they can be specified using the `filter`, `yesCondition`, and `noCondition` arguments in the `getDHSindicator()` function. 
+
+As an example, we create a dataset below that consists of neonatal deaths during the last 5 years prior to survey. The dataset we need is the births recode. After obtaining the raw data using `getDHSdata()` function, we specify the following conditions:
+
+1. Filter the dataset with `v008 - b3 < 120`. v008 and b3 are column names in the DHS birth recode. v008 is the data of interview, and b3 is the date of birth. Both dates are in Century Month Code (CMC) format, so that the difference is in the unit of months. This filter creates a dataset that only consist of births 120 months prior to survey.
+2. Specify a yes response, i.e., a neonatal death, by `b7 == 0`. b7 is the column specifying age of deaths. Age of deaths equal to 0 means the death happened during the first month of birth.
+3. Specify a no response, i.e., not a neonatal death, by `b7 > 0 | is.na(b7)`. That is, deaths after the first month or live children are considered not a neonatal death.   
+
+Putting everything together, the dataset can be created with the following codes.
+
+```{r, eval=FALSE, tidy = FALSE}
+Recode <- "Births Recode"
+dhsData <- getDHSdata(country = "Zambia", indicator = NULL, 
+                        Recode = Recode, year = "2018")
+data <- getDHSindicator(Rdata = dhsData,
+                        indicator = NULL, 
+                        filter = "v008 - b3 < 120",
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+``` 
+
+Notice that all the conditions are specified by a string of expressions that R can use to filter and data with. For the `filter` argument, more than one filters can be applied. For example, the following two calls to `getDHSindicator()` are equivalent and add an additional filter for births by mothers over 30 years old at time of birth.
+
+```{r, eval=FALSE, tidy = FALSE}
+data_over30_a <- getDHSindicator(Rdata = dhsData,
+                        indicator = NULL, 
+                        filter = c("v008 - b3 < 120", "b3 - v011 > 30 * 12"),
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+data_over30_b <- getDHSindicator(Rdata = dhsData,
+                        indicator = NULL, 
+                        filter = "v008 - b3 < 120 & b3 - v011 > 30 * 12",
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+``` 
+
+
+
+## Option 2: Specifying function to process the indicator
+
+When the indicator specification needs more steps than the first option can handle, users can import the full data processing functions by following the steps below.
 
 Let's take **Current use of any modern method of contraception (all women)** as an example. For users familiar with the standard indicators defined by the [DHS Data Indicator API](https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html), the indicator ID is "FP_CUSA_W_MOD". We will go through the steps to create the customized function below.
 

@@ -4,7 +4,15 @@
 \alias{getDHSindicator}
 \title{Process DHS data}
 \usage{
-getDHSindicator(Rdata, indicator = NULL, FUN = NULL)
+getDHSindicator(
+  Rdata,
+  indicator = NULL,
+  FUN = NULL,
+  nmr.year = 10,
+  filter = NULL,
+  yesCondition = NULL,
+  noCondition = NULL
+)
 }
 \arguments{
 \item{Rdata}{Result from getDHSdata function, the raw DHS survry data from get_datasets.}
@@ -12,6 +20,14 @@ getDHSindicator(Rdata, indicator = NULL, FUN = NULL)
 \item{indicator}{Indicator of interests.}
 
 \item{FUN}{a function to process the DHS data into a binary indicator if not using one of the implemented indicators. See surveyPrev::AN_ANEM_W_ANY for an example function to obtain the indicator for women classified as having any anemia.}
+
+\item{nmr.year}{This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey.}
+
+\item{filter}{This arguments specifies how the data should be filtered for creating a customized indicator. It should be a character string or a vector of character strings specifying the expression used to filter the data. See example for details}
+
+\item{yesCondition}{This arguments specifies how to define a yes label, i.e., value = 1, for creating a customized indicator. It should be a character string specifying the expression used to define the outcome value equal to 1. See example for details.}
+
+\item{noCondition}{This arguments specifies how to define a no label, i.e., value = 0, for creating a customized indicator. It should be a character string specifying the expression used to define the outcome value equal to 0. See example for details.}
 }
 \value{
 The function returns processed survey data that contains the indicator of interests.
@@ -27,8 +43,10 @@ dhsData1 <- getDHSdata(country = "Zambia",
 data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
 
 
+#------------------------------------------------------------------#
 # User-specified function to process the data
 # For example see the internal function surveyPrev::AN_ANEM_W_ANY
+#------------------------------------------------------------------#
 dhsData2 <- getDHSdata(country = "Zambia",
                                  indicator = NULL,
                                  year = 2018)
@@ -40,6 +58,51 @@ dhsData3 <- getDHSdata(country = "Zambia",
                                  year = 2018)
 data3 <- getDHSindicator(dhsData3, indicator = "womananemia")
 
+#------------------------------------------------------------------#
+# User-specified filtering condition 
+# Demonstrating NMR data preparation by specifying how to subset data 
+#    and specify the outcome variable and its levels
+#------------------------------------------------------------------#
+Recode <- "Births Recode"
+dhsData4 <- getDHSdata(country = "Zambia", indicator = NULL, 
+                       Recode=Recode,year = "2018")
+# 
+# Here we filter the births to be within the last 10 years
+#   this is specified by condition = "v008 - b3 < 120"
+# b3 is the date of births in CMC format
+# v008 is the date of interview in CMC format
+# the difference is the number of months between the two dates
+# b7 is the age of death for the child. We consider neonatal deaths where
+#   b7 = 0. 
+# b7 = NA when the child is alive at the time of interview.
+data4 <- getDHSindicator(Rdata = dhsData4,
+                        indicator = NULL, 
+                        filter = "v008 - b3 < 120",
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+
+# This will return the same dataset as below
+data5 <- getDHSindicator(Rdata = dhsData4, indicator = "nmr")
+
+# Notice that filter can have more than one conditions specified by vector
+# The following four specifications lead to the same dataset for
+#  neonatal deaths in the last 5 years
+data6a <- getDHSindicator(Rdata = dhsData4,
+                        indicator = NULL, 
+                        filter = "v008 - b3 < 120 & v008 - b3 < 60",
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+data6b <- getDHSindicator(Rdata = dhsData4,
+                        indicator = NULL, 
+                        filter = c("v008 - b3 < 120", "v008 - b3 < 60"),
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+data6c <- getDHSindicator(Rdata = dhsData4,
+                        indicator = NULL, 
+                        filter = "v008 - b3 < 60",
+                        yesCondition = "b7 == 0", 
+                        noCondition = "b7 > 0 | is.na(b7)")
+data7 <- getDHSindicator(Rdata = dhsData4, indicator = "nmr", nmr.year = 5)
 }
 
 }
