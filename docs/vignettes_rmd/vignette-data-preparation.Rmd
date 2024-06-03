@@ -140,7 +140,7 @@ For many standard indicators, the specification can be summarized into the follo
 
 If an indicator can be specified in this way, with the conditions depending on variables in the DHS data, they can be specified using the `filter`, `yesCondition`, and `noCondition` arguments in the `getDHSindicator()` function. 
 
-As an example, we create a dataset below that consists of neonatal deaths during the last 5 years prior to survey. The dataset we need is the births recode. After obtaining the raw data using `getDHSdata()` function, we specify the following conditions:
+As an example, we create a dataset below that consists of neonatal deaths during the last 10 years prior to survey. The dataset we need is the births recode. After obtaining the raw data using `getDHSdata()` function, we specify the following conditions:
 
 1. Filter the dataset with `v008 - b3 < 120`. v008 and b3 are column names in the DHS birth recode. v008 is the data of interview, and b3 is the date of birth. Both dates are in Century Month Code (CMC) format, so that the difference is in the unit of months. This filter creates a dataset that only consist of births 120 months prior to survey.
 2. Specify a yes response, i.e., a neonatal death, by `b7 == 0`. b7 is the column specifying age of deaths. Age of deaths equal to 0 means the death happened during the first month of birth.
