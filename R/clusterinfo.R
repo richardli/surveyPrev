@@ -58,12 +58,12 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
  # # return(cluster.info)
  #  return(list(cluster.info=cluster.info,wrong.points=wrong.points))
 
-
-
-
   poly.adm1<- sf::st_as_sf(poly.adm1)
   poly.adm2<-sf::st_as_sf(poly.adm2)
   points_sf <- sf::st_as_sf(geo)
+
+  if( !any(sf::st_is_valid(poly.adm1)) ){stop('sf object not valid, consider validating it via sf::st_make_valid')}
+  if( !any(sf::st_is_valid(poly.adm2)) ){stop('sf object not valid, consider validating it via sf::st_make_valid')}
 
   # Select required columns and filter out wrong points
   cluster.info <- points_sf %>%
@@ -85,6 +85,12 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
   # Spatial join for admin2
   admin2.sf <- st_join(cluster.info, poly.adm2) %>%
     sf::st_transform(st_crs(poly.adm2)) # Transform CRS if needed
+
+  if(dim(admin2.sf)[1] > dim(cluster.info)[1]){
+    admin2.sf <- admin2.sf[!duplicated(admin2.sf[,c('DHSCLUST')]),]
+    warning('overlapping admin regions exist, the first match is kept')
+    }
+
 
   # Add admin2 name to cluster.info
    cluster.info$admin2.name <- as.data.frame( admin2.sf)[,by.adm2]
