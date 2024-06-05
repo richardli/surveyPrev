@@ -87,7 +87,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
     sf::st_transform(st_crs(poly.adm2)) # Transform CRS if needed
 
   if(dim(admin2.sf)[1] > dim(cluster.info)[1]){
-    admin2.sf <- admin2.sf[!duplicated(admin2.sf[,c('DHSCLUST')]),]
+    admin2.sf <- admin2.sf[!duplicated(admin2.sf[,c('cluster')]),]
     warning('overlapping admin regions exist, the first match is kept')
     }
 
