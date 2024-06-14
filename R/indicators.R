@@ -86,7 +86,7 @@ fp_cruse_mod <- function(Rdata){
 #' nmr CM_ECMR_C_NNR BR (not from dhs github)
 #' Neonatal mortality rate !!!!!!
 #' @param Rdata  data.frame from survryPrev::getDHSdata
-#' @param nmr.year This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey. 
+#' @param nmr.year This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey.
 
 #' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
 #'
@@ -2741,7 +2741,7 @@ hv_hiv_pos<-function(Rdata){
 
  watersource_adj<-function(Rdata){
 
-
+   WASHdata=Rdata
 
    # generate water source indicator ----------------------------------------------
 
@@ -4746,8 +4746,8 @@ hv_hiv_pos<-function(Rdata){
 
 
  ph_wtr_basic<-function(Rdata){
-   WASHdata <- watersource_adj(Rdata)
 
+   WASHdata <- watersource_adj(Rdata)
    # time to obtain drinking water (round trip)
    WASHdata <- WASHdata %>%
      mutate(ph_wtr_time = case_when(
