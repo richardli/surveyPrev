@@ -290,7 +290,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
        res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
-    }
+   }
     return(res.admin2)
 
   }else if(admin==1){
@@ -423,12 +423,13 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     res.admin1=(list(res.admin1=res.admin1, agg.natl=nation_agg))
 
     }
-
     return(res.admin1)
 
 }else if(admin==0){
     data$admin0.name="country"
     modt<- left_join(data,cluster.info$data,by="cluster")
+    modt<- modt[!(is.na(modt$admin1.name)), ]
+
     # modt<- modt[!(is.na(modt$LONGNUM)), ]
     modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
@@ -467,11 +468,10 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     admin0_res$direct.lower <- expit(admin0_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
     admin0_res$direct.upper <- expit(admin0_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
 
-
-    # colnames(admin0_res)[1] <- c("admin0.name")
-
-
-   return(list(res.admin0=admin0_res[,-1]))
+   # colnames(admin0_res)[1] <- c("admin0.name")
+   # return(list(res.admin0=admin0_res[,-1]))
+    res.admin0=list(res.admin0=admin0_res[,-1])
+    return(res.admin0)
 
   }
 
