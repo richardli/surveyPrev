@@ -463,6 +463,8 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
   dat.tmp<-  raw.dat.tmp %>%
       dplyr::  select(c(cluster= paste0(pre, "v001"),
                         householdID= paste0(pre, "v002"),
+                        v022= paste0(pre, "v022"),
+                        v023= paste0(pre, "v023"),
                         v024= paste0(pre, "v024"),
                         weight= paste0(pre, "v005"),
                         strata= paste0(pre, "v025"),
