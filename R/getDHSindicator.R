@@ -460,6 +460,9 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
   raw.dat.tmp[, paste0(pre, "v025")] <- ifelse(raw.dat.tmp[, paste0(pre, "v025")] == strat["urban"][[1]],'urban','rural')
   raw.dat.tmp[, paste0(pre, "v025")] <- factor(raw.dat.tmp[, paste0(pre, "v025")], levels = c('urban','rural'))
   raw.dat.tmp[, paste0(pre, "v024")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v024")]))
+  raw.dat.tmp[, paste0(pre, "v023")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v023")]))
+  raw.dat.tmp[, paste0(pre, "v022")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v022")]))
+
   dat.tmp<-  raw.dat.tmp %>%
       dplyr::  select(c(cluster= paste0(pre, "v001"),
                         householdID= paste0(pre, "v002"),

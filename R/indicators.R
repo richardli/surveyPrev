@@ -256,6 +256,8 @@ rh_del_pvskill <- function(Rdata){
     replace_with_na(replace = list(rh_del_pvskill = c(99))) %>%
     set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
     set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
+
+
   BRdata$rh_del_pvskill= ifelse( BRdata$rh_del_pvskill == 1, 1, 0)
   colnames(BRdata)[colnames(BRdata) == 'rh_del_pvskill'] <- "value"
 return(BRdata)
