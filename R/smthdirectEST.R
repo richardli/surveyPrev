@@ -186,8 +186,10 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                       admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all)
     }
 
+    # return(admin2.res)
+    attr(admin2.res,"class")="fhModel"
+    attr(admin2.res,"domain.names") <- admin.info$admin2.name.full
     return(admin2.res)
-
 
     }else if(admin==1){
 
@@ -220,6 +222,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
+      draw.all=expit(t(fit1$draws.est[,-c(1,2)]))
+
     }else{
 
       if(!is.null(admin.info$surveyWeight)&sum(is.na(admin.info$population))>0){
@@ -236,7 +240,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
     if(aggregation==F){
-      admin1.res=list(res.admin1 =admin1_res)
+      admin1.res=list(res.admin1 =admin1_res,model = fit1,admin1_post=draw.all)
     }else{
 
 
@@ -261,8 +265,10 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     }
 
 
+    # return(admin1.res)
+    attr(admin1.res,"class")="fhModel"
+    attr(admin1.res,"domain.names") <- admin.info$admin1.name
     return(admin1.res)
-
 
 
 

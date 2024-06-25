@@ -291,6 +291,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
 
    }
+    attr(res.admin2,"class")="directEST"
+    attr(res.admin2,"domain.names") <- admin.info$admin2.name.full
     return(res.admin2)
 
   }else if(admin==1){
@@ -423,6 +425,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     res.admin1=(list(res.admin1=res.admin1, agg.natl=nation_agg))
 
     }
+    attr(res.admin1,"class")="directEST"
+    attr(res.admin1,"domain.names") <- admin.info$admin1.name
     return(res.admin1)
 
 }else if(admin==0){
@@ -471,6 +475,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
    # colnames(admin0_res)[1] <- c("admin0.name")
    # return(list(res.admin0=admin0_res[,-1]))
     res.admin0=list(res.admin0=admin0_res[,-1])
+    attr(res.admin0,"class")="directEST"
+    # attr(res.admin0,"domain.names") <- ""
     return(res.admin0)
 
   }
