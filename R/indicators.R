@@ -248,8 +248,8 @@ rh_del_pvskill <- function(Rdata){
   BRdata <- BRdata %>%
     mutate(rh_del_pvskill =
              case_when(
-               rh_del_pv %in% c(1,2)   ~ 1 ,
-               rh_del_pv %in% c(3,4,5) ~ 2,
+               rh_del_pv %in% c(1,2,3)   ~ 1 ,
+               rh_del_pv %in% c(4,5) ~ 2,
                rh_del_pv ==6 ~ 3 ,
                rh_del_pv==9 ~ 9 ,
                age>=period ~ 99)) %>%
