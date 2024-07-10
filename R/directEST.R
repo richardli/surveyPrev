@@ -430,16 +430,23 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     return(res.admin1)
 
 }else if(admin==0){
-    data$admin0.name="country"
-    modt<- left_join(data,cluster.info$data,by="cluster")
-    modt<- modt[!(is.na(modt$admin1.name)), ]
 
-    # modt<- modt[!(is.na(modt$LONGNUM)), ]
-    modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
     if (!is.null(alt.strata)) {
+      data$admin0.name="country"
+      modt<- left_join(data,cluster.info$data,by="cluster")
+      # modt<- modt[!(is.na(modt$admin1.name)), ]
       modt$strata.full <- factor(modt[, alt.strata])
+      message("Using alt.strata and including all clusters")
+
+    }else{
+      data$admin0.name="country"
+      modt<- left_join(data,cluster.info$data,by="cluster")
+      modt<- modt[!(is.na(modt$admin1.name)), ]
+     # modt<- modt[!(is.na(modt$LONGNUM)), ]
+      modt$strata.full <- paste(modt$admin1.name, modt$strata)
     }
+
 
 
     if(strata=="all"){

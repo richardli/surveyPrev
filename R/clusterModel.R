@@ -277,8 +277,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
                     data=c.dat.tmp,
                     Ntrials=n,
                     control.predictor = list(compute=TRUE, link = 1),
-                    control.compute = list(config = TRUE),
-                    control.family = control.family)
+                    control.compute = list(config = TRUE,waic = TRUE),
+                    control.family = control.family,)
 
 
   nsamp <- 1000

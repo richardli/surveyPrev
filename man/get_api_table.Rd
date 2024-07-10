@@ -4,7 +4,7 @@
 \alias{get_api_table}
 \title{Function to obtain subnational estimates from DHS API}
 \usage{
-get_api_table(country, survey, indicator, simplify = TRUE)
+get_api_table(country, survey, indicator, simplify = TRUE, admin = 1)
 }
 \arguments{
 \item{country}{A character string of keys at: https://api.dhsprogram.com/rest/dhs/countries?returnFields=CountryName,DHS_CountryCode&f=html}
@@ -25,12 +25,12 @@ Function to obtain subnational estimates from DHS API
 \dontrun{
 # country:  Zambia
 # survey: 2018 DHS
-# indicator: Percentage of children stunted 
-#             (below -2 SD of height for age 
+# indicator: Percentage of children stunted
+#             (below -2 SD of height for age
 #              according to the WHO standard)
-dhs_table <- get_api_table(country = "ZM", 
-                           survey = "ZM2018DHS", 
-                           indicator = "CN_NUTS_C_HA2", 
+dhs_table <- get_api_table(country = "ZM",
+                           survey = "ZM2018DHS",
+                           indicator = "CN_NUTS_C_HA2",
                            simplify = TRUE)
 dhs_table
 }
