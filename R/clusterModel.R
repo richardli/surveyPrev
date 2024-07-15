@@ -258,12 +258,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
 
     }
-
-
   }
-
-
-
 
 
   ## MODELING:
@@ -278,7 +273,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
                     Ntrials=n,
                     control.predictor = list(compute=TRUE, link = 1),
                     control.compute = list(config = TRUE,waic = TRUE),
-                    control.family = control.family,)
+                    control.family = control.family)
 
 
   nsamp <- 1000
