@@ -33,7 +33,7 @@ get_api_table <- function(country,survey,indicator, simplify = TRUE, admin=1){
                    survey,
                    "&lang=en&f=csv")
     tab <- read.csv(call)
-  }else{
+  }else if(admin==0){
 
     call <- paste0("https://api.dhsprogram.com/rest/dhs/data?indicatorIds=",
                    indicator,
