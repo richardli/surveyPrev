@@ -50,7 +50,7 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL){
+fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL, ...){
 
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -109,7 +109,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                          CI = CI,
                          smooth=T,
                          save.draws = TRUE,
-                         X=X)
+                         X=X,
+                         ,...)
 
 
     admin2_res <- fit2$smooth

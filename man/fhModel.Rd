@@ -13,7 +13,8 @@ fhModel(
   CI = 0.95,
   model = c("bym2", "iid"),
   aggregation = FALSE,
-  alt.strata = NULL
+  alt.strata = NULL,
+  ...
 )
 }
 \arguments{
