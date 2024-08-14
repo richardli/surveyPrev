@@ -259,6 +259,9 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
     }
   }
+  if(stratification && sum(!unique(c.dat.tmp$strata) %in% c('urban', 'rural', NA))){
+    stop("The variable strata in the input data can only be 'urban' or 'rural' currently.")
+  }
 
 
   ## MODELING:
@@ -305,16 +308,23 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       tmp <- samp[[i]]$latent
       s.effect <- tmp[paste0("sID:", 1:nregion), 1]
       intercept <- tmp["(Intercept):1", 1]
-      str.effect <- tmp["stratarural:1", 1]
+      if("stratarural:1" %in% rownames(tmp)){
+        str.effect <- tmp["stratarural:1", 1]   
+        str.effect.u <- 0     
+      }else{
+        str.effect <- 0
+        str.effect.u <- tmp["strataurban:1", 1] 
+      }
+
 
       # draw.u[i, ] <- expit(s.effect + intercept)
       # draw.r[i, ] <- expit(s.effect + intercept + str.effect)
       if(is.null(X)==FALSE){
         covariates=as.matrix(X[,2:dim(X)[2]])%*% tail(tmp,n=(dim(X)[2]-1))[,1]
-        draw.u[i, ] <- expit(s.effect + intercept+covariates)
-        draw.r[i, ] <- expit(s.effect + intercept + str.effect+covariates)
+        draw.u[i, ] <- expit(s.effect + intercept + str.effect.u +covariates)
+        draw.r[i, ] <- expit(s.effect + intercept + str.effect + covariates)
       }else{
-        draw.u[i, ] <- expit(s.effect + intercept)
+        draw.u[i, ] <- expit(s.effect + intercept + str.effect.u)
         draw.r[i, ] <- expit(s.effect + intercept + str.effect)
       }
 
