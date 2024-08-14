@@ -118,6 +118,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     admin2_res$sd<-sqrt(admin2_res$var)
 
     admin2_res$cv=admin2_res$sd/admin2_res$mean
+    admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name.full")])
     ####message for aggregation=T but missing some components and return results without aggregation
 
 
@@ -132,13 +133,13 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     if(aggregation==F){
       admin2.res=admin2_res
       # colnames(admin2.res)[colnames(admin2.res) == 'admin2.name.full'] <- 'admin2.name.full'
-      draw.all=expit((fit2$draws.est[,-c(1,2)]))
+      draw.all=expit(t(fit2$draws.est[,-c(1,2)]))
 
       admin2.res=list(res.admin2=admin2.res,  model = fit2, admin2_post=draw.all)
 
     }else{
 
-
+      # TODO: check dimension is nsample x nregion
 
       #aggregate results
 
