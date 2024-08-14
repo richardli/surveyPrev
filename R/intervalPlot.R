@@ -189,7 +189,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
 
         dd=dim(model[[i]]$agg.admin1)[1]
-        dt[(1+ (i-1)*dd):(i*dd),]= model[[i]]$agg.admin1[,c("admin1.name","mean","lower","upper","model")]
+        dt[(1+ (i-1)*dd):(i*dd),1:5]= model[[i]]$agg.admin1[,c("admin1.name","mean","lower","upper","model")]
       }
      if(group){
         if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
@@ -197,8 +197,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
         allgroup <- c(allgroup, model[[i]]$group)
       }
     }
-
-    dt=na.omit(dt)
+    dt <- dt[!is.na(dt$model), ]
     dt$model <- factor(dt$model, levels = names(model))
     if(!is.null(group)) dt$group <- factor(dt$group, levels = unique(allgroup))
 
@@ -244,7 +243,87 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
   }else if(admin == 2){
 
-    stop("Admin 2 interval plot not implemented.")
+    n.region.all <- 0
+    for(i in 1:length(model)){
+      n.region <- dim(model[[i]]$res.admin2)[1]
+      n.region.all <- n.region.all + n.region 
+    }
+
+    dt <- data.frame(admin2.name.full=rep(NA, n.region.all),
+                  mean=rep(NA, n.region.all), 
+                  lower=rep(NA, n.region.all), 
+                  upper=rep(NA, n.region.all), 
+                  model=rep(NA, n.region.all),
+                  group=rep(NA, n.region.all), 
+                  admin1.name = rep(NA, n.region.all))
+    allgroup <- NULL
+    for (i in 1:length(model)) {
+
+        if(colnames(model[[i]]$res.admin2)[2]=="direct.est"){
+          colnames(model[[i]]$res.admin2)[colnames(model[[i]]$res.admin2) == 'direct.est'] <- 'mean'
+          colnames(model[[i]]$res.admin2)[colnames(model[[i]]$res.admin2) == 'direct.lower'] <- 'lower'
+          colnames(model[[i]]$res.admin2)[colnames(model[[i]]$res.admin2) == 'direct.upper'] <- 'upper'
+        }
+        model[[i]]$res.admin2$model= names(model[i])
+
+        if( !is.null(model[[i]]$res.admin2$type)){
+          model[[i]]$res.admin2=model[[i]]$res.admin2[model[[i]]$res.admin2$type=="full",]
+        }
+
+        dd=dim(model[[i]]$res.admin2)[1]
+
+        dt[(1+ (i-1)*dd):(i*dd),c(1:5, 7)]= model[[i]]$res.admin2[,c("admin2.name.full","mean","lower","upper","model", "admin1.name")]
+       
+     if(group){
+        if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
+        dt[(1+ (i-1)*dd):(i*dd),]$group= model[[i]]$group
+        allgroup <- c(allgroup, model[[i]]$group)
+      }
+    }
+    dt <- dt[!is.na(dt$model), ]
+    dt$model <- factor(dt$model, levels = names(model))
+    if(!is.null(group)) dt$group <- factor(dt$group, levels = unique(allgroup))
+
+    if(group){
+
+      ggplot(dt, aes(x = admin2.name.full, y = mean, color = group, shape=model)) +
+        geom_point( position = position_dodge(width = 0.8)) +
+        scale_shape_manual(values = c(0:5, 15:25)) +
+        geom_errorbar(aes(ymin = lower,
+                          ymax = upper), alpha = 0.8, position = position_dodge(width = 0.8), width = 0.1)+
+        scale_color_brewer(palette="Set1") +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        labs(title = "", x = "Region", y = "value")+
+
+        theme(legend.title = element_text(size=10), # Increase legend title size
+              legend.text = element_text(size=10), # Increase legend text size
+              legend.key.size = unit(1.5, 'lines'), # Increase legend key size
+              axis.text.x = element_text(size=10), # Increase x axis text size
+              axis.text.y = element_text(size=10)) + 
+        facet_wrap(~admin1.name, scales = "free_x")
+
+
+
+
+    }else{
+      ggplot(dt, aes(x = admin2.name.full, y = mean, group = model, color = model)) +
+        geom_point( position = position_dodge(width = 0.8)) +
+        scale_shape_manual(values = c(0:5, 15:25)) +
+        geom_errorbar(aes(ymin = lower,
+                          ymax = upper, group = model), alpha = 0.8, position = position_dodge(width = 0.8), width = 0.1)+
+        scale_color_brewer(palette="Set1") +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        labs(title = "", x = "Region", y = "value")+
+
+        theme(legend.title = element_text(size=10), # Increase legend title size
+              legend.text = element_text(size=10), # Increase legend text size
+              legend.key.size = unit(1.5, 'lines'), # Increase legend key size
+              axis.text.x = element_text(size=10), # Increase x axis text size
+              axis.text.y = element_text(size=10))+ 
+        facet_wrap(~admin1.name, scales = "free_x")
+    }
 
   }
 
