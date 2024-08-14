@@ -82,7 +82,9 @@ utils::globalVariables(c("admin1.name",
 						"pop.census", 
 						"urban.frac", 
 						"urban", 
-						"outcome"
+						"outcome", 
+						"region.name", 
+						"admin2.name.short"
 						))
 
  

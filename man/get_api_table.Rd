@@ -14,6 +14,8 @@ get_api_table(country, survey, indicator, simplify = TRUE, admin = 1)
 \item{indicator}{A character string of keys at: https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html}
 
 \item{simplify}{if TRUE only the value and region index is returned.}
+
+\item{admin}{Either 0 (national) or 1 (subnational admin 1 area).}
 }
 \value{
 a data frame of the DHS indicator estimates

@@ -3,6 +3,7 @@
 #' @param country A character string of keys at: https://api.dhsprogram.com/rest/dhs/countries?returnFields=CountryName,DHS_CountryCode&f=html
 #' @param survey A character string of keys at: https://api.dhsprogram.com/rest/dhs/surveys?returnFields=SurveyId,SurveyYearLabel,SurveyType,CountryName&f=html
 #' @param indicator A character string of keys at: https://api.dhsprogram.com/rest/dhs/indicators?returnFields=IndicatorId,Label,Definition&f=html
+#' @param admin Either 0 (national) or 1 (subnational admin 1 area).
 #' @param simplify if TRUE only the value and region index is returned.
 #'
 #' @importFrom utils read.csv
