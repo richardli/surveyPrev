@@ -101,6 +101,10 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
   }
   else if(admin==2){
 
+    if(is.null(by.adm.upper)){
+      stop("Upper level admin region membership needs to be specified in 'by.admin.upper'.")
+    }
+
 
 
     if (is.null(proportion)&is.null(agg.pop)){
