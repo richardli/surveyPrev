@@ -105,7 +105,9 @@ getUR <- function(tiff.census, tiff.survey, prop.census, fact = 10, poly.adm1, p
 
 	if(max(table(prop.census$admin1)) > 1) stop("There are duplicated areas in 'prop.census' table.")
 
-
+	if("sf" %in% class(poly.adm1)) poly.adm1 <- sf::as_Spatial(poly.adm1)
+	if("sf" %in% class(poly.adm2)) poly.adm2 <- sf::as_Spatial(poly.adm2)
+ 
 	# Match Admin 1 name
 	poly.over.adm1 <- SpatialPolygons(poly.adm1@polygons)
 	admin1.key <- over(coords, poly.over.adm1)
