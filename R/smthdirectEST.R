@@ -139,8 +139,6 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
     }else{
 
-      # TODO: check dimension is nsample x nregion
-
       #aggregate results
 
       # draw.all=expit(t(fit2$draws.est[,-c(1,2)]))
@@ -185,7 +183,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
       # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
       admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2,
-                      admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all)
+                      admin2_post=t(draw.all),admin1_post=admin1.samp,nation_post=post.all)
     }
 
     # return(admin2.res)
