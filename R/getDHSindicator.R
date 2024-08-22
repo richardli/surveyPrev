@@ -98,7 +98,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
     raw.dat.tmp <- FUN(Rdata)
   }else if(is.null(indicator) && !is.null(yesCondition)){
 
-    data <- Rdata
+    data <- data.frame(Rdata)
     if(!is.null(filter)){
       for(f in filter) data = data %>% filter(!! rlang::parse_expr(f))
     }
