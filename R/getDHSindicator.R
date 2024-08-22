@@ -453,7 +453,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
   if("hv001" %in% colnames(raw.dat.tmp)){
     pre <- "h"
   }else if("mv001" %in% colnames(raw.dat.tmp)){
-    pre <- "h"
+    pre <- "m"
   }else if("v001" %in% colnames(raw.dat.tmp)){
     pre <- ""
   }
