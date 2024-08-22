@@ -452,9 +452,13 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 
   if("hv001" %in% colnames(raw.dat.tmp)){
     pre <- "h"
+  }else if("mv001" %in% colnames(raw.dat.tmp)){
+    pre <- "h"
   }else if("v001" %in% colnames(raw.dat.tmp)){
     pre <- ""
   }
+
+
   strat <- attr(raw.dat.tmp[, paste0(pre, "v025")], which='labels')
   names(strat) <- tolower(names(strat))
   raw.dat.tmp[, paste0(pre, "v025")] <- ifelse(raw.dat.tmp[, paste0(pre, "v025")] == strat["urban"][[1]],'urban','rural')
