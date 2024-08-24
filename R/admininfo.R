@@ -124,7 +124,7 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
       # Needed for cluster model when stratification=T and aggregation=F.
       admininfo<-data.frame(admin1.name=geo@data[,by.adm.upper],admin2.name=geo@data[,by.adm],
                             admin2.name.full=paste0(geo@data[,by.adm.upper],"_",geo@data[,by.adm]))
-      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name","urban")])
+      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin2.name.full","urban")])
       admininfo$population<-NA
       admin.info= as.data.frame(admininfo)
 
@@ -146,7 +146,7 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
       #5 proportion +agg.pop
       admininfo<-data.frame(admin1.name=geo@data[,by.adm.upper],admin2.name=geo@data[,by.adm],
                             admin2.name.full=paste0(geo@data[,by.adm.upper],"_",geo@data[,by.adm]))
-      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin1.name", "admin2.name","urban")])
+      admininfo <- dplyr::left_join(admininfo, proportion[, c("admin2.name.full","urban")])
       admininfo <- dplyr::left_join(admininfo, agg.pop[, c("admin2.name.full","population")])
       admininfo<-admininfo%>%
         dplyr::group_by(admin1.name)%>%
