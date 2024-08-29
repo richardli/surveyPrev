@@ -379,15 +379,15 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
       admin1.bb.res <- data.frame(
                                   admin1.name=rep(admin.info$admin1.name, 3),
-                                  type = c(rep("urban", nregion), rep("rural", nregion),
-                                           rep("full", nregion)),
                                   mean = c(post.u, post.r, post.all),
                                   median = c(post.u.median, post.r.median, post.all.median),
                                   sd= c(post.u.sd, post.r.sd, post.all.sd),
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
-                                  cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all)
+                                  cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
+                                  type = c(rep("urban", nregion), rep("rural", nregion),
+                                           rep("full", nregion))               
                                   )
 
     }

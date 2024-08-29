@@ -118,8 +118,10 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     admin2_res$sd<-sqrt(admin2_res$var)
 
     admin2_res$cv=admin2_res$sd/admin2_res$mean
-    admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name.full")])
-    ####message for aggregation=T but missing some components and return results without aggregation
+    admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name", "admin2.name.full")])
+    admin2_res <- admin2_res[, c("admin2.name.full", "mean", "median", "sd", "var", 
+                                 "lower", "upper", "cv", "logit.mean", "logit.median", 
+                                 "logit.var", "logit.lower", "logit.upper", "admin1.name",  "admin2.name")]
 
 
 
@@ -160,7 +162,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
       admin1.samp <- do.call(cbind, sums_list)
 
 
-      agg.admin1 <- data.frame(admin1.name=rownames(agg.admin1), 
+      agg.admin1 <- data.frame(admin1.name=colnames(admin1.samp), 
                                mean = colMeans(admin1.samp),
                                median = apply(admin1.samp, 2, median),
                                sd =  apply(admin1.samp, 2, sd),
@@ -168,6 +170,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                                lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
                                upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,])
       agg.admin1$cv = agg.admin1$sd / agg.admin1$mean
+      rownames(agg.admin1) <- NULL
 
       #agg national
       # unique( admin.info$population.admin1)/sum(unique( admin.info$population.admin1))
@@ -219,7 +222,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     admin1_res$sd<-sqrt(admin1_res$var)
     admin1_res$cv=admin1_res$sd/admin1_res$mean
-
+    admin1_res <- admin1_res[, c("admin1.name", "mean", "median", "sd", "var", 
+                                 "lower", "upper", "cv", "logit.mean", "logit.median", 
+                                 "logit.var", "logit.lower", "logit.upper")]
 
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==F){
