@@ -216,7 +216,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                          Amat =Amat,
                          CI = CI,
                          save.draws = TRUE,
-                         X=X)
+                         X=X, ...)
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
