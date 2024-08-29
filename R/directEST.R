@@ -329,7 +329,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                  Amat =NULL,
                  CI = CI,
                  is.unit.level=FALSE,
-                 smooth=FALSE)
+                 smooth=FALSE, ...)
 
     admin1_res<-smoothSurvey_res$HT
     admin1_res$direct.se<-sqrt(admin1_res$HT.var)
@@ -466,7 +466,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                    Amat =NULL,
                                    CI = CI,
                                    is.unit.level=FALSE,
-                                   smooth=FALSE)
+                                   smooth=FALSE, ...)
     admin0_res<-smoothSurvey_res$HT
     admin0_res$direct.se<-sqrt(admin0_res$HT.var)
     colnames(admin0_res)[colnames(admin0_res) == 'HT.est'] <- 'direct.est'
