@@ -13,7 +13,7 @@ aggPopulation(tiff, fact = 10, poly.adm, by.adm, by.adm.upper = NULL)
 
 \item{poly.adm}{spatial polygons dataframe.}
 
-\item{by.adm}{the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2".}
+\item{by.adm}{the column name of column for Admin names for desired output Admin level, can be such as "NAME_1" or "NAME_2". Duplicated admin names are handled internally when by.adm.upper is specified}
 
 \item{by.adm.upper}{the column name of column for Admin names for upper level of your desired output Admin level when admin=2, can be "NAME_1" when by.adm="NAME_2".}
 }
