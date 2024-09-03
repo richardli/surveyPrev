@@ -155,6 +155,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
                   model=rep(NA, n.region.all),
                   group=rep(NA, n.region.all))
     allgroup <- NULL
+    counter <- 1
     for (i in 1:length(model)) {
       if( is.null(model[[i]]$agg.admin1)){
         if(colnames(model[[i]]$res.admin1)[2]=="direct.est"){
@@ -171,8 +172,8 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
         dd=dim(model[[i]]$res.admin1)[1]
 
-
-        dt[(1+ (i-1)*dd):(i*dd),]= model[[i]]$res.admin1[,c("admin1.name","mean","lower","upper","model")]
+        dt[counter : (counter + dd - 1),]= model[[i]]$res.admin1[,c("admin1.name","mean","lower","upper","model")]
+        counter <- counter + dd
        
       }else{
 
@@ -189,7 +190,8 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
 
         dd=dim(model[[i]]$agg.admin1)[1]
-        dt[(1+ (i-1)*dd):(i*dd),1:5]= model[[i]]$agg.admin1[,c("admin1.name","mean","lower","upper","model")]
+        dt[counter : (counter + dd - 1),1:5]= model[[i]]$agg.admin1[,c("admin1.name","mean","lower","upper","model")]
+        counter <- counter + dd
       }
      if(group){
         if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
@@ -257,6 +259,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
                   group=rep(NA, n.region.all), 
                   admin1.name = rep(NA, n.region.all))
     allgroup <- NULL
+    counter <- 1
     for (i in 1:length(model)) {
 
         if(colnames(model[[i]]$res.admin2)[2]=="direct.est"){
@@ -272,7 +275,8 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
         dd=dim(model[[i]]$res.admin2)[1]
 
-        dt[(1+ (i-1)*dd):(i*dd),c(1:5, 7)]= model[[i]]$res.admin2[,c("admin2.name.full","mean","lower","upper","model", "admin1.name")]
+        dt[counter : (counter + dd - 1), c(1:5, 7)]= model[[i]]$res.admin2[,c("admin2.name.full","mean","lower","upper","model", "admin1.name")]
+        counter <- counter + dd
        
      if(group){
         if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
@@ -307,6 +311,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
 
     }else{
+    
       ggplot(dt, aes(x = admin2.name.full, y = mean, group = model, color = model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
@@ -316,7 +321,6 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
         theme_bw() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         labs(title = "", x = "Region", y = "value")+
-
         theme(legend.title = element_text(size=10), # Increase legend title size
               legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
