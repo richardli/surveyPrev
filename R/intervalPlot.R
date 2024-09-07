@@ -6,8 +6,11 @@
 #' @param admin  level of plot
 #' @param group plot by group or not
 #' @param compare plot for compare multiple plot or not
+#' @param sort_by the name of the model to sort the areas by. Default to be NULL
+#' @param decreasing whether the regions are sorted in decreasing order. Default to be NULL
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level.
 #' @import ggplot2
+#' @importFrom stats reorder
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -67,7 +70,7 @@
 #'
 
 
-intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
+intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort_by = NULL, decreasing = FALSE){
 
 
   if(compare){
@@ -202,10 +205,22 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
     dt <- dt[!is.na(dt$model), ]
     dt$model <- factor(dt$model, levels = names(model))
     if(!is.null(group)) dt$group <- factor(dt$group, levels = unique(allgroup))
+    if(!is.null(sort_by) && sort_by %in% dt$model){
+      tmp <- subset(dt, model == sort_by)
+      tmp$mean_to_order <- tmp$mean
+      tmp$mean_to_order[is.na(tmp$mean_order)] <- min(tmp$mean, na.rm = TRUE)
+      dt <- left_join(dt, tmp[, c("admin1.name", "mean_to_order")])
+    }else{
+      dt$mean_to_order <- NA
+    }
+      
+
+
+
 
     if(group){
 
-      ggplot(dt, aes(x = admin1.name, y = mean, color = group, shape=model)) +
+      ggplot(dt, aes(x = reorder(admin1.name, mean_to_order, decreasing = decreasing), y = mean, color = group, shape=model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
         geom_errorbar(aes(ymin = lower,
@@ -225,7 +240,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
 
     }else{
-      ggplot(dt, aes(x = admin1.name, y = mean, group = model, color = model)) +
+      ggplot(dt, aes(x = reorder(admin1.name, mean_to_order, decreasing = decreasing), y = mean, group = model, color = model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
         geom_errorbar(aes(ymin = lower,
@@ -257,7 +272,8 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
                   upper=rep(NA, n.region.all), 
                   model=rep(NA, n.region.all),
                   group=rep(NA, n.region.all), 
-                  admin1.name = rep(NA, n.region.all))
+                  admin1.name = rep(NA, n.region.all), 
+                  admin2.name = rep(NA, n.region.all))
     allgroup <- NULL
     counter <- 1
     for (i in 1:length(model)) {
@@ -275,7 +291,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
         dd=dim(model[[i]]$res.admin2)[1]
 
-        dt[counter : (counter + dd - 1), c(1:5, 7)]= model[[i]]$res.admin2[,c("admin2.name.full","mean","lower","upper","model", "admin1.name")]
+        dt[counter : (counter + dd - 1), c(1:5, 7, 8)]= model[[i]]$res.admin2[,c("admin2.name.full","mean","lower","upper","model", "admin1.name", "admin2.name")]
         counter <- counter + dd
        
      if(group){
@@ -287,10 +303,17 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
     dt <- dt[!is.na(dt$model), ]
     dt$model <- factor(dt$model, levels = names(model))
     if(!is.null(group)) dt$group <- factor(dt$group, levels = unique(allgroup))
-
+    if(!is.null(sort_by) && sort_by %in% dt$model){
+      tmp <- subset(dt, model == sort_by)
+      tmp$mean_to_order <- tmp$mean
+      tmp$mean_to_order[is.na(tmp$mean_order)] <- min(tmp$mean, na.rm = TRUE)
+      dt <- left_join(dt, tmp[, c("admin2.name.full", "mean_to_order")])
+    }else{
+      dt$mean_to_order <- NA
+    }
     if(group){
 
-      ggplot(dt, aes(x = admin2.name.full, y = mean, color = group, shape=model)) +
+      ggplot(dt, aes(x = reorder(admin2.name, mean_to_order, decreasing = decreasing), y = mean, color = group, shape=model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
         geom_errorbar(aes(ymin = lower,
@@ -312,7 +335,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE){
 
     }else{
     
-      ggplot(dt, aes(x = admin2.name.full, y = mean, group = model, color = model)) +
+      ggplot(dt, aes(x = reorder(admin2.name, mean_to_order, decreasing = decreasing), y = mean, group = model, color = model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
         geom_errorbar(aes(ymin = lower,

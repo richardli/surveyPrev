@@ -84,7 +84,8 @@ utils::globalVariables(c("admin1.name",
 						"urban", 
 						"outcome", 
 						"region.name", 
-						"admin2.name.short"
+						"admin2.name.short",
+						"mean_to_reorder"
 						))
 
  
