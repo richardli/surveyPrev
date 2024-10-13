@@ -14,6 +14,7 @@ clusterModel(
   model = c("bym2", "iid"),
   stratification = FALSE,
   aggregation = FALSE,
+  nested = FALSE,
   overdisp.mean = 0,
   overdisp.prec = 0.4,
   pc.u = 1,
@@ -40,6 +41,8 @@ clusterModel(
 \item{stratification}{whether or not to include urban/rural stratum.}
 
 \item{aggregation}{whether or not report aggregation results.}
+
+\item{nested}{whether or not to fit a nested model.}
 
 \item{overdisp.mean}{prior mean for logit(d), where d is the intracluster correlation.}
 

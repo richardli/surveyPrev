@@ -11,13 +11,13 @@
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param stratification whether or not to include urban/rural stratum.
 #' @param aggregation whether or not report aggregation results.
+#' @param nested whether or not to fit a nested model.
 #' @param overdisp.mean prior mean for logit(d), where d is the intracluster correlation.
 #' @param overdisp.prec prior precision for logit(d), where d is the intracluster correlation.
 #' @param pc.u pc prior u for iid or bym2 precision.
 #' @param pc.alpha pc prior alpha for iid or bym2 precision.
 #' @param pc.u.phi pc prior u for bym2 mixing paramete.
 #' @param pc.alpha.phi pc prior u for bym2 mixing paramete.
-#'
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #' @import dplyr
@@ -70,7 +70,8 @@
 #' @export
 
 
-clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, model = c("bym2", "iid"), stratification = FALSE, aggregation = FALSE,
+clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, model = c("bym2", "iid"),
+                       stratification = FALSE, aggregation = FALSE,nested=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
 
   if (sum(is.na(data$value)) > 0) {
@@ -118,6 +119,47 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
   modt<- left_join(data,cluster.info$data,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
+
+
+
+  # nest model adjustment 1)nest  adjacency matrix
+  if(nested&admin>1){
+    #for nested model, we adjust 2 things
+    #1)make admin2.mat adjacency matrix within ad 2
+    #2)add admin 1 as a covriates.
+
+    # Convert admin1.name to a numeric vector based on the unique regions
+    admin.info$admin1<- as.numeric(factor(admin.info$admin1.name))
+    admin.info$admin2<- as.numeric(factor(admin.info$admin2.name.full))
+    admin.key <- as.data.frame(admin.info[,c('admin1','admin2')])
+    admin.key <- admin.key[order(admin.key$admin2),]
+
+    # make admin2 nested within admin1
+    admin2.mat=admin.mat
+    admin2.mat.nested <- admin2.mat
+
+    for(i in 1:nrow(admin2.mat)){
+      admin2.mat.nested[i,which(admin.key$admin1!=admin.key[admin.key$admin2==i,]$admin1)] <- 0
+      if(sum(admin2.mat.nested[i,])>0){
+        admin2.mat.nested[i,] <- admin2.mat.nested[i,]/sum(admin2.mat.nested[i,])
+      }
+    }
+
+    # checking nesting was done correctly
+    # for(area in 1:nrow(admin2.mat)){
+    #   neighbors <- which(admin2.mat.nested[area,]!=0)
+    #   # are all neighbors in the same admin1?
+    #   if(unique(admin.key[admin.key$admin2 %in% neighbors,]$admin1) != admin.key[admin.key$admin2==area,]$admin1)
+    #     stop('Error')
+    # }
+
+    admin.mat=admin2.mat.nested
+
+
+  }else if(nested&admin==1){
+    message("Nested model is designed for Admin 2 or finer level. An Admin 1 model will be fitted")
+
+  }
 
   c.dat.tmp <- modt %>%
     group_by(cluster) %>%
@@ -200,10 +242,20 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       }else{
         cvrt=NULL
       }
-      sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
 
-      formula_string <- paste("value ~ 1", cvrt,sptl)
+      ### for nested model,addscale.model=T, constr=T, adjust.for.con.comp=T,
+      if(nested){
+        sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        formula_string <- paste("value ~ admin1.name", cvrt,sptl)
+      }else{
+        sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        formula_string <- paste("value ~ 1", cvrt,sptl)
+      }
+
+
       formula <- as.formula(formula_string)
+
+
 
 
 
@@ -250,9 +302,15 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       }else{
         cvrt=NULL
       }
-      sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
 
-      formula_string <- paste("value ~ 1 + strata", cvrt,sptl)
+      if(nested){
+        sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        formula_string <- paste("value ~ admin1.name+ strata", cvrt,sptl)
+      }else{
+        sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        formula_string <- paste("value ~ 1+ strata", cvrt,sptl)
+      }
+
       formula <- as.formula(formula_string)
 
 
@@ -290,7 +348,32 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       s.effect <- tmp[paste0("sID:", 1:nregion), 1]
       intercept <- tmp["(Intercept):1", 1]
       # draw.all[i, ] <- SUMMER::expit(s.effect + intercept)
+      if(nested){
 
+        NN<- admin.info %>%
+          group_by(admin1.name) %>%
+          mutate(N = length(admin2.name.full)) %>%
+          select(c("admin1.name","N")) %>%
+          arrange(admin1.name)%>%
+          distinct( admin1.name, .keep_all = TRUE)
+
+        # n is the number of Admin 1 areas.
+        n <- dim(NN)[1]
+
+        # Get the row index of "(Intercept):1"
+        intercept_index <- which(rownames(tmp) == "(Intercept):1")
+        # Extract "(Intercept):1" and the next n-1 rows
+        rows_to_extract <- intercept_index:(intercept_index + n - 1)
+        # Subset the data based on the calculated rows
+        intercept_and_next_n <- tmp[rows_to_extract, , drop = FALSE]
+
+        #baseline(first area)+itself
+        intercept <- intercept_and_next_n[1, 1]  # Extract the intercept (first row)
+        intercept_and_next_n[-1, 1] <- intercept_and_next_n[-1, 1] + intercept
+
+        intercept=rep(intercept_and_next_n[,1],times=NN$N)
+
+      }
       if(is.null(X)==FALSE){
         covariates=as.matrix(X[,2:dim(X)[2]])%*% tail(tmp,n=(dim(X)[2]-1))[,1]
         draw.all[i, ] <- SUMMER::expit(s.effect + intercept+covariates)
@@ -309,13 +392,39 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       s.effect <- tmp[paste0("sID:", 1:nregion), 1]
       intercept <- tmp["(Intercept):1", 1]
       if("stratarural:1" %in% rownames(tmp)){
-        str.effect <- tmp["stratarural:1", 1]   
-        str.effect.u <- 0     
+        str.effect <- tmp["stratarural:1", 1]
+        str.effect.u <- 0
       }else{
         str.effect <- 0
-        str.effect.u <- tmp["strataurban:1", 1] 
+        str.effect.u <- tmp["strataurban:1", 1]
       }
 
+      if(nested){
+        NN<- admin.info %>%
+          group_by(admin1.name) %>%
+          mutate(N = length(admin2.name.full)) %>%
+          select(c("admin1.name","N")) %>%
+          arrange(admin1.name)%>%
+          distinct( admin1.name, .keep_all = TRUE)
+
+        # n is the number of Admin 1 areas.
+        n <- dim(NN)[1]
+
+        # Get the row index of "(Intercept):1"
+        intercept_index <- which(rownames(tmp) == "(Intercept):1")
+
+        # Extract "(Intercept):1" and the next n-1 rows
+        rows_to_extract <- intercept_index:(intercept_index + n - 1)
+        # Subset the data based on the calculated rows
+        intercept_and_next_n <- tmp[rows_to_extract, , drop = FALSE]
+
+        #baseline(first area)+itself
+        intercept <- intercept_and_next_n[1, 1]  # Extract the intercept (first row)
+        intercept_and_next_n[-1, 1] <- intercept_and_next_n[-1, 1] + intercept
+
+        intercept=rep(intercept_and_next_n[,1],times=NN$N)
+
+      }
 
       # draw.u[i, ] <- expit(s.effect + intercept)
       # draw.r[i, ] <- expit(s.effect + intercept + str.effect)
@@ -387,7 +496,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
                                   cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
-                                           rep("full", nregion))               
+                                           rep("full", nregion))
                                   )
 
     }
