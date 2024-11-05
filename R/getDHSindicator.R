@@ -478,6 +478,29 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
                         value="value"))
 
 
+  # Check urban/rural
+  test <- aggregate(strata ~ cluster, data = dat.tmp, FUN = function(x) { length(unique(x)) })
+  inconsistent_clusters <- test$cluster[test$strata > 1]
+
+  if(length(inconsistent_clusters) > 0){
+    for (cluster_id in inconsistent_clusters) {
+      # Subset data for the inconsistent cluster
+      cluster_data <- dat.tmp[dat.tmp$cluster == cluster_id, ]
+      # Determine majority vote for `strata` in the cluster
+      majority_strata <- names(sort(table(cluster_data$strata), decreasing = TRUE))[1]
+      # Replace `strata` values in the inconsistent cluster with the majority value
+      dat.tmp$strata[dat.tmp$cluster == cluster_id] <- majority_strata
+    }
+    # Issue a warning with the inconsistent cluster IDs
+    message("Inconsistent strata variable in the following clusters have been replaced with majority assignment: ", paste(inconsistent_clusters, collapse = ", "))
+  }
+
+
+
+
+
+
+
   return(dat.tmp)
 
 }
