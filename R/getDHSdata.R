@@ -135,11 +135,12 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
     list <- c("Men's Recode"     , "Household Member Recode",
               "Children's Recode", "Births Recode",
               "Couples' Recode"  , "Household Recode",
-              "Individual Recode")
+              "Individual Recode","Pregnancy and Postnatal Care Recode"
+              )
     listname <- c("MRdata"     , "PRdata",
               "KRdata", "BRdata",
               "CRdata"  , "HRdata",
-              "IRdata")
+              "IRdata","NRdata")
     for(i in 1:length(list)){
       Type <- list[i]
       surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
