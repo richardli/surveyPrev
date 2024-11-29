@@ -101,7 +101,7 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
     message("All DHS files are downloaded.\n\n")
   }
 
-  CountryName<-stringr::str_to_title(country)
+  #CountryName<-stringr::str_to_title(country)
   countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
   potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
     dplyr::filter( FileFormat=='Stata dataset (.dta)')
