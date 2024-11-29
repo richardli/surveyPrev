@@ -16,7 +16,8 @@
 #'
 #' @export
 getDHSgeo <- function(country, year) {
-  CountryName<-stringr::str_to_title(country)
+  CountryName <- country
+  # CountryName<-stringr::str_to_title(country)
   # indicator<-indicator
   countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
   surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
