@@ -119,8 +119,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
     admin2_res$cv=admin2_res$sd/admin2_res$mean
     admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name", "admin2.name.full")])
-    admin2_res <- admin2_res[, c("admin2.name.full", "mean", "median", "sd", "var", 
-                                 "lower", "upper", "cv", "logit.mean", "logit.median", 
+    admin2_res <- admin2_res[, c("admin2.name.full", "mean", "median", "sd", "var",
+                                 "lower", "upper", "cv", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper", "admin1.name",  "admin2.name")]
 
 
@@ -162,7 +162,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
       admin1.samp <- do.call(cbind, sums_list)
 
 
-      agg.admin1 <- data.frame(admin1.name=colnames(admin1.samp), 
+      agg.admin1 <- data.frame(admin1.name=colnames(admin1.samp),
                                mean = colMeans(admin1.samp),
                                median = apply(admin1.samp, 2, median),
                                sd =  apply(admin1.samp, 2, sd),
@@ -222,8 +222,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     admin1_res$sd<-sqrt(admin1_res$var)
     admin1_res$cv=admin1_res$sd/admin1_res$mean
-    admin1_res <- admin1_res[, c("admin1.name", "mean", "median", "sd", "var", 
-                                 "lower", "upper", "cv", "logit.mean", "logit.median", 
+    admin1_res <- admin1_res[, c("admin1.name", "mean", "median", "sd", "var",
+                                 "lower", "upper", "cv", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper")]
 
     ####message for aggregation=T but missing some components and return results without aggregation
@@ -246,6 +246,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
     if(aggregation==F){
+      draw.all=expit(t(fit1$draws.est[,-c(1,2)]))
       admin1.res=list(res.admin1 =admin1_res,model = fit1,admin1_post=draw.all)
     }else{
 
