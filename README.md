@@ -1,5 +1,5 @@
 # surveyPrev
-[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/surveyPrev)](https://cran.r-project.org/package=surveyPrev) [![](https://cranlogs.r-pkg.org/badges/surveyPrev)](https://cran.r-project.org/package=surveyPrev) [![](https://cranlogs.r-pkg.org/badges/grand-total/surveyPrev?color=orange)](https://cran.r-project.org/package=surveyPrev)
+[![](https://github.com/richardli/surveyPrev/actions/workflows/R-CMD-check-inla-testing.yaml/badge.svg)](https://github.com/richardli/surveyPrev/actions)[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/surveyPrev)](https://cran.r-project.org/package=surveyPrev) [![](https://cranlogs.r-pkg.org/badges/surveyPrev)](https://cran.r-project.org/package=surveyPrev) [![](https://cranlogs.r-pkg.org/badges/grand-total/surveyPrev?color=orange)](https://cran.r-project.org/package=surveyPrev)
 
 R package for the full workflow to map the prevalence of common DHS indicators.
 
