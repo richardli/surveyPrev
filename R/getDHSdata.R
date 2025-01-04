@@ -100,8 +100,8 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
   }else{
     message("All DHS files are downloaded.\n\n")
   }
-
-  CountryName<-stringr::str_to_title(country)
+  CountryName <- country
+  #CountryName<-stringr::str_to_title(country)
   countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
   potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
     dplyr::filter( FileFormat=='Stata dataset (.dta)')
@@ -135,11 +135,12 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
     list <- c("Men's Recode"     , "Household Member Recode",
               "Children's Recode", "Births Recode",
               "Couples' Recode"  , "Household Recode",
-              "Individual Recode")
+              "Individual Recode","Pregnancy and Postnatal Care Recode"
+              )
     listname <- c("MRdata"     , "PRdata",
               "KRdata", "BRdata",
               "CRdata"  , "HRdata",
-              "IRdata")
+              "IRdata","NRdata")
     for(i in 1:length(list)){
       Type <- list[i]
       surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))

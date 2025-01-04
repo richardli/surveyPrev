@@ -227,6 +227,71 @@ rh_del_pvskill <- function(Rdata){
   # //Assistance during delivery
   # **Note: Assistance during delivery and skilled provider indicators are both country specific indicators.
   # **The table for these indicators in the final report would need to be checked to confirm the code below.
+  # BRdata <- BRdata %>%
+  #   mutate(rh_del_pv =
+  #            case_when(
+  #              m3a == 1   ~ 1 ,
+  #              m3b == 1 ~ 2,
+  #              m3c == 1 | m3d == 1 | m3e == 1 | m3f == 1~ 3 ,
+  #              m3g == 1 ~ 4 ,
+  #              m3h == 1 | m3i == 1 | m3j == 1 | m3k == 1 | m3l == 1 | m3m == 1 ~ 5 ,
+  #              m3n ==1 ~ 6,
+  #              m3a ==8 | m3a==9 ~ 9 ,
+  #              age>=period ~ 99)) %>%
+  #   replace_with_na(replace = list(rh_del_pv = c(99))) %>%
+  #   set_value_labels(rh_del_pv = c("Doctor" = 1, "Nurse/midwife"=2, "Country specific health professional"=3, "Traditional birth attendant"=4, "Relative/other"=5, "No one"=6, "Don't know/missing"=9  )) %>%
+  #   set_variable_labels(rh_del_pv = "Person providing assistance during delivery")
+  #
+  # # //Skilled provider during delivery
+  # # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
+  #
+  # BRdata <- BRdata %>%
+  #   mutate(rh_del_pvskill =
+  #            case_when(
+  #              rh_del_pv %in% c(1,2,3)   ~ 1 ,
+  #              rh_del_pv %in% c(4,5) ~ 2,
+  #              rh_del_pv ==6 ~ 3 ,
+  #              rh_del_pv==9 ~ 9 ,
+  #              age>=period ~ 99)) %>%
+  #   replace_with_na(replace = list(rh_del_pvskill = c(99))) %>%
+  #   set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
+  #   set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
+
+  # updated version from Courtney
+  # //Assistance during delivery
+  # **Note: Assistance during delivery and skilled provider indicators are both country specific indicators.
+
+  # BRdata <- BRdata %>%
+  #   mutate(rh_del_pv =
+  #            case_when(
+  #              m3a == 1 ~ 1 ,
+  #              m3b == 1 ~ 2,
+  #              m3c == 1 ~ 3 ,
+  #              m3h == 1 ~ 4 ,
+  #              m3d == 1 | m3e == 1 | m3f == 1 ~ 5 ,
+  #              m3g == 1 ~ 6,
+  #              m3i == 1 | m3j == 1 | m3k == 1 | m3l == 1 | m3m == 1~ 7,
+  #              m3a == 9 ~ 9 ,
+  #              TRUE ~ 8)) %>%
+  #   replace_with_na(replace = list(rh_del_pv = c(99))) %>%
+  #   set_value_labels(rh_del_pv = c("Doctor" = 1, "Nurse/midwife"=2, "Auxiliary midwife"=3, "Community health worker/fieldworker"=4, "Other Health worker"=5, "TBA"=6,"Other, not health professional"= 7, "No one"= 8, "Don't know/missing"=9  )) %>%
+  #   set_variable_labels(rh_del_pv = "Person providing assistance during delivery")
+  #
+  #
+  #
+  # # //Skilled provider during delivery
+  # # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
+  # BRdata <- BRdata %>%
+  #   mutate(rh_del_pvskill =
+  #            case_when(
+  #              m80 %in% c(1,2,3,4) & p19<24 & rh_del_pv %in% c(1,2,3)~ 1 ,
+  #              m80 %in% c(1,2,3,4) & p19<24 & rh_del_pv %in% c(4,5,6,7,8,9) ~ 0)) %>%
+  #   set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider/ No one"=0)) %>%
+  #   set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
+  #
+
+
+
   BRdata <- BRdata %>%
     mutate(rh_del_pv =
              case_when(
@@ -244,18 +309,41 @@ rh_del_pvskill <- function(Rdata){
 
   # //Skilled provider during delivery
   # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
-
   BRdata <- BRdata %>%
     mutate(rh_del_pvskill =
              case_when(
-               rh_del_pv %in% c(1,2,3)   ~ 1 ,
-               rh_del_pv %in% c(4,5) ~ 2,
+               rh_del_pv %in% c(1,2)   ~ 1 ,
+               rh_del_pv %in% c(3,4,5) ~ 2,
                rh_del_pv ==6 ~ 3 ,
                rh_del_pv==9 ~ 9 ,
                age>=period ~ 99)) %>%
     replace_with_na(replace = list(rh_del_pvskill = c(99))) %>%
     set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
     set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
+
+
+
+
+
+
+  if (BRdata$v000[1] %in% c("NG7")) {
+  # //Skilled provider during delivery -- ****SPECIFIC FOR NIGERIA*******
+  # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
+  BRdata <- BRdata %>%
+    mutate(rh_del_pvskill =
+             case_when(
+               #m3c==1 ~ 1,
+               rh_del_pv %in% c(1,2) | m3c==1   ~ 1 , # ADD AUXILIARY MIDWIFE HERE FOR NIGERIA (M3C==1)
+               rh_del_pv %in% c(3, 4,5) ~ 2,
+               rh_del_pv ==6 ~ 3 ,
+               rh_del_pv==9 ~ 9 ,
+               age>=period ~ 99)) %>%
+    replace_with_na(replace = list(rh_del_pvskill = c(99))) %>%
+    set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
+    set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery in Nigeria")
+
+
+  }
 
 
   BRdata$rh_del_pvskill= ifelse( BRdata$rh_del_pvskill == 1, 1, 0)

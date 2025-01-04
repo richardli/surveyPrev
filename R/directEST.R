@@ -141,8 +141,33 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
    if(aggregation==FALSE){
+
+
+     ##aggregation
+     # admin2_res<-na.omit(admin2_res)# exclude NA when weighted mean to admin1
+
+     # make direct.logit.est to 36 or -36 for HT=1 or 0.
+     for (i in 1:dim(admin2_res)[1]) {
+
+       if(is.na(admin2_res[i,]$direct.logit.est)&& round(admin2_res[i,]$direct.est,digits = 8)==1 ){
+         admin2_res[i,]$direct.logit.est=36
+       }
+       if(is.na(admin2_res[i,]$direct.logit.est)&&admin2_res[i,]$direct.est==0 ){
+         admin2_res[i,]$direct.logit.est=-36
+       }
+
+       if(is.na(admin2_res[i,]$direct.logit.var)){
+         admin2_res[i,]$direct.logit.var=0
+       }
+     }
+
+
+     dd=data.frame(admin2.name.full=admin2_res$admin2.name.full,value=admin2_res$direct.logit.est,sd=sqrt(admin2_res$direct.logit.var))   #dd$value has <0 bc it's direct.logit.est
+     draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
+     colnames(draw.all)=admin2_res$admin2.name.full
      # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
-     res.admin2=list(res.admin2=res.admin2)
+     res.admin2=list(res.admin2=res.admin2,
+                    admin2_post= draw.all)
    }else{
 
 
@@ -165,10 +190,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 }
 
 
-
-
         dd=data.frame(admin2.name.full=admin2_res$admin2.name.full,value=admin2_res$direct.logit.est,sd=sqrt(admin2_res$direct.logit.var))   #dd$value has <0 bc it's direct.logit.est
         draw.all=  expit(apply(dd[,2:3], 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
+        colnames(draw.all)=admin2_res$admin2.name.full
 
         ##
         ## TODO: Similar to above, using distinct() can create problems. Instead, use both admin1 and admin2 names to join the two dataset.
@@ -288,7 +312,13 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
        # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
 
 
-       res.admin2<-list(res.admin2=res.admin2,agg.admin1=admin1_agg, agg.natl=nation_agg)
+       res.admin2<-list(res.admin2=res.admin2,
+                        agg.admin1=admin1_agg,
+                        agg.natl=nation_agg,
+                        admin2_post=draw.all,
+                        admin1_post=admin1.samp,
+                        nation_post=nation.samp
+                        )
 
    }
     attr(res.admin2,"class")="directEST"
@@ -362,7 +392,27 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
     if(aggregation==FALSE){
-      res.admin1=list(res.admin1=res.admin1)
+
+
+      for (i in 1:dim(admin1_res)[1]) {
+
+        if(is.na(admin1_res[i,]$direct.logit.est)&& round(admin1_res[i,]$direct.est,digits = 8)==1 ){
+          admin1_res[i,]$direct.logit.est=36
+        }
+        if(is.na(admin1_res[i,]$direct.logit.est)&&admin1_res[i,]$direct.est==0 ){
+          admin1_res[i,]$direct.logit.est=-36
+        }
+
+        if(is.na(admin1_res[i,]$direct.logit.var)){
+          admin1_res[i,]$direct.logit.var=0
+        }
+      }
+
+      dd=data.frame(mean=admin1_res$direct.logit.est,sd=sqrt(admin1_res$direct.logit.var))
+      draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
+
+      res.admin1=list(res.admin1=res.admin1,
+                      admin1_post=draw.all)
 
     }else{
 

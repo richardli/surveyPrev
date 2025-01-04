@@ -1,10 +1,13 @@
 # surveyPrev
+[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/surveyPrev)](https://cran.r-project.org/package=surveyPrev) [![](https://cranlogs.r-pkg.org/badges/surveyPrev)](https://cran.r-project.org/package=surveyPrev) [![](https://cranlogs.r-pkg.org/badges/grand-total/surveyPrev?color=orange)](https://cran.r-project.org/package=surveyPrev)
 
-R package to process and map prevalence of common DHS indicators.
+R package for the full workflow to map the prevalence of common DHS indicators.
+
+A Shiny App built on the surveyPrev package is avarilable at [https://rsc.stat.washington.edu/surveyPrevRShiny/](https://rsc.stat.washington.edu/surveyPrevRShiny/)
 
 
 ## Installation
-To install and load the latest version of `surveyPrev` package, use the following command. 
+To install and load the latest version of the `surveyPrev` package, use the following command. 
 
 ```
 library(devtools)
