@@ -4,7 +4,14 @@
 \alias{intervalPlot}
 \title{Get scatter plot for any two model results}
 \usage{
-intervalPlot(admin = 0, compare = FALSE, model = NULL, group = FALSE)
+intervalPlot(
+  admin = 0,
+  compare = FALSE,
+  model = NULL,
+  group = FALSE,
+  sort_by = NULL,
+  decreasing = FALSE
+)
 }
 \arguments{
 \item{admin}{level of plot}
@@ -14,6 +21,10 @@ intervalPlot(admin = 0, compare = FALSE, model = NULL, group = FALSE)
 \item{model}{list of model results  using surveyPrev}
 
 \item{group}{plot by group or not}
+
+\item{sort_by}{the name of the model to sort the areas by. Default to be NULL}
+
+\item{decreasing}{whether the regions are sorted in decreasing order. Default to be NULL}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level.

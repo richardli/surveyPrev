@@ -17,7 +17,7 @@ License: GPL (>= 2)
 Imports: survey, stats, ggplot2, ggridges, rdhs, SUMMER, dplyr, labelled, sjlabelled, naniar, raster, sp, spdep, stringr, tidyverse, data.table, sf, matrixStats, rlang
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Additional_repositories: https://inla.r-inla-download.org/R/testing/
 Suggests: INLA, knitr, rmarkdown, R.rsp, kableExtra, geodata, patchwork, tidyr
 VignetteBuilder: R.rsp, knitr
