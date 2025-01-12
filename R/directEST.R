@@ -472,8 +472,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-    res.admin1=(list(res.admin1=res.admin1, agg.natl=nation_agg))
-
+    res.admin1 = (list(res.admin1 = res.admin1, agg.natl = nation_agg, admin1_post=draw.all, nation_post=nation.samp))
     }
     attr(res.admin1,"class")="directEST"
     attr(res.admin1,"domain.names") <- admin.info$admin1.name
