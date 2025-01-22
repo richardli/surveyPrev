@@ -92,7 +92,7 @@
 #' @export
 getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
         filter = NULL, yesCondition = NULL, noCondition = NULL) {
-
+# data(match_all_result)
 
   if(is.null(indicator) && !is.null(FUN)){
     raw.dat.tmp <- FUN(Rdata)
@@ -105,6 +105,11 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
     raw.dat.tmp <- data %>% mutate(value =
               case_when((!!rlang::parse_expr(noCondition)) ~ 0,
                         (!!rlang::parse_expr(yesCondition)) ~ 1))
+
+  }else if(indicator %in% match_all_result$indicator_ID_DHS){
+
+    FUN=getFromNamespace(indicator, "surveyPrev")
+    raw.dat.tmp <-FUN(Rdata)
 
   }else if(indicator == "unmet_family"||indicator == "FP_NADA_W_UNT"){
     # IRdata <- Rdata %>%

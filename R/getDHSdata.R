@@ -28,6 +28,41 @@
 #' @export
 getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
 
+  # data(match_all_result)
+
+
+  if(indicator %in% match_all_result$indicator_ID_DHS ){
+
+  dataset=match_all_result[match_all_result$indicator_ID_DHS==indicator, "updated_recode_name"]#"IRdata"
+
+  tb= data.frame(list=c("Men's Recode"     , "Household Member Recode",
+                           "Children's Recode", "Births Recode",
+                           "Couples' Recode"  , "Household Recode",
+                           "Individual Recode","Pregnancy and Postnatal Care Recode"
+  ),
+  listname= c("MRdata"     , "PRdata",
+                "KRdata", "BRdata",
+                "CRdata"  , "HRdata",
+                "IRdata","NRdata"))
+
+  Type <- tb[tb$listname==dataset,1]
+
+  CountryName <- country
+  #CountryName<-stringr::str_to_title(country)
+  countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
+  potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
+    dplyr::filter( FileFormat=='Stata dataset (.dta)')
+
+  surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
+  data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, clear_cache = T)
+  Rdata<-readRDS(paste0(data.paths.tmp))
+  return(Rdata)
+  }else{
+
+
+
+
+
   IR_Individual<-c("ancvisit4+"
                      ,"RH_ANCN_W_N4P"
                      ,"womananemia"
@@ -158,6 +193,6 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
     }
     return(all)
   }
-
+  }
 }
 
