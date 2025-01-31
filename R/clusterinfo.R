@@ -71,9 +71,10 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
   #filter(!(LATNUM < 0.0000001 & LONGNUM < 0.0000001))
 #removing wrong.points that has weird LONGNUM LATNUM
 
-  wrong.points <- cluster.info[which(cluster.info$LATNUM < 0.0000001 & cluster.info$LONGNUM < 0.0000001),]$cluster
+  # wrong.points <- cluster.info[which(cluster.info$LATNUM < 0.0000001 & cluster.info$LONGNUM < 0.0000001),]$cluster
 
-
+  wrong.points <- cluster.info[which(abs(cluster.info$LATNUM) <
+                                       1e-07 & abs(cluster.info$LONGNUM) <1e-07), ]$cluster
 
 
 
