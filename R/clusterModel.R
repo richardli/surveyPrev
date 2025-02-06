@@ -84,11 +84,11 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
   #   model <- "iid"
   # }
 
-  # if (is.null(X)==FALSE && dim(X)[1]!=dim(admin.info$data)[1]) {
-  #
-  #   message("Not valid covariates format. No covariates model is fitted instead")
-  #   X=NULL
-  # }
+  if (is.null(X)==FALSE && dim(X)[1]!=dim(admin.info$data)[1]) {
+
+    message("Not valid covariates format. No covariates model is fitted instead")
+    X=NULL
+  }
 
 
 
@@ -120,18 +120,18 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
 
 
-  if(admin==1){
-    if (is.null(X)==FALSE && dim(X)[1]!=length(unique(modt$admin1.name))) {
-
-      message("Not valid covariates format. No covariates model is fitted instead")
-      X=NULL
-    }
-  }else{
-    if (is.null(X)==FALSE && dim(X)[1]!=length(unique(modt$admin2.name.full))) {
-      message("Not valid covariates format. No covariates model is fitted instead")
-      X=NULL
-    }
-  }
+  # if(admin==1){
+  #   if (is.null(X)==FALSE && dim(X)[1]!=length(unique(modt$admin1.name))) {
+  #
+  #     message("Not valid covariates format. No covariates model is fitted instead")
+  #     X=NULL
+  #   }
+  # }else{
+  #   if (is.null(X)==FALSE && dim(X)[1]!=length(unique(modt$admin2.name.full))) {
+  #     message("Not valid covariates format. No covariates model is fitted instead")
+  #     X=NULL
+  #   }
+  # }
 
 
 
@@ -417,13 +417,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
     # step 3 : covariates: 0 when no covariates
     if(is.null(X)==FALSE){
-      # covariates=as.matrix(X[,2:dim(X)[2]])%*% tail(tmp,n=(dim(X)[2]-1))[,1]
-      XNEW=X
-      XNEW$covariates = as.matrix(X[, 2:dim(X)[2]]) %*% tail(tmp,
-                                                             n = (dim(X)[2] - 1))[, 1]
-
-      l.com <- merge(l.com, XNEW[, c("admin1.name", "covariates")], by = "admin1.name", all.x = TRUE)
-      l.com$covariates[is.na(l.com$covariates)] <- 0
+      l.com$covariates=as.matrix(X[,2:dim(X)[2]])%*% tail(tmp,n=(dim(X)[2]-1))[,1]
 
     }else{
       l.com$covariates=0
