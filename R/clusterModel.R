@@ -417,7 +417,14 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
     # step 3 : covariates: 0 when no covariates
     if(is.null(X)==FALSE){
-      covariates=as.matrix(X[,2:dim(X)[2]])%*% tail(tmp,n=(dim(X)[2]-1))[,1]
+      # covariates=as.matrix(X[,2:dim(X)[2]])%*% tail(tmp,n=(dim(X)[2]-1))[,1]
+      XNEW=X
+      XNEW$covariates = as.matrix(X[, 2:dim(X)[2]]) %*% tail(tmp,
+                                                             n = (dim(X)[2] - 1))[, 1]
+
+      l.com <- merge(l.com, XNEW[, c("admin1.name", "covariates")], by = "admin1.name", all.x = TRUE)
+      l.com$covariates[is.na(l.com$covariates)] <- 0
+
     }else{
       l.com$covariates=0
     }
