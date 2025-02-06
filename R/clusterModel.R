@@ -84,11 +84,11 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
   #   model <- "iid"
   # }
 
-  if (is.null(X)==FALSE && dim(X)[1]!=dim(admin.info$data)[1]) {
-
-    message("Not valid covariates format. No covariates model is fitted instead")
-    X=NULL
-  }
+  # if (is.null(X)==FALSE && dim(X)[1]!=dim(admin.info$data)[1]) {
+  #
+  #   message("Not valid covariates format. No covariates model is fitted instead")
+  #   X=NULL
+  # }
 
 
 
@@ -118,6 +118,21 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
   modt<- left_join(data,cluster.info$data,by="cluster")
   modt<- modt[!(is.na(modt$LONGNUM)), ]
   # modt$strata.full <- paste(modt$admin1.name, modt$strata)
+
+
+  if(admin==1){
+    if (is.null(X)==FALSE && dim(X)[1]!=length(unique(modt$admin1.name))) {
+
+      message("Not valid covariates format. No covariates model is fitted instead")
+      X=NULL
+    }
+  }else{
+    if (is.null(X)==FALSE && dim(X)[1]!=length(unique(modt$admin2.name.full))) {
+      message("Not valid covariates format. No covariates model is fitted instead")
+      X=NULL
+    }
+  }
+
 
 
 
