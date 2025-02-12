@@ -70,7 +70,12 @@
 #' @export
 
 directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL, ...){
-  if(sum(is.na(data$value))>0){
+
+
+  options(survey.adjust.domain.lonely=TRUE)
+  options(survey.lonely.psu="adjust")
+
+   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
@@ -91,9 +96,6 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
         modt$strata.full <- factor(modt[, alt.strata])
     }
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
-
-    options(survey.adjust.domain.lonely=TRUE)
-    options(survey.lonely.psu="adjust")
 
     smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
