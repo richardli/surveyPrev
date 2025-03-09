@@ -15,6 +15,7 @@ clusterModel(
   stratification = FALSE,
   aggregation = FALSE,
   nested = FALSE,
+  interact = FALSE,
   overdisp.mean = 0,
   overdisp.prec = 0.4,
   pc.u = 1,
@@ -43,6 +44,8 @@ clusterModel(
 \item{aggregation}{whether or not report aggregation results.}
 
 \item{nested}{whether or not to fit a nested model.}
+
+\item{interact}{whether or not to fit a admin1 x urban/rural  model.}
 
 \item{overdisp.mean}{prior mean for logit(d), where d is the intracluster correlation.}
 

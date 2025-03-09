@@ -12,6 +12,7 @@
 #' @param stratification whether or not to include urban/rural stratum.
 #' @param aggregation whether or not report aggregation results.
 #' @param nested whether or not to fit a nested model.
+#' @param interact whether or not to fit a admin1 x urban/rural  model.
 #' @param overdisp.mean prior mean for logit(d), where d is the intracluster correlation.
 #' @param overdisp.prec prior precision for logit(d), where d is the intracluster correlation.
 #' @param pc.u pc prior u for iid or bym2 precision.
@@ -70,7 +71,7 @@
 #' @export
 
 clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, model = c("bym2", "iid"),
-                       stratification = FALSE, aggregation = FALSE,nested=FALSE,
+                       stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
 
   if (sum(is.na(data$value)) > 0) {
@@ -277,6 +278,10 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       if(nested){
         sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
         formula_string <- paste("value ~ -1+ admin1.name", cvrt,sptl)
+
+
+
+
       }else{
         sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
         formula_string <- paste("value ~ 1", cvrt,sptl)
@@ -334,8 +339,18 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       }
 
       if(nested){
-        sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
-        formula_string <- paste("value ~ -1+ admin1.name + strata", cvrt,sptl)
+        # sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        # formula_string <- paste("value ~ -1+ admin1.name + strata", cvrt,sptl)
+
+        if(interact){
+          sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+          formula_string <- paste("value ~ -1+ admin1.name + strata+admin1.name:strata",
+                                  cvrt, sptl)
+          }else{
+         sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+         formula_string <- paste("value ~ -1+ admin1.name + strata",  cvrt, sptl)
+                                  }
+
       }else{
         sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
         formula_string <- paste("value ~ 1+ strata", cvrt,sptl)
@@ -411,6 +426,20 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       l.com=left_join(l.com,intercept.fix,by="admin1.name")
 
 
+      if(interact){
+        rows_to_extract <- paste0("admin1.name", NN$admin1.name,
+                                  ":stratarural:1")
+
+        intercept.fix.rural<-as.data.frame(tmp[rownames(tmp) %in% rows_to_extract, , drop = FALSE])
+        intercept.fix.rural$admin1.name <- sub("admin1.name(.*):stratarural:1",
+                                               "\\1", rownames(intercept.fix.rural))
+        colnames(intercept.fix.rural)[colnames(intercept.fix.rural) ==
+                                        "V1"] <- "intercept.rural"
+        l.com = left_join(l.com, intercept.fix.rural, by = "admin1.name")
+        l.com$intercept.rural=ifelse(is.na(l.com$intercept.rural),0,l.com$intercept.rural)
+      }
+
+
     }else{
       l.com$intercept <- tmp["(Intercept):1", 1]
     }
@@ -439,11 +468,16 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       draw.all[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept+l.com$covariates)
 
     }else if(stratification){
+      if(interact){
+        draw.u[i, ] <- SUMMER::expit(l.com$intercept +str.effect.u + l.com$covariates)
+        draw.r[i, ] <- SUMMER::expit(l.com$intercept.rural + l.com$intercept +str.effect  + l.com$covariates)
+        draw.all[i, ] <- draw.u[i, ] * admin.info$urban +  draw.r[i, ] * (1 - admin.info$urban)
+      }else{
+        draw.u[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect.u + l.com$covariates)
+        draw.r[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect + l.com$covariates)
+        draw.all[i, ] <- draw.u[i, ] * admin.info$urban +draw.r[i, ] * (1 - admin.info$urban)
 
-      draw.u[i, ] <- SUMMER::expit(l.com$s.effect +  l.com$intercept + str.effect.u +l.com$covariates)
-      draw.r[i, ] <- SUMMER::expit(l.com$s.effect +  l.com$intercept + str.effect + l.com$covariates)
-      draw.all[i, ] <- draw.u[i, ] * admin.info$urban +
-        draw.r[i, ] * (1 - admin.info$urban)
+      }
     }
   }
 
