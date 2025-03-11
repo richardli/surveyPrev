@@ -44,9 +44,9 @@ fp_unmet_tot<- function(Rdata){
   return(IRdata)
 }
 
-#'FP_CUSM_W_MOD
+#'FP_CUSA_W_MOD
 #'IRdata
-#'Modern contraceptive prevalence rate (Married women currently using any modern method of contraception)
+#'Modern contraceptive prevalence rate (women currently using any modern method of contraception)
 #'
 #'
 #'
