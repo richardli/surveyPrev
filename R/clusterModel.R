@@ -70,7 +70,7 @@
 #'
 #' @export
 
-clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, model = c("bym2", "iid"),
+clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
 
@@ -141,46 +141,46 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
   if(nested&admin>1){
     #for nested model, make admin2.mat adjacency matrix within ad2
 
-
-    # Convert admin1.name to a numeric vector based on the unique regions
-    admin.info$admin1<- as.numeric(factor(admin.info$admin1.name))
-    admin.info$admin2<- as.numeric(factor(admin.info$admin2.name.full))
-
-    admin.key <- as.data.frame(admin.info[,c('admin1.name','admin2.name.full')])
-    admin.key <- admin.key[order(admin.key$admin2.name.full),]
-
-
-    admin2.mat.nested <- admin.mat
-
-    for(i in 1:nrow(admin2.mat.nested)){
-
-      admin2.mat.nested[i,which(admin.key$admin1.name!=admin.key[admin.key$admin2.name.full==row.names(admin2.mat.nested)[i],]$admin1.name)] <- 0
-      if(sum(admin2.mat.nested[i,])>0){
-        admin2.mat.nested[i,] <- admin2.mat.nested[i,]/sum(admin2.mat.nested[i,])
-      }
-    }
-
-
-    # checking nesting was done correctly
-    for(area in 1:nrow(admin2.mat.nested)){
-      neighbors <- which(admin2.mat.nested[area,]!=0)
-      # are all neighbors in the same admin1?
-      if(unique(admin.key[admin.key$admin2.name.full %in% rownames(as.data.frame(neighbors)),]$admin1.name) != admin.key[admin.key$admin2.name.full==colnames(admin2.mat.nested)[area],]$admin1.name)
-        message('Error in adjacency matrix, unnested model is fitted')
-        nested==FALSE
-    }
-
-
-
-    # checking nesting was done correctly
-    # for(area in 1:nrow(admin2.mat)){
-    #   neighbors <- which(admin2.mat.nested[area,]!=0)
-    #   # are all neighbors in the same admin1?
-    #   if(unique(admin.key[admin.key$admin2 %in% neighbors,]$admin1) != admin.key[admin.key$admin2==area,]$admin1)
-    #     stop('Error')
-    # }
-
-    admin.mat=admin2.mat.nested
+#
+#     # Convert admin1.name to a numeric vector based on the unique regions
+#     admin.info$admin1<- as.numeric(factor(admin.info$admin1.name))
+#     admin.info$admin2<- as.numeric(factor(admin.info$admin2.name.full))
+#
+#     admin.key <- as.data.frame(admin.info[,c('admin1.name','admin2.name.full')])
+#     admin.key <- admin.key[order(admin.key$admin2.name.full),]
+#
+#
+#     admin2.mat.nested <- admin.mat
+#
+#     for(i in 1:nrow(admin2.mat.nested)){
+#
+#       admin2.mat.nested[i,which(admin.key$admin1.name!=admin.key[admin.key$admin2.name.full==row.names(admin2.mat.nested)[i],]$admin1.name)] <- 0
+#       if(sum(admin2.mat.nested[i,])>0){
+#         admin2.mat.nested[i,] <- admin2.mat.nested[i,]/sum(admin2.mat.nested[i,])
+#       }
+#     }
+#
+#
+#     # checking nesting was done correctly
+#     for(area in 1:nrow(admin2.mat.nested)){
+#       neighbors <- which(admin2.mat.nested[area,]!=0)
+#       # are all neighbors in the same admin1?
+#       if(unique(admin.key[admin.key$admin2.name.full %in% rownames(as.data.frame(neighbors)),]$admin1.name) != admin.key[admin.key$admin2.name.full==colnames(admin2.mat.nested)[area],]$admin1.name)
+#         message('Error in adjacency matrix, unnested model is fitted')
+#         nested==FALSE
+#     }
+#
+#
+#
+#     # checking nesting was done correctly
+#     # for(area in 1:nrow(admin2.mat)){
+#     #   neighbors <- which(admin2.mat.nested[area,]!=0)
+#     #   # are all neighbors in the same admin1?
+#     #   if(unique(admin.key[admin.key$admin2 %in% neighbors,]$admin1) != admin.key[admin.key$admin2==area,]$admin1)
+#     #     stop('Error')
+#     # }
+#
+#     admin.mat=admin2.mat.nested
 
 
   }else if(nested&admin==1){
@@ -344,7 +344,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
         if(interact){
           sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
-          formula_string <- paste("value ~ -1+ admin1.name + strata+admin1.name:strata",
+          formula_string <- paste("value ~ -1+admin1.name:strata", # +admin1.name + strata
                                   cvrt, sptl)
           }else{
          sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
@@ -414,19 +414,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
 
       # n is the number of Admin 1 areas.
       n <- dim(NN)[1]
-
-      # Set row names for fixed effect
-      rows_to_extract <- paste0("admin1.name", NN$admin1.name, ":1")
-
-      # Subset the data based on the calculated rows
-      intercept.fix <- as.data.frame(tmp[rows_to_extract, , drop = FALSE])
-      intercept.fix$admin1.name <- sub("admin1.name(.*):1", "\\1", rownames(intercept.fix))
-      colnames(intercept.fix)[colnames(intercept.fix) == 'V1'] <- 'intercept'
-
-      l.com=left_join(l.com,intercept.fix,by="admin1.name")
-
-
       if(interact){
+        #rural
         rows_to_extract <- paste0("admin1.name", NN$admin1.name,
                                   ":stratarural:1")
 
@@ -435,9 +424,38 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
                                                "\\1", rownames(intercept.fix.rural))
         colnames(intercept.fix.rural)[colnames(intercept.fix.rural) ==
                                         "V1"] <- "intercept.rural"
+
+        #urban
+        rows_to_extract <- paste0("admin1.name", NN$admin1.name,
+                                  ":strataurban:1")
+        intercept.fix.urban<-as.data.frame(tmp[rownames(tmp) %in% rows_to_extract, , drop = FALSE])
+        intercept.fix.urban$admin1.name <- sub("admin1.name(.*):strataurban:1",
+                                               "\\1", rownames(intercept.fix.urban))
+        colnames(intercept.fix.urban)[colnames(intercept.fix.urban) ==
+                                        "V1"] <- "intercept.urban"
+
         l.com = left_join(l.com, intercept.fix.rural, by = "admin1.name")
+        l.com = left_join(l.com, intercept.fix.urban, by = "admin1.name")
         l.com$intercept.rural=ifelse(is.na(l.com$intercept.rural),0,l.com$intercept.rural)
+        l.com$intercept.urban=ifelse(is.na(l.com$intercept.urban),0,l.com$intercept.urban)
+
+      }else{
+
+
+        # Set row names for fixed effect
+        rows_to_extract <- paste0("admin1.name", NN$admin1.name, ":1")
+
+        # Subset the data based on the calculated rows
+        intercept.fix <- as.data.frame(tmp[rows_to_extract, , drop = FALSE])
+        intercept.fix$admin1.name <- sub("admin1.name(.*):1", "\\1", rownames(intercept.fix))
+        colnames(intercept.fix)[colnames(intercept.fix) == 'V1'] <- 'intercept'
+
+        l.com=left_join(l.com,intercept.fix,by="admin1.name")
+
       }
+
+
+
 
 
     }else{
@@ -452,9 +470,15 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       l.com$covariates=0
     }
 
+    # step 4:  strata
 
     if(stratification){
-    # step 4:  strata
+      if(interact){
+        str.effect=0
+      }else{
+
+
+
     if("stratarural:1" %in% rownames(tmp)){
       str.effect <- tmp["stratarural:1", 1]
       str.effect.u <- 0
@@ -462,15 +486,21 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL ,admin, CI = 0.95, 
       str.effect <- 0
       str.effect.u <- tmp["strataurban:1", 1]
     }
+      }
      }
+
+
+
+
+    # aggregation
 
     if(stratification==FALSE){
       draw.all[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept+l.com$covariates)
 
     }else if(stratification){
       if(interact){
-        draw.u[i, ] <- SUMMER::expit(l.com$intercept +str.effect.u + l.com$covariates)
-        draw.r[i, ] <- SUMMER::expit(l.com$intercept.rural + l.com$intercept +str.effect  + l.com$covariates)
+        draw.u[i, ] <- SUMMER::expit(l.com$s.effect+l.com$intercept.urban+ l.com$covariates)
+        draw.r[i, ] <- SUMMER::expit(l.com$s.effect+l.com$intercept.rural+ l.com$covariates)
         draw.all[i, ] <- draw.u[i, ] * admin.info$urban +  draw.r[i, ] * (1 - admin.info$urban)
       }else{
         draw.u[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect.u + l.com$covariates)
