@@ -9,6 +9,8 @@ clusterModel(
   cluster.info,
   admin.info,
   X = NULL,
+  X.unit = NULL,
+  X.pixel = NULL,
   admin,
   CI = 0.95,
   model = c("bym2", "iid"),
@@ -32,6 +34,10 @@ clusterModel(
 \item{admin.info}{dataframe that contains population and urban/rural proportion at specific admin level}
 
 \item{X}{dataframe that contains areal covariates, the first column should be the same admin name as in admin.info$data.}
+
+\item{X.unit}{dataframe that contains unit covariates, must contain cluster}
+
+\item{X.pixel}{dataframe that contains pixel covariates, must contain 1. admin1.name or admin2.name.full, 2. Population, 3. strata if stratification==T}
 
 \item{admin}{admin level for the model}
 

@@ -7,6 +7,8 @@
 #' @param admin.info dataframe that contains population and urban/rural proportion at specific admin level
 #' @param admin admin level for the model
 #' @param X dataframe that contains areal covariates, the first column should be the same admin name as in admin.info$data.
+#' @param X.unit dataframe that contains unit covariates, must contain cluster
+#' @param X.pixel dataframe that contains pixel covariates, must contain 1. admin1.name or admin2.name.full, 2. Population, 3. strata if stratification==T
 #' @param CI Credible interval to be used. Default to 0.95.
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param stratification whether or not to include urban/rural stratum.
@@ -23,6 +25,7 @@
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #' @import dplyr
 #' @importFrom survey svydesign svyby
+#' @importFrom tidyr replace_na
 #' @importFrom data.table data.table
 #' @importFrom utils tail
 #' @importFrom stats sd quantile rnorm
@@ -70,7 +73,7 @@
 #'
 #' @export
 
-clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
+clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
 
@@ -213,6 +216,11 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
    if(is.null(X)==FALSE){
      c.dat.tmp<-left_join(c.dat.tmp,X,by="admin1.name")
    }
+   #adding unit level covariates
+
+   if(is.null(X.unit)==FALSE){
+     c.dat.tmp<-left_join(c.dat.tmp,X.unit,by="cluster")
+   }
 
  }else{
    c.dat.tmp[(dim(c.dat.tmp)[1]+1):(dim(c.dat.tmp)[1]+nregion),"admin2.name.full"] <- admin_name_table[,which(colnames(admin_name_table)=="admin2.name.full")]
@@ -229,6 +237,11 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
    if(is.null(X)==FALSE){
      c.dat.tmp<-left_join(c.dat.tmp,X,by="admin2.name.full")
    }
+   #adding unit level covariates
+
+   if(is.null(X.unit)==FALSE){
+     c.dat.tmp<-left_join(c.dat.tmp,X.unit,by="cluster")
+   }
 
  }
 
@@ -244,14 +257,38 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
       #                                                   param = c(pc.u , pc.alpha))))
 
 
+
+      ##covariate
       if(is.null(X)==FALSE){
         cvrt <- paste(" + ",colnames(X)[2:dim(X)[2]], collapse = "")
+      }else if(is.null(X.unit)==FALSE){
+        cvrt <- paste(" + ",colnames(X.unit)[2:dim(X.unit)[2]], collapse = "")
+
       }else{
         cvrt=NULL
+
       }
-      sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
-      formula_string <- paste("value ~ 1", cvrt,sptl)
+
+
+      ##nested
+      if(nested){
+
+        sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
+        formula_string <- paste("value ~  -1+ admin1.name", cvrt,sptl)
+
+      }else{
+
+        sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
+        formula_string <- paste("value ~ 1", cvrt,sptl)
+
+      }
+
+
       formula <- as.formula(formula_string)
+
+
+
+
 
 
 
@@ -268,19 +305,21 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
        #                 phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))
 
 
+      ##covariate
       if(is.null(X)==FALSE){
         cvrt <- paste(" + ",colnames(X)[2:dim(X)[2]], collapse = "")
+      }else if(is.null(X.unit)==FALSE){
+        cvrt <- paste(" + ",colnames(X.unit)[2:dim(X.unit)[2]], collapse = "")
+
       }else{
         cvrt=NULL
+
       }
 
       ### for nested model,addscale.model=T, constr=T, adjust.for.con.comp=T,
       if(nested){
-        sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        sptl <- "+ f(sID, model = model, graph = admin.mat,hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
         formula_string <- paste("value ~ -1+ admin1.name", cvrt,sptl)
-
-
-
 
       }else{
         sptl <- "+ f(sID, model = model, graph = admin.mat,  hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
@@ -308,14 +347,46 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
       #                                                           param = c(pc.u , pc.alpha))))
 
 
+      ##covariate
       if(is.null(X)==FALSE){
         cvrt <- paste(" + ",colnames(X)[2:dim(X)[2]], collapse = "")
+      }else if(is.null(X.unit)==FALSE){
+        cvrt <- paste(" + ",colnames(X.unit)[2:dim(X.unit)[2]], collapse = "")
+
       }else{
         cvrt=NULL
+
       }
+
+
       sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
       formula_string <- paste("value ~ 1 + strata", cvrt,sptl)
       formula <- as.formula(formula_string)
+
+
+      if(nested){
+        # sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+        # formula_string <- paste("value ~ -1+ admin1.name + strata", cvrt,sptl)
+
+        if(interact){
+
+          sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
+          formula_string <- paste("value ~ -1+admin1.name:strata", # +admin1.name + strata
+                                  cvrt, sptl)
+
+        }else{
+          sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
+          formula_string <- paste("value ~ -1+ admin1.name + strata",  cvrt, sptl)
+        }
+
+      }else{
+          sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list(prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha))))"
+          formula_string <- paste("value ~ 1 + strata", cvrt,sptl)
+      }
+
+      formula <- as.formula(formula_string)
+
+
 
 
     }else if(model=="bym2"){
@@ -332,22 +403,29 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
 
 
 
+
+      ##covariate
       if(is.null(X)==FALSE){
         cvrt <- paste(" + ",colnames(X)[2:dim(X)[2]], collapse = "")
+      }else if(is.null(X.unit)==FALSE){
+        cvrt <- paste(" + ",colnames(X.unit)[2:dim(X.unit)[2]], collapse = "")
+
       }else{
         cvrt=NULL
+
       }
+
 
       if(nested){
         # sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
         # formula_string <- paste("value ~ -1+ admin1.name + strata", cvrt,sptl)
 
         if(interact){
-          sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+          sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
           formula_string <- paste("value ~ -1+admin1.name:strata", # +admin1.name + strata
                                   cvrt, sptl)
           }else{
-         sptl <- "+ f(sID, model = model, graph = admin.mat,scale.model=T, constr=T, adjust.for.con.comp=T, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
+         sptl <- "+ f(sID, model = model, graph = admin.mat, hyper = list( prec = list(prior = \"pc.prec\", param = c(pc.u , pc.alpha)), phi = list(prior = 'pc', param = c(pc.u.phi , pc.alpha.phi))))"
          formula_string <- paste("value ~ -1+ admin1.name + strata",  cvrt, sptl)
                                   }
 
@@ -385,8 +463,11 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
   nsamp <- 1000
   samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
 
-  #draw posterior samples
 
+
+  ########################################################################
+  #####posterior aggregation  ############################################
+  ########################################################################
 
 
   draw.u <- matrix(NA, nsamp, nregion)
@@ -400,7 +481,6 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
     s.effect <- data.frame(s.effect=tmp[paste0("sID:", 1:nregion), 1])
     s.effect$sID <- as.integer(sub("sID:(.*)", "\\1", rownames(s.effect)))
     l.com=left_join(admin_name_table,s.effect,by="sID")
-
 
 
     # step 2: intercept:  1 intercept when unnested, number of admin1 intercepts when nested
@@ -476,9 +556,6 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
       if(interact){
         str.effect=0
       }else{
-
-
-
     if("stratarural:1" %in% rownames(tmp)){
       str.effect <- tmp["stratarural:1", 1]
       str.effect.u <- 0
@@ -492,33 +569,165 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
 
 
 
-    # aggregation
+    # aggregation for urban rural
+    # is.null(X.pixel)==FALSE: unit level covariates
 
-    if(stratification==FALSE){
-      draw.all[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept+l.com$covariates)
+    if (is.null(X.pixel)==FALSE ){
+        covpixel=X.pixel
 
-    }else if(stratification){
-      if(interact){
-        draw.u[i, ] <- SUMMER::expit(l.com$s.effect+l.com$intercept.urban+ l.com$covariates)
-        draw.r[i, ] <- SUMMER::expit(l.com$s.effect+l.com$intercept.rural+ l.com$covariates)
-        draw.all[i, ] <- draw.u[i, ] * admin.info$urban +  draw.r[i, ] * (1 - admin.info$urban)
-      }else{
-        draw.u[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect.u + l.com$covariates)
-        draw.r[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect + l.com$covariates)
+
+        if(admin==1){
+          colnames(covpixel)[colnames(covpixel) == "admin1.name"] <- "admin.name"
+          colnames(l.com)[colnames(l.com) == "admin1.name"] <- "admin.name"
+
+        }else{
+          colnames(covpixel)[colnames(covpixel) == "admin2.name.full"] <- "admin.name"
+          colnames(l.com)[colnames(l.com) == "admin2.name.full"] <- "admin.name"
+         }
+
+
+
+
+      if(stratification){
+
+        if(interact){
+          l.com$str.effect=l.com$intercept.rural
+          l.com$str.effect.u=l.com$intercept.urban
+          l.com$intercept=0
+        }else{
+
+        # step 4:  strata
+        if("stratarural:1" %in% rownames(tmp)){
+          l.com$str.effect <- tmp["stratarural:1", 1]
+          l.com$str.effect.u <- 0
+        }else{
+          l.com$str.effect <- 0
+          l.com$str.effect.u <- tmp["strataurban:1", 1]
+        }
+
+        }
+
+        covpixel$covariates=colSums(tmp[paste0(colnames(X.unit)[ colnames(X.unit)!= "cluster"],":1"),1]%*%t(as.matrix(covpixel[, colnames(X.unit)[ colnames(X.unit)!= "cluster"]])))
+
+        covpixel= left_join(  covpixel, l.com[,c("admin.name","intercept","s.effect","str.effect.u","str.effect")],by="admin.name")
+
+
+
+        covpixel$p.u=SUMMER::expit(covpixel$s.effect +
+                                     covpixel$intercept +
+                                     covpixel$covariates+
+                                     covpixel$str.effect.u
+        )
+
+        covpixel$p.r=SUMMER::expit(covpixel$s.effect +
+                                     covpixel$intercept +
+                                     covpixel$covariates+
+                                     covpixel$str.effect
+        )
+
+        unique_areas <-sort( unique(covpixel$admin.name))
+        # Compute weighted means by area
+        draw.u[i, ]=covpixel%>%
+          filter(strata == 1)%>%
+          group_by(admin.name) %>%
+          summarise(weighted_value = sum(p.u * Population) / sum(Population), .groups = "drop") %>%
+          right_join(data.frame(admin.name = unique_areas), by = "admin.name") %>%  # Ensure all areas are present
+          arrange(admin.name) %>%
+          mutate(weighted_value = replace_na(weighted_value, 0)) %>%  # Replace NA with 0
+          pull(weighted_value)
+
+        draw.r[i, ]=covpixel%>%
+          filter(strata == 0)%>%
+          group_by(admin.name) %>%
+          summarise(weighted_value = sum(p.r * Population) / sum(Population), .groups = "drop") %>%
+          right_join(data.frame(admin.name = unique_areas), by = "admin.name") %>% # Ensure all areas are present
+          arrange(admin.name) %>%
+          mutate(weighted_value = replace_na(weighted_value, 0)) %>%  # Replace NA with 0
+          pull(weighted_value)
+
         draw.all[i, ] <- draw.u[i, ] * admin.info$urban +draw.r[i, ] * (1 - admin.info$urban)
 
+
+      }else{
+
+        covpixel$covariates=colSums(tmp[paste0(colnames(X.unit)[ colnames(X.unit)!= "cluster"],":1"),1]%*%t(as.matrix(covpixel[, colnames(X.unit)[ colnames(X.unit)!= "cluster"]])))
+        covpixel= left_join(covpixel,l.com[,c("admin.name","intercept","s.effect")],by="admin.name")
+
+        covpixel$p=SUMMER::expit(covpixel$s.effect +
+                                   covpixel$intercept +
+                                   covpixel$covariates)
+
+
+        unique_areas <- unique(covpixel$admin.name)
+        # Compute weighted means by area
+        draw.all[i, ]=covpixel%>%
+          group_by(admin.name) %>%
+          summarise(weighted_value = sum(p * Population) / sum(Population), .groups = "drop") %>%
+          right_join(data.frame(admin.name = unique_areas), by = "admin.name") %>% # Ensure all areas are present
+          pull(weighted_value)
+
+
       }
+
+
+    }else{
+
+      if(stratification==FALSE){
+        draw.all[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept+l.com$covariates)
+
+      }else if(stratification){
+        if(interact){
+          draw.u[i, ] <- SUMMER::expit(l.com$s.effect+l.com$intercept.urban+ l.com$covariates)
+          draw.r[i, ] <- SUMMER::expit(l.com$s.effect+l.com$intercept.rural+ l.com$covariates)
+          draw.all[i, ] <- draw.u[i, ] * admin.info$urban +  draw.r[i, ] * (1 - admin.info$urban)
+        }else{
+          draw.u[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect.u + l.com$covariates)
+          draw.r[i, ] <- SUMMER::expit(l.com$s.effect + l.com$intercept +  str.effect + l.com$covariates)
+          draw.all[i, ] <- draw.u[i, ] * admin.info$urban +draw.r[i, ] * (1 - admin.info$urban)
+
+        }
+      }
+
+
+
     }
+
+
+
+
+
+
+
+
   }
 
 
 
 
-  #aggregation
+  #aggregation to upper level
 
 
   if(admin==1){
-    if(stratification==F){
+    if(stratification==FALSE){
+      if (is.null(X.pixel)==FALSE ){
+
+        post.all <- apply(draw.all, 2, mean)
+        post.all.sd <- apply(draw.all, 2, sd)
+        post.all.median <- apply(draw.all, 2, median)
+        post.all.ci <- apply(draw.all, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
+
+        admin1.bb.res <- data.frame(
+          admin1.name=admin.info$admin1.name,
+          mean =post.all,
+          median = post.all.median,
+          sd= post.all.sd,
+          var = post.all.sd^2,
+          lower= post.all.ci[1,],
+          upper= post.all.ci[2,],
+          cv=post.all.sd/post.all
+        )
+      }else{
+
       admin1.bb.res<- data.frame(cbind(
         admin1.name=admin.info$admin1.name[tail(c.dat.tmp$sID,n=nregion)],
         mean= tail(imod$summary.fitted.values,n=nregion)[,1],
@@ -535,6 +744,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
       admin1.bb.res$lower<-as.numeric (admin1.bb.res$lower)
       admin1.bb.res$upper<-as.numeric (admin1.bb.res$upper)
       admin1.bb.res$cv=admin1.bb.res$sd/admin1.bb.res$mean
+      }
 
     }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
@@ -610,8 +820,26 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
     }
   }else if(admin==2){
 
-    if(stratification==F){
+    if(stratification==FALSE){
 
+      if (is.null(X.pixel)==FALSE ){
+
+        post.all <- apply(draw.all, 2, mean)
+        post.all.sd <- apply(draw.all, 2, sd)
+        post.all.median <- apply(draw.all, 2, median)
+        post.all.ci <- apply(draw.all, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
+
+        admin2.bb.res <- data.frame(
+          admin2.name.full= admin.info$admin2.name.full,
+          mean =post.all,
+          median = post.all.median,
+          sd= post.all.sd,
+          var = post.all.sd^2,
+          lower= post.all.ci[1,],
+          upper= post.all.ci[2,],
+          cv=post.all.sd/post.all
+        )
+      }else{
       admin2.bb.res<- data.frame(cbind(
       admin2.name.full=admin.info$admin2.name.full[tail(c.dat.tmp$sID,n=nregion)],
         mean= tail(imod$summary.fitted.values,n=nregion)[,1],
@@ -630,6 +858,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
       admin2.bb.res$cv=admin2.bb.res$sd/admin2.bb.res$mean
 
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
+     }
 
     }else if(stratification){
       post.u <- apply(draw.u, 2, mean)
@@ -662,9 +891,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
 
     }
 
-
-
-    if(aggregation==T){
+    if(aggregation){
     #agg admin1
     weight=admin.info$population/admin.info$population.admin1
 
@@ -711,7 +938,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,admin, CI = 0.95, m
     # colnames(admin2.bb.res)[colnames(admin2.bb.res) == 'admin2.name.full'] <- 'admin2.name.full'
 
 
-    if(aggregation==F){
+    if(aggregation==FALSE){
 
       # return(list(res.admin2=admin2.bb.res, inla=imod,
       #             admin2_post=draw.all))
