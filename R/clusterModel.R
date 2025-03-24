@@ -193,7 +193,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
 
   }else if(nested&admin==1){
     message("Nested model is designed for Admin 2 or finer level. An Admin 1 model will be fitted")
-    nested==FALSE
+    nested=FALSE
   }
 
   c.dat.tmp <- modt %>%
