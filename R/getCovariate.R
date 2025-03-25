@@ -11,7 +11,8 @@
 #' @param by.adm  the column name of column for Admin names for admin 1
 #' @param by.adm.upper the column name of column for Admin names for admin 2 or other lower admin level.
 #' @param fact A numeric value indicating the aggregation factor for resampling the raster data. If `fact = 1`, no aggregation is performed.
-#'
+#' @param standardize whether to standardize the covariates/tiffs or not
+#' @param na.rm whether to remove rows that have no Population or admin 2 membership
 #' @importFrom sf st_as_sf
 #' @importFrom terra  aggregate xyFromCell extract resample ncell
 #'
@@ -40,19 +41,14 @@
 #'     poly.adm = poly.adm2,
 #'     by.adm = 'NAME_2',
 #'     by.adm.upper = 'NAME_1',
+#'     standardize=FALSE,
+#'.    na.rm=FALSE,
 #'     fact = 1)
 #'
 #'}
 #'
 #'
 #' @export
-
-
-
-
-
-
-
 getCovariate <- function(
     tiffs,
     tiff.population,
@@ -61,6 +57,8 @@ getCovariate <- function(
     poly.adm,
     by.adm,
     by.adm.upper,
+    standardize=FALSE,
+    na.rm=FALSE,
     fact=1){
   ####################
   ### preparation
@@ -70,6 +68,36 @@ getCovariate <- function(
   # Check if input is a list of SpatRaster objects
   if (!all(sapply(tiffs, inherits, "SpatRaster"))) {
     stop("All elements in 'tiffs' must be of class 'SpatRaster'.")
+  }
+
+
+  # if standardize==t, scale everthing in tiff
+
+   # Create a data.frame to hold the mean and sd for each raster
+  raster_stats <- data.frame(
+    name = character(),
+    mean = numeric(),
+    sd = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  if (standardize) {
+    tiffs <- lapply(names(tiffs), function(nm) {
+      r <- tiffs[[nm]]
+
+      # Compute mean and sd
+      r_mean <- global(r, fun = "mean", na.rm = TRUE)[1, 1]
+      r_sd   <- global(r, fun = "sd", na.rm = TRUE)[1, 1]
+
+      # Save stats
+      raster_stats <<- rbind(raster_stats, data.frame(name = nm, mean = r_mean, sd = r_sd))
+
+      # Return scaled raster
+      return(scale(r))
+    })
+
+    # Reassign names to tiffs list after lapply
+    names(tiffs) <- raster_stats$name
   }
 
   # Align each raster to the target grid (pop_den) if needed
@@ -82,7 +110,6 @@ getCovariate <- function(
   if(fact!=1){
 
     tiff.population = terra::aggregate(tiff.population, fact = fact, fun = mean, na.rm = TRUE)
-
 
     aligned.tiffs <- mapply(
       function(r, f) terra::aggregate(r, fact = f, fun = mean, na.rm = TRUE),
@@ -172,24 +199,41 @@ getCovariate <- function(
   # cluster.cov.df$strata <- cluster.info$data$strata
   rownames(cluster.cov.df) <- NULL
 
-  # #######################
-  # ### remove NA? no need?
-  # #######################
-  #
-  #
-  # natl.grid <- natl.grid %>%
-  #   filter(!is.na(admin1.name)) %>%
-  #   arrange(LONGNUM, desc(LATNUM)) %>%
-  #   mutate(pixel_noNA_ID = row_number())
+   #######################
+   ### remove NA
+   #######################
 
+  #remove rows for no Population and admin 2
+  if(na.rm==TRUE){
+  natl.grid <- natl.grid %>%
+    filter(!is.na(admin2.name.full)) %>%
+    filter(!is.na(Population)) %>%
+    arrange(LONGNUM, desc(LATNUM)) %>%
+    mutate(pixel_noNA_ID = row_number())
+  }
 
+  #NA to 0 for all covariates
+  for (col in names(tiffs)) {
+    if (col %in% colnames(natl.grid)) {
+      natl.grid[[col]][is.na(natl.grid[[col]])] <- 0
+    }
+  }
 
   ####################
   ### prepare return
   ####################
 
-  return.obj = list(natl.grid = natl.grid,
-                    cluster.cov = cluster.cov.df)
+
+  if(standardize){
+    return.obj = list(natl.grid = natl.grid,
+                      cluster.cov = cluster.cov.df,
+                      raster.stats=raster_stats )
+  }else{
+    return.obj = list(natl.grid = natl.grid,
+                      cluster.cov = cluster.cov.df)
+  }
+
+
 
 
   return(return.obj)

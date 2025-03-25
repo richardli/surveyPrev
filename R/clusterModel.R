@@ -95,7 +95,23 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
   }
 
   if (is.null(X.unit)==FALSE && is.null(X.pixel)==FALSE ) {
-    X.unit.model=TRUE
+
+    checkset=setequal(
+      colnames(X.pixel)[!colnames(X.pixel) %in% c("admin2.name.full", "admin1.name", "Population", "strata")],
+      colnames(X.unit)[colnames(X.unit) != "cluster"]
+    )
+
+    if(checkset){
+      X.unit.model=TRUE
+    }else{
+      message("covariates names are not matched in X.unit and X.pixel, non covariate model is fitted instead")
+      X.unit.model=FALSE
+      X.pixel=NULL
+      X.unit=NULL
+    }
+
+
+
   }else{
     X.unit.model=FALSE
     }
@@ -836,13 +852,15 @@ if(X.unit.model==FALSE){
   }
 
 }else if(X.unit.model){
+
+
   draw.u <- matrix(NA, nsamp, length(unique(X.pixel$admin2.name.full)))
   draw.r <- matrix(NA, nsamp, length(unique(X.pixel$admin2.name.full)))
   draw.all <- matrix(NA, nsamp, length(unique(X.pixel$admin2.name.full)))
 
-  draw.u1 <- matrix(NA, nsamp, length(unique(X.pixel$admin1.name)))
-  draw.r1 <- matrix(NA, nsamp, length(unique(X.pixel$admin1.name)))
-  draw.all1 <- matrix(NA, nsamp, length(unique(X.pixel$admin1.name)))
+  draw.u1 <- matrix(NA, nsamp, length(unique(admin.info$admin1.name)))
+  draw.r1 <- matrix(NA, nsamp, length(unique(admin.info$admin1.name)))
+  draw.all1 <- matrix(NA, nsamp, length(unique(admin.info$admin1.name)))
 
   draw.u0 <- matrix(NA, nsamp, 1)
   draw.r0 <- matrix(NA, nsamp, 1)
@@ -940,6 +958,7 @@ if(X.unit.model==FALSE){
 
 
     # step 4 : covariates on pixel level
+
 
     covpixel= left_join(  covpixel, l.com[,c("admin2.name.full","intercept","s.effect","str.effect.u","str.effect")],by="admin2.name.full")
     covpixel$covariates=colSums(tmp[paste0(colnames(X.unit)[ colnames(X.unit)!= "cluster"],":1"),1]%*%t(as.matrix(covpixel[, colnames(X.unit)[ colnames(X.unit)!= "cluster"]])))
@@ -1237,7 +1256,9 @@ if(X.unit.model==FALSE){
 
     post.all.ci <- apply(draw.all, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
 
-    admin2.bb.res <- data.frame(admin2.name.full= admin.info$admin2.name.full,
+
+    if(admin==2){
+    admin2.bb.res <- data.frame(admin2.name.full= sort(unique(X.pixel$admin2.name.full)),
                                 mean = c( post.all),
                                 median = c(post.all.median),
                                 sd= c(post.all.sd),
@@ -1246,7 +1267,16 @@ if(X.unit.model==FALSE){
                                 upper=c( post.all.ci[2,]),
                                 cv=c(post.all.sd/post.all))
 
-
+    }else{
+      admin2.bb.res <- data.frame(admin2.name.full= X.pixel$admin2.name.full,
+                                  mean = c( post.all),
+                                  median = c(post.all.median),
+                                  sd= c(post.all.sd),
+                                  var = c(post.all.sd^2),
+                                  lower=c(post.all.ci[1,]),
+                                  upper=c( post.all.ci[2,]),
+                                  cv=c(post.all.sd/post.all))
+}
 
     ###admin1
     post.all <- apply(draw.all1, 2, mean)

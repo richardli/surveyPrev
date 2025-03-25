@@ -12,6 +12,8 @@ getCovariate(
   poly.adm,
   by.adm,
   by.adm.upper,
+  standardize = FALSE,
+  na.rm = FALSE,
   fact = 1
 )
 }
@@ -29,6 +31,10 @@ getCovariate(
 \item{by.adm}{the column name of column for Admin names for admin 1}
 
 \item{by.adm.upper}{the column name of column for Admin names for admin 2 or other lower admin level.}
+
+\item{standardize}{whether to standardize the covariates/tiffs or not}
+
+\item{na.rm}{whether to remove rows that have no Population or admin 2 membership}
 
 \item{fact}{A numeric value indicating the aggregation factor for resampling the raster data. If `fact = 1`, no aggregation is performed.}
 }
@@ -62,6 +68,8 @@ kenya_cov <- getCovariate(
     poly.adm = poly.adm2,
     by.adm = 'NAME_2',
     by.adm.upper = 'NAME_1',
+    standardize=FALSE,
+.    na.rm=FALSE,
     fact = 1)
 
 }
