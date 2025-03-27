@@ -93,7 +93,8 @@ getCovariate <- function(
       raster_stats <<- rbind(raster_stats, data.frame(name = nm, mean = r_mean, sd = r_sd))
 
       # Return scaled raster
-      return(scale(r))
+      # return(scale(r))
+      return((r - r_mean) / r_sd)
     })
 
     # Reassign names to tiffs list after lapply
