@@ -959,10 +959,14 @@ if(X.unit.model==FALSE){
 
     # step 4 : covariates on pixel level
 
-
+   if(admin==2){
     covpixel= left_join(  covpixel, l.com[,c("admin2.name.full","intercept","s.effect","str.effect.u","str.effect")],by="admin2.name.full")
     covpixel$covariates=colSums(tmp[paste0(colnames(X.unit)[ colnames(X.unit)!= "cluster"],":1"),1]%*%t(as.matrix(covpixel[, colnames(X.unit)[ colnames(X.unit)!= "cluster"]])))
+   }else{
+     covpixel= left_join(  covpixel, l.com[,c("admin1.name","intercept","s.effect","str.effect.u","str.effect")],by="admin1.name")
+     covpixel$covariates=colSums(tmp[paste0(colnames(X.unit)[ colnames(X.unit)!= "cluster"],":1"),1]%*%t(as.matrix(covpixel[, colnames(X.unit)[ colnames(X.unit)!= "cluster"]])))
 
+   }
 
       if(stratification){
 
@@ -1132,7 +1136,7 @@ if(X.unit.model==FALSE){
     post.r.ci <- apply(draw.r, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2),na.rm=TRUE)
     post.all.ci <- apply(draw.all, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))
 
-    admin2.bb.res <- data.frame(admin2.name.full= rep(admin.info$admin2.name.full, 3),
+    admin2.bb.res <- data.frame(admin2.name.full= rep(sort(unique(covpixel$admin2.name.full)), 3),
                                 mean = c(post.u, post.r, post.all),
                                 median = c(post.u.median, post.r.median, post.all.median),
                                 sd= c(post.u.sd, post.r.sd, post.all.sd),
@@ -1214,9 +1218,9 @@ if(X.unit.model==FALSE){
                rep("full",1)
     ))
 
-    cm=list(res.admin2=admin2.bb.res,
-            res.admin1=admin1.bb.res,
-            res.admin0=admin0.bb.res,
+    cm=list(agg.admin2=admin2.bb.res,
+            agg.admin1=admin1.bb.res,
+            agg.admin0=admin0.bb.res,
             inla=imod,
             admin2_post=draw.all,
             urban2_post=draw.u,
@@ -1268,7 +1272,7 @@ if(X.unit.model==FALSE){
                                 cv=c(post.all.sd/post.all))
 
     }else{
-      admin2.bb.res <- data.frame(admin2.name.full= X.pixel$admin2.name.full,
+      admin2.bb.res <- data.frame(admin2.name.full= sort(unique(X.pixel$admin2.name.full)),
                                   mean = c( post.all),
                                   median = c(post.all.median),
                                   sd= c(post.all.sd),

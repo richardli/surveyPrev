@@ -213,12 +213,7 @@ getCovariate <- function(
     mutate(pixel_noNA_ID = row_number())
   }
 
-  #NA to 0 for all covariates
-  for (col in names(tiffs)) {
-    if (col %in% colnames(natl.grid)) {
-      natl.grid[[col]][is.na(natl.grid[[col]])] <- 0
-    }
-  }
+
 
   ####################
   ### prepare return
@@ -226,6 +221,13 @@ getCovariate <- function(
 
 
   if(standardize){
+    #NA to 0 for all covariates
+    for (col in names(tiffs)) {
+      if (col %in% colnames(natl.grid)) {
+        natl.grid[[col]][is.na(natl.grid[[col]])] <- 0
+      }
+    }
+
     return.obj = list(natl.grid = natl.grid,
                       cluster.cov = cluster.cov.df,
                       raster.stats=raster_stats )
