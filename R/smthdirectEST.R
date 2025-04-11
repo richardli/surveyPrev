@@ -112,6 +112,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
       direct.logit <- fit0$res.admin2[, c("region", "HT.logit.est", "HT.logit.var")]
+      if(!is.null(X)){colnames(X)[colnames(X) == "admin2.name.full"] <- "region"}
       if( dim(direct.logit)[1]<dim(admin.info)[1]){
       direct.logit_na=data.frame( region=setdiff(admin.info$admin2.name.full,direct.logit$region),
                                   HT.logit.est=NA,
