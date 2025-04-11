@@ -137,11 +137,14 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
        fit2$smooth$logit.median=fit2$smooth$median
        fit2$smooth$logit.lower=fit2$smooth$lower
        fit2$smooth$logit.upper=fit2$smooth$upper
-       fit2$smooth$mean=expit( fit2$smooth$logit.mean)
-       fit2$smooth$var=expit( fit2$smooth$logit.var)
-       fit2$smooth$median=expit( fit2$smooth$logit.median)
-       fit2$smooth$lower=expit( fit2$smooth$logit.lower)
-       fit2$smooth$upper=expit( fit2$smooth$logit.upper)
+
+       FUN <- function(x) exp( x ) / ( 1 + exp( x ) )
+       tmp2 <- apply(fit2$draws.est[,-c(1,2)], 2, FUN)
+       fit2$smooth$mean=apply(tmp2, 1,  mean)
+       fit2$smooth$var=apply(tmp2, 1,  var)
+       fit2$smooth$median=apply(tmp2, 1,  median)
+       fit2$smooth$lower=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,]
+       fit2$smooth$upper=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
 
 
 
