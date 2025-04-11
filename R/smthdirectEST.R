@@ -131,6 +131,17 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                            save.draws = TRUE,
                            X=X,...
                            )
+       fit2$smooth$logit.mean=fit2$smooth$mean
+       fit2$smooth$logit.var=fit2$smooth$var
+       fit2$smooth$logit.median=fit2$smooth$median
+       fit2$smooth$logit.lower=fit2$smooth$lower
+       fit2$smooth$logit.upper=fit2$smooth$upper
+       fit2$smooth$mean=expit( fit2$smooth$logit.mean)
+       fit2$smooth$var=expit( fit2$smooth$logit.var)
+       fit2$smooth$median=expit( fit2$smooth$logit.median)
+       fit2$smooth$lower=expit( fit2$smooth$logit.lower)
+       fit2$smooth$upper=expit( fit2$smooth$logit.upper)
+
 
 
     }else{
