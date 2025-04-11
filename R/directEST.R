@@ -11,6 +11,7 @@
 #' @param weight the weight used for aggregating result, "population" or "survey"
 #' @param aggregation whether or not report aggregation results.
 #' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
+#' @param var.fix Whether to add phantom cluster to fix admin 2 direct estimate with variance close to 0.
 #' @param ... Additional arguments passed on to the `smoothSurvey` function
 #'
 #'
@@ -69,7 +70,7 @@
 #'
 #' @export
 
-directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL, ...){
+directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL,var.fix = FALSE, ...){
 
 
   options(survey.adjust.domain.lonely=TRUE)
@@ -130,6 +131,157 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
     res.admin2=admin2_res
+
+
+    ################## Variance Fix ##################
+
+    if (var.fix == TRUE) {
+
+
+      res_ad1<-NULL
+
+
+      smoothSurvey<-SUMMER::smoothSurvey(as.data.frame(modt),
+                                         responseType ="binary",
+                                         responseVar= "value",
+                                         regionVar = "admin1.name",
+                                         clusterVar = "~cluster+householdID",
+                                         weightVar = "weight",
+                                         strataVar = "strata.full",
+                                         Amat =NULL,
+                                         CI = CI,
+                                         is.unit.level=FALSE,
+                                         smooth=FALSE)
+
+
+
+      smoothSurvey$HT$res.admin1.direct.est=smoothSurvey$HT$HT.est
+      smoothSurvey$HT$admin1.name= smoothSurvey$HT$region
+      res_ad1=smoothSurvey$HT[,c("admin1.name","res.admin1.direct.est")]
+
+
+
+
+
+      admin_areas=admin2_res$admin2.name.full
+
+
+      # input variance fix function (!!!!! REMOVE THIS FUNCTION TO A SEPARATE FUNCTION LATER)
+      wr_phantom <- function(data, n_ph, pi_ph, tw_ph) {
+
+        #### INPUTS
+        # data - filtered dataset for admin area of interest
+        # n_ph - number of phantom clusters to be added
+        # pi_ph - phantom hajek estimate for each new phantom cluster
+        # tw_ph - total sum for phantom clusters = sum over phantom clusters of w_i*m_i ######## double check here
+
+        # number of PSUs (clusters)
+        n <- length(unique(data$cluster))
+        n_aug <- n + n_ph
+
+        # real cluster quantities to calculate ri_aug
+        ri_aug_df <- data %>%
+          group_by(cluster, weight) %>%
+          reframe(m_i = n(), ######## should this be number of households or number of units?
+                  y_i = sum(value)) %>%
+          mutate(t_wi = weight * m_i, # for each cluster # sum of weight w_ik
+                 t_w = sum(t_wi), # for each admin area of interest
+                 pi_HJ = y_i / m_i,
+                 t_w_aug = t_w + tw_ph,
+                 r_i_aug_real = t_wi / t_w_aug)
+
+        # TEMPORARY - ASSUMES ONLY ONE CLUSTER ADDED
+        t_wi_ph <- tw_ph
+        r_i_aug_ph <- t_wi_ph / ri_aug_df$t_w_aug[1]
+
+        # calculate phat_aug
+        p_aug_part1 <- sum(ri_aug_df$r_i_aug_real * ri_aug_df$pi_HJ)
+        p_aug_part2 <- sum(r_i_aug_ph * pi_ph)
+        phat_aug <- p_aug_part1 + p_aug_part2
+        ri_aug_df$phat_aug <- phat_aug
+
+        ri_aug_df <- ri_aug_df %>%
+          mutate(pt1_real = r_i_aug_real^2 * (pi_HJ - phat_aug)^2)
+
+        pt2 <- r_i_aug_ph^2 * (pi_ph - phat_aug)^2
+
+        main_term <- sum(ri_aug_df$pt1_real) + n_ph * pt2
+        var <- (n_aug / (n_aug - 1)) * main_term
+
+        point_est <- phat_aug
+
+        return(c(var, point_est))
+
+      }
+
+
+
+      tw_df <- modt %>%
+        group_by(cluster, weight, admin1.name, admin2.name, admin2.name.full) %>%
+        summarize(m_i = n()) %>% # household number
+        mutate(t_wi = m_i * weight) %>%
+        group_by(admin2.name, admin1.name) %>%
+        summarize(t_w = sum(t_wi)) %>% # for each admin2
+        group_by(admin1.name) %>%
+        summarize(avg_tw = mean(t_w)) # for each admin1 by taking average of admin2
+
+
+      #### Need to debug!!!
+      key <- admin2_res %>%
+        as.data.frame() %>%
+        # full_join(admin.info,
+        #           by = c("admin2.name.full" = "admin2.name.full")) %>%
+        left_join(tw_df, by = "admin1.name") %>%
+        left_join(res_ad1[,c("admin1.name","res.admin1.direct.est")], by = c("admin1.name"))
+      # %>% ## NEED to change here
+      # filter(admin2.name.full %in% admin_areas$admin2.name.full)
+
+
+
+      for(i in admin_areas) {
+        #print(i)
+
+        # obtain the data for each admin2 and delete NA value
+        dat_tmp <- modt %>%
+          filter(admin2.name.full == i, !is.na(value))
+
+        # fix the variance and update the mean when the var = 0
+        if (admin2_res$direct.var[admin2_res$admin2.name.full == i] < 1e-30) {
+          # values to input into function
+          fun_vals <- key %>%
+            filter(key$admin2.name.full == i) %>%
+            mutate(n_ph = 1, ##### check here!
+                   pi_ph = res.admin1.direct.est, ### need to debug here
+                   tw_ph = avg_tw) %>%
+            dplyr::select(n_ph, pi_ph, tw_ph)
+          phantom_var <- wr_phantom(data = dat_tmp, n_ph = fun_vals$n_ph,
+                                    pi_ph = fun_vals$pi_ph, tw_ph = fun_vals$tw_ph)[1]
+          phantom_haj <- wr_phantom(data = dat_tmp, n_ph = fun_vals$n_ph,
+                                    pi_ph = fun_vals$pi_ph, tw_ph = fun_vals$tw_ph)[2]
+
+          res.admin2$direct.est[res.admin2$admin2.name.full == i] = phantom_haj
+          res.admin2$direct.var[res.admin2$admin2.name.full == i] = phantom_var
+          res.admin2$direct.se<-sqrt(res.admin2$direct.var)
+
+
+          p.i=phantom_haj
+          var.i=phantom_var
+          ht      <- log(p.i / (1 - p.i))
+          ht.v    <- var.i / (p.i^2 * (1 - p.i)^2)
+          ht.prec <- 1 / ht.v
+          res.admin2$direct.logit.est[res.admin2$admin2.name.full == i] = ht
+          res.admin2$direct.logit.var[res.admin2$admin2.name.full == i] =ht.v
+          res.admin2$direct.logit.prec[res.admin2$admin2.name.full == i] = ht.prec
+
+          res.admin2$direct.lower <- expit(res.admin2$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(res.admin2$direct.logit.var))
+          res.admin2$direct.upper <- expit(res.admin2$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(res.admin2$direct.logit.var))
+
+          res.admin2$cv<-sqrt(res.admin2$direct.var)/res.admin2$direct.est
+
+        }
+
+      }
+ }
 
     ####message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==FALSE){

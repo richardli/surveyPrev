@@ -11,6 +11,7 @@
 #' @param model  smoothing model used in the random effect. Options are independent ("iid") or spatial ("bym2").
 #' @param aggregation whether or not report aggregation results.
 #' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
+#' @param var.fix Whether to use fix variance admin 2 direct estimate as input for the model.
 #' @param ... Additional arguments passed on to the `smoothSurvey` function
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
@@ -50,7 +51,7 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL, ...){
+fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL,var.fix=FALSE, ...){
 
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -97,6 +98,42 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
     #model
+
+    if(var.fix==TRUE){
+        fit0 <- surveyPrev::directEST(data = data,
+                                 cluster.info = cluster.info,
+                                 admin = 2,
+                                 aggregation = FALSE,
+                                 var.fix = TRUE
+        )
+        fit0$res.admin2$region<-fit0$res.admin2$admin2.name.full
+        fit0$res.admin2$HT.logit.est<-fit0$res.admin2$direct.logit.est
+        fit0$res.admin2$HT.logit.var<-fit0$res.admin2$direct.logit.var
+
+
+      direct.logit <- fit0$res.admin2[, c("region", "HT.logit.est", "HT.logit.var")]
+      if( dim(direct.logit)[1]<dim(admin.info)[1]){
+      direct.logit_na=data.frame( region=setdiff(admin.info$admin2.name.full,direct.logit$region),
+                                  HT.logit.est=NA,
+                                  HT.logit.var=NA
+                                  )
+      direct.logit=rbind(direct.logit,direct.logit_na)
+      }
+       fit2 <- smoothSurvey(data=NULL,
+                           direct.est = direct.logit,
+                           Amat=Amat,
+                           regionVar="region",
+                           responseVar="HT.logit.est",
+                           direct.est.var = "HT.logit.var",
+                           responseType = "gaussian",
+                           CI = CI,
+                           smooth=TRUE,
+                           save.draws = TRUE,
+                           X=X,...
+                           )
+
+
+    }else{
     fit2 <- smoothSurvey(as.data.frame(modt),
                          responseType ="binary",
                          responseVar= "value",
@@ -112,7 +149,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                          X=X,
                          ,...)
 
-
+    }
     admin2_res <- fit2$smooth
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name.full'
     admin2_res$sd<-sqrt(admin2_res$var)
