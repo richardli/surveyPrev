@@ -699,7 +699,13 @@ if(X.unit.model==FALSE){
 
       # return(list(res.admin1=admin1.bb.res,inla=imod ))
 
-      cm=list(res.admin1=admin1.bb.res,inla=imod,admin1_post=draw.all,urban_post=draw.u,rural_post=draw.r)
+      cm=list(res.admin1=admin1.bb.res,
+              inla=imod,
+              admin1_post=draw.all,
+              urban_post=draw.u,
+              rural_post=draw.r,
+              admin.info=admin.info,
+              admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin1.name
       return(cm)
@@ -711,8 +717,14 @@ if(X.unit.model==FALSE){
       # return(list(res.admin1=admin1.bb.res,agg.natl=agg.natl,inla=imod,
       #             admin1_post=draw.all,nation_post=post.all))
       #
-      cm=list(res.admin1=admin1.bb.res,agg.natl=agg.natl,inla=imod,
-          admin1_post=draw.all,nation_post=post.all,urban_post=draw.u,rural_post=draw.r)
+      cm=list(res.admin1=admin1.bb.res,
+              agg.natl=agg.natl,inla=imod,
+          admin1_post=draw.all,
+          nation_post=post.all,
+          urban_post=draw.u,
+          rural_post=draw.r,
+          admin.info=admin.info,
+          admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin1.name
       return(cm)
@@ -826,8 +838,13 @@ if(X.unit.model==FALSE){
       # return(list(res.admin2=admin2.bb.res, inla=imod,
       #             admin2_post=draw.all))
 
-      cm=list(res.admin2=admin2.bb.res, inla=imod,
-              admin2_post=draw.all,urban_post=draw.u,rural_post=draw.r)
+      cm=list(res.admin2=admin2.bb.res,
+              inla=imod,
+              admin2_post=draw.all,
+              urban_post=draw.u,
+              rural_post=draw.r,
+              admin.info=admin.info,
+              admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin2.name.full
 
@@ -839,8 +856,17 @@ if(X.unit.model==FALSE){
 #
 #     return(list(res.admin2=admin2.bb.res,agg.admin1=agg.admin1,agg.natl=agg.natl,inla=imod,
 #                 admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all))
-      cm=list(res.admin2=admin2.bb.res,agg.admin1=agg.admin1,agg.natl=agg.natl,inla=imod,
-              admin2_post=draw.all,admin1_post=admin1.samp,nation_post=post.all,urban_post=draw.u,rural_post=draw.r)
+      cm=list(res.admin2=admin2.bb.res,
+              agg.admin1=agg.admin1,
+              agg.natl=agg.natl,
+              inla=imod,
+              admin2_post=draw.all,
+              admin1_post=admin1.samp,
+              nation_post=post.all,
+              urban_post=draw.u,
+              rural_post=draw.r,
+              admin.info=admin.info,
+              admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin2.name.full
 
@@ -1230,7 +1256,9 @@ if(X.unit.model==FALSE){
             rural1_post=draw.r1,
             admin0_post=draw.all0,
             urban0_post=draw.u0,
-            rural0_post=draw.r0
+            rural0_post=draw.r0,
+            admin.info=admin.info,
+            admin=admin
             )
     attr(cm,"class")="clusterModel"
     if(admin==1){
@@ -1334,7 +1362,9 @@ if(X.unit.model==FALSE){
             rural1_post=draw.r1,
             admin0_post=draw.all0,
             urban0_post=draw.u0,
-            rural0_post=draw.r0
+            rural0_post=draw.r0,
+            admin.info=admin.info,
+            admin=admin
             )
     attr(cm,"class")="clusterModel"
     if(admin==1){

@@ -189,7 +189,11 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
       # colnames(admin2.res)[colnames(admin2.res) == 'admin2.name.full'] <- 'admin2.name.full'
       draw.all=expit(t(fit2$draws.est[,-c(1,2)]))
 
-      admin2.res=list(res.admin2=admin2.res,  model = fit2, admin2_post=draw.all)
+      admin2.res=list(res.admin2=admin2.res,
+                      model = fit2,
+                      admin2_post=draw.all,
+                      admin.info=admin.info,
+                      admin=admin)
 
     }else{
 
@@ -238,8 +242,16 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
       # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
-      admin2.res=list(res.admin2=admin2_res,agg.admin1=agg.admin1,agg.natl=agg.natl, model = fit2,
-                      admin2_post=t(draw.all),admin1_post=admin1.samp,nation_post=post.all)
+      admin2.res=list(res.admin2=admin2_res,
+                      agg.admin1=agg.admin1,
+                      agg.natl=agg.natl,
+                      model = fit2,
+                      admin2_post=t(draw.all),
+                      admin1_post=admin1.samp,
+                      nation_post=post.all,
+                      admin.info=admin.info,
+                      admin=admin
+                      )
     }
 
     # return(admin2.res)
@@ -299,7 +311,11 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
     if(aggregation==F){
       draw.all=expit(t(fit1$draws.est[,-c(1,2)]))
-      admin1.res=list(res.admin1 =admin1_res,model = fit1,admin1_post=draw.all)
+      admin1.res=list(res.admin1 =admin1_res,
+                      model = fit1,
+                      admin1_post=draw.all,
+                      admin.info=admin.info,
+                      admin=admin)
     }else{
 
 
@@ -316,8 +332,13 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
 
-      admin1.res=list(res.admin1 = admin1_res, agg.natl= agg.natl, model = fit1,
-                      admin1_post=draw.all,nation_post=post.all)
+      admin1.res=list(res.admin1 = admin1_res,
+                      agg.natl= agg.natl,
+                      model = fit1,
+                      admin1_post=draw.all,
+                      nation_post=post.all,
+                      admin.info=admin.info,
+                      admin=admin)
 
     }
 
