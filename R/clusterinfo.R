@@ -22,7 +22,7 @@
 #' }
 #' @export
 #'
-clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = "NAME_2") {
+clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.adm2 = "NAME_2") {
  #  # SpatialPointsDataFrame for point shape file for each cluster
  #  points<-geo
  #  cluster.info<-points@data%>%dplyr::select(cluster=DHSCLUST, LONGNUM, LATNUM)
@@ -57,6 +57,40 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
  #
  # # return(cluster.info)
  #  return(list(cluster.info=cluster.info,wrong.points=wrong.points))
+
+
+  if(is.null(poly.adm2)){
+
+
+
+    poly.adm1<- sf::st_as_sf(poly.adm1)
+    points_sf <- sf::st_as_sf(geo)
+    if( !any(sf::st_is_valid(poly.adm1)) ){stop('sf object not valid, consider validating it via sf::st_make_valid')}
+
+    cluster.info <- points_sf %>%
+      select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
+
+    wrong.points <- cluster.info[which(abs(cluster.info$LATNUM) <
+                                         1e-07 & abs(cluster.info$LONGNUM) <1e-07), ]$cluster
+
+    admin1.sf <- st_join(cluster.info, poly.adm1) %>%
+      sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
+
+    cluster.info$admin1.name <- as.data.frame( admin1.sf)[,by.adm1]
+    #removing wrong.points that has no coordinates
+    cluster.info <- cluster.info[!(cluster.info$cluster %in% points_sf$DHSCLUST[wrong.points]),]
+
+
+    #removing wrong.points that has no admin 1 name
+    wrong.points <- c(wrong.points,cluster.info[ which(is.na(cluster.info$admin1.name)),]$cluster)
+    cluster.info <- cluster.info[!(cluster.info$cluster %in% wrong.points),]
+
+    # return(cluster.info)
+    cluster.info<-as.data.frame(cluster.info)
+    return(list(data=cluster.info, wrong.points = wrong.points))
+  }else{
+
+
 
   poly.adm1<- sf::st_as_sf(poly.adm1)
   poly.adm2<-sf::st_as_sf(poly.adm2)
@@ -112,7 +146,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1",by.adm2 = 
 
 
     return(list(data=cluster.info, wrong.points = wrong.points))
-
+  }
 
 }
 

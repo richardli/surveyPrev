@@ -4,7 +4,13 @@
 \alias{clusterInfo}
 \title{Get cluster information}
 \usage{
-clusterInfo(geo, poly.adm1, poly.adm2, by.adm1 = "NAME_1", by.adm2 = "NAME_2")
+clusterInfo(
+  geo,
+  poly.adm1,
+  poly.adm2 = NULL,
+  by.adm1 = "NAME_1",
+  by.adm2 = "NAME_2"
+)
 }
 \arguments{
 \item{geo}{spatial point dataframe}
