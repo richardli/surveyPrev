@@ -321,7 +321,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
      colnames(draw.all)=admin2_res$admin2.name.full
      # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
      res.admin2=list(res.admin2=res.admin2,
-                    admin2_post= draw.all)
+                    admin2_post= draw.all,
+                    admin.info=admin.info,
+                    admin=admin)
    }else{
 
 
@@ -471,7 +473,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                         agg.natl=nation_agg,
                         admin2_post=draw.all,
                         admin1_post=admin1.samp,
-                        nation_post=nation.samp
+                        nation_post=nation.samp,
+                        admin.info=admin.info,
+                        admin=admin
                         )
 
    }
@@ -566,7 +570,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       draw.all= expit(apply(dd, 1, FUN = function(x) rnorm(10000, mean = x[1], sd = x[2]))) # sqrt(colVars(draw.all))
 
       res.admin1=list(res.admin1=res.admin1,
-                      admin1_post=draw.all)
+                      admin1_post=draw.all,
+                      admin.info=admin.info,
+                      admin=admin)
 
     }else{
 
@@ -626,7 +632,12 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
 
-    res.admin1 = (list(res.admin1 = res.admin1, agg.natl = nation_agg, admin1_post=draw.all, nation_post=nation.samp))
+    res.admin1 = (list(res.admin1 = res.admin1,
+                       agg.natl = nation_agg,
+                       admin1_post=draw.all,
+                       nation_post=nation.samp,
+                       admin.info=admin.info,
+                       admin=admin))
     }
     attr(res.admin1,"class")="directEST"
     attr(res.admin1,"domain.names") <- admin.info$admin1.name
@@ -684,10 +695,13 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
    # colnames(admin0_res)[1] <- c("admin0.name")
    # return(list(res.admin0=admin0_res[,-1]))
-    res.admin0=list(res.admin0=admin0_res[,-1])
-    attr(res.admin0,"class")="directEST"
+
+    res.natl=list(res.natl=admin0_res[,-1],
+                  admin.info=admin.info,
+                  admin=admin)
+    attr(res.natl,"class")="directEST"
     # attr(res.admin0,"domain.names") <- ""
-    return(res.admin0)
+    return(res.natl)
 
   }
 
