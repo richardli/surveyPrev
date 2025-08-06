@@ -168,7 +168,11 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
 
 
   return(list(data=admin.info,
-              mat=as.matrix(as.data.frame(admin.mat))))
+              mat=as.matrix(as.data.frame(admin.mat)),
+              by.adm=by.adm,
+              by.adm.upper=by.adm.upper
+
+              ))
 
 }
 
