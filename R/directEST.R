@@ -76,7 +76,14 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
   options(survey.adjust.domain.lonely=TRUE)
   options(survey.lonely.psu="adjust")
 
-   if(sum(is.na(data$value))>0){
+  if(!is.null(admin.info)){
+    admin.info.output=admin.info
+  }else{
+    admin.info.output=NULL
+  }
+
+
+ if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
@@ -322,7 +329,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
      # colnames(res.admin2)[colnames(res.admin2) == 'admin2.name.full'] <- 'admin2.name.full'
      res.admin2=list(res.admin2=res.admin2,
                     admin2_post= draw.all,
-                    admin.info=admin.info,
+                    admin.info=admin.info.output,
                     admin=admin)
    }else{
 
@@ -474,7 +481,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                         admin2_post=draw.all,
                         admin1_post=admin1.samp,
                         nation_post=nation.samp,
-                        admin.info=admin.info,
+                        admin.info=admin.info.output,
                         admin=admin
                         )
 
@@ -571,7 +578,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
       res.admin1=list(res.admin1=res.admin1,
                       admin1_post=draw.all,
-                      admin.info=admin.info,
+                      admin.info=admin.info.output,
                       admin=admin)
 
     }else{
@@ -636,7 +643,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                        agg.natl = nation_agg,
                        admin1_post=draw.all,
                        nation_post=nation.samp,
-                       admin.info=admin.info,
+                       admin.info=admin.info.output,
                        admin=admin))
     }
     attr(res.admin1,"class")="directEST"
@@ -697,8 +704,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
    # return(list(res.admin0=admin0_res[,-1]))
 
     res.natl=list(res.natl=admin0_res[,-1],
-                  admin.info=admin.info,
-                  admin=admin)
+                  admin.info=admin.info.output,
+                  admin=admin
+                  )
     attr(res.natl,"class")="directEST"
     # attr(res.admin0,"domain.names") <- ""
     return(res.natl)

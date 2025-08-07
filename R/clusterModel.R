@@ -82,6 +82,14 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
     message("Removing NAs in indicator response")
   }
 
+  if(!is.null(admin.info)){
+    admin.info.output=admin.info
+  }else{
+    admin.info.output=NULL
+  }
+
+
+
 
   # if(is.null(admin.info) && model != "iid"){
   #   message("No admin.info supplied. Using IID random effects.")
@@ -704,7 +712,7 @@ if(X.unit.model==FALSE){
               admin1_post=draw.all,
               urban_post=draw.u,
               rural_post=draw.r,
-              admin.info=admin.info,
+              admin.info=admin.info.output,
               admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin1.name
@@ -843,7 +851,7 @@ if(X.unit.model==FALSE){
               admin2_post=draw.all,
               urban_post=draw.u,
               rural_post=draw.r,
-              admin.info=admin.info,
+              admin.info=admin.info.output,
               admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin2.name.full
@@ -865,7 +873,7 @@ if(X.unit.model==FALSE){
               nation_post=post.all,
               urban_post=draw.u,
               rural_post=draw.r,
-              admin.info=admin.info,
+              admin.info=admin.info.output,
               admin=admin)
       attr(cm,"class")="clusterModel"
       attr(cm,"domain.names") <- admin.info$admin2.name.full
@@ -1257,7 +1265,7 @@ if(X.unit.model==FALSE){
             admin0_post=draw.all0,
             urban0_post=draw.u0,
             rural0_post=draw.r0,
-            admin.info=admin.info,
+            admin.info=admin.info.output,
             admin=admin
             )
     attr(cm,"class")="clusterModel"
@@ -1363,7 +1371,7 @@ if(X.unit.model==FALSE){
             admin0_post=draw.all0,
             urban0_post=draw.u0,
             rural0_post=draw.r0,
-            admin.info=admin.info,
+            admin.info=admin.info.output,
             admin=admin
             )
     attr(cm,"class")="clusterModel"

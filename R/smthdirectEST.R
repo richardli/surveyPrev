@@ -57,6 +57,12 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
   }
+  if(!is.null(admin.info)){
+    admin.info.output=admin.info
+  }else{
+    admin.info.output=NULL
+  }
+
 
   if(is.null(admin.info) && model != "iid"){
     message("No admin.info supplied. Using IID random effects.")
@@ -192,7 +198,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
       admin2.res=list(res.admin2=admin2.res,
                       model = fit2,
                       admin2_post=draw.all,
-                      admin.info=admin.info,
+                      admin.info=admin.info.output,
                       admin=admin)
 
     }else{
@@ -249,7 +255,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                       admin2_post=t(draw.all),
                       admin1_post=admin1.samp,
                       nation_post=post.all,
-                      admin.info=admin.info,
+                      admin.info=admin.info.output,
                       admin=admin
                       )
     }
@@ -314,7 +320,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
       admin1.res=list(res.admin1 =admin1_res,
                       model = fit1,
                       admin1_post=draw.all,
-                      admin.info=admin.info,
+                      admin.info=admin.info.output,
                       admin=admin)
     }else{
 
@@ -337,7 +343,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                       model = fit1,
                       admin1_post=draw.all,
                       nation_post=post.all,
-                      admin.info=admin.info,
+                      admin.info=admin.info.output,
                       admin=admin)
 
     }
