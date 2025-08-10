@@ -162,6 +162,7 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
     poly.adm2<-geo
     admin.mat <- spdep::poly2nb(sp::SpatialPolygons(poly.adm2@polygons))
     admin.mat <- spdep::nb2mat(admin.mat, zero.policy = TRUE)
+    admin.mat=as.data.frame(admin.mat)
     colnames(admin.mat) <- rownames(admin.mat) <-  paste0(geo@data[,by.adm.upper],"_",geo@data[,by.adm])
 
     }
