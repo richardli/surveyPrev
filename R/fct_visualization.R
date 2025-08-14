@@ -1,8 +1,9 @@
 ###############################################################
 ### leaflet (interactive) prevalence map for any subnational level
 ###############################################################
-#' visualization_helpers
-#'
+#' 
+#' leaflet (interactive) prevalence map for any subnational level
+#' 
 #' @description produce interactive map for any subnational level, with the option to focus on one admin-1 level
 #'
 #' @param res.obj result object from surveyPrev
@@ -46,25 +47,24 @@
 #' dhsData <- getDHSdata(country = "Zambia",
 #'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' poly.adm2 <- sf::st_as_sf(ZambiaAdm2)
 #' admin.info2 <- adminInfo(poly.adm = poly.adm2, 
 #'                          admin = 2, 
 #'                          by.adm = "NAME_2", 
 #'                          by.adm.upper = "NAME_1")
-
 #' cl_res_ad2 <- clusterModel(data=data,
 #'                   cluster.info = cluster.info,
 #'                   admin.info = admin.info2,
 #'                   model = "bym2",
 #'                   admin = 2)
-#' prevMap.adm2.central <- prevMap.leaflet(res.obj=res_ad2, 
+#' prevMap.adm2.central <- prevMap.web(res.obj=cl_res_ad2, 
 #'                                               poly.shp=poly.adm2,
 #'                                               admin1.focus = "Central")
 #' } 
 #' 
 
-prevMap.leaflet <- function(res.obj,
+prevMap.web <- function(res.obj,
                             poly.shp,
                             admin1.focus = NULL,
                             color.palette = NULL,
@@ -491,8 +491,8 @@ prevMap.leaflet <- function(res.obj,
 ###############################################################
 ### static prevalence map for any subnational level
 ###############################################################
-#' visualization_helpers
-#'
+#' static prevalence map for any subnational level
+#' 
 #' @description produce static map for any subnational level, with the option to focus on one admin-1 level
 #'
 #' @param res.obj result object from surveyPrev
@@ -530,7 +530,7 @@ prevMap.leaflet <- function(res.obj,
 #' dhsData <- getDHSdata(country = "Zambia",
 #'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' admin.info2 <- adminInfo(poly.adm = sf::st_as_sf(ZambiaAdm2), 
 #'                          admin = 2, 
 #'                          by.adm = "NAME_2", 
@@ -541,13 +541,13 @@ prevMap.leaflet <- function(res.obj,
 #'                   model = "bym2",
 #'                   admin = 2)
 #'
-#' prevMap.adm2.central <- prevMap.static(res.obj=res_ad2, 
+#' prevMap.adm2.central <- prevMap(res.obj=cl_res_ad2, 
 #'                                        poly.shp=poly.adm2,
 #'                                        admin1.focus = "Central")
 #' } 
 #' 
 
-prevMap.static <- function(res.obj,
+prevMap <- function(res.obj,
                            poly.shp ,
                            admin1.focus = NULL,
                            value.to.plot = 'mean',
@@ -725,6 +725,8 @@ prevMap.static <- function(res.obj,
 ### ridge plot
 ###############################################################
 #'
+#' ridge plot for prevalence
+#' 
 #' @description static ridge plot for posterior densities
 #'
 #' @param res.obj result object from surveyPrev
@@ -747,7 +749,7 @@ prevMap.static <- function(res.obj,
 #'
 #' @export
 #' 
-#' @example
+#' @examples
 #' \dontrun{
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' cluster.info <- clusterInfo(geo = geo,
@@ -756,7 +758,7 @@ prevMap.static <- function(res.obj,
 #' dhsData <- getDHSdata(country = "Zambia",
 #'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' poly.adm1 <- sf::st_as_sf(ZambiaAdm1)
 #' admin.info1 <- adminInfo(poly.adm = poly.adm1, 
 #'                          admin = 1, 
@@ -770,12 +772,12 @@ prevMap.static <- function(res.obj,
 #'                   aggregation = TRUE,
 #'                   CI = 0.95)
 #'  
-#' posterior_ridge_plot(cl_res_ad1, plot.extreme.num=5)
+#' ridgeprevPlot(cl_res_ad1, plot.extreme.num=5)
 #' 
 #' }
 #' 
 
-posterior_ridge_plot <- function(res.obj,
+ridgeprevPlot <- function(res.obj,
                                  admin1.focus=NA ,
                                  plot.extreme.num=8,
                                  legend.label = 'Value',
@@ -1024,6 +1026,8 @@ posterior_ridge_plot <- function(res.obj,
 ### scatter plot
 ###############################################################
 #'
+#' web-based scatter plot
+#' 
 #' @description interactive scatter plot comparing estimates from two methods for the same admin level
 #'
 #' @param res.obj.x result object from surveyPrev
@@ -1046,7 +1050,7 @@ posterior_ridge_plot <- function(res.obj,
 #'
 #' @export
 #' 
-#' @example
+#' @examples
 #' 
 #' #' \dontrun{
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
@@ -1056,29 +1060,28 @@ posterior_ridge_plot <- function(res.obj,
 #' dhsData <- getDHSdata(country = "Zambia",
 #'                                  indicator = "ancvisit4+",
 #'                                  year = 2018)
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 #' poly.adm2 <- sf::st_as_sf(ZambiaAdm2)
 #' admin.info2 <- adminInfo(poly.adm = poly.adm2, 
 #'                          admin = 2, 
 #'                          by.adm = "NAME_2", 
 #'                          by.adm.upper = "NAME_1")
-
 #' res_adm2_cl <- clusterModel(data=data,
 #'                   cluster.info = cluster.info,
 #'                   admin.info = admin.info2,
 #'                   model = "bym2",
 #'                   admin = 2)
-#'res_adm2_fh <- fhModel(data=data,
+#' res_adm2_fh <- fhModel(data=data,
 #'                   cluster.info = cluster.info,
 #'                   admin.info = admin.info2,
 #'                   model = "bym2",
 #'                   admin = 2)
 #' 
-#' scatter.plot(res_adm2_cl, res_adm2_fh)
+#' scatterPlot.web(res_adm2_cl, res_adm2_fh)
 #' } 
 #' 
 
-scatter.plot <- function(res.obj.x,
+scatterPlot.web <- function(res.obj.x,
                          res.obj.y ,
                          value.to.plot = 'mean',
                          label.x = 'Method 1 Estimates',
