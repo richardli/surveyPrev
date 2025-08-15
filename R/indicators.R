@@ -7,9 +7,9 @@
 #'#unmet_family  IRdata
 #'women with an unmet need for family planning for spacing and limiting
 #'
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -50,9 +50,9 @@ fp_unmet_tot<- function(Rdata){
 #'
 #'
 #'
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -85,10 +85,10 @@ fp_cruse_mod <- function(Rdata){
 #' CM_ECMR_C_NNR
 #' nmr CM_ECMR_C_NNR BR (not from dhs github)
 #' Neonatal mortality rate !!!!!!
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #' @param nmr.year This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey.
 
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -122,9 +122,9 @@ NMR<- function(Rdata, nmr.year){
 #'RH_ANCN_W_N4P
 #'ancvisit4+ RH_ANCN_W_N4P  IR
 #'Antenatal visits for pregnancy: 4+ visits
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -184,9 +184,9 @@ return(IRdata)
 #'RH_DELA_C_SKP
 #'IR or BR
 #'Assistance during delivery from a skilled provider
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -359,9 +359,9 @@ return(BRdata)
 
 #'CH_DIAT_C_ORT
 #'KR  Diarrhea treatment (Children under five with diarrhea treated with either ORS or RHF)
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -412,9 +412,9 @@ ch_diar_ors_rhf<-function(Rdata){
 #' KR
 #'Percentage of children (age 12-23)
 #'Pentavalent 1rd dose vaccination according to either source"
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -501,9 +501,9 @@ ch_pent1_either<-function(Rdata){
 #'DPT3  KR
 #'Percentage of children (age 12-23)
 #'Pentavalent 3rd dose vaccination according to either source"
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -623,9 +623,9 @@ ch_pent3_either<-function(Rdata){
 #'Percentage of children (age 12-23)
 #'ch_meas_either   CH_VAC.do  KR
 #'"Measles vaccination according to either source"
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -862,9 +862,9 @@ ch_meas_either<-function(Rdata){
 #'CH_VACS_C_BAS
 #'Children with all 8 basic vaccinations (age 12-23)
 #'"All basic vaccinations according to either source"
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -992,9 +992,9 @@ ch_allvac_either<-function(Rdata){
 #'CH_VACS_C_NON
 #'KR
 #'Children with no vaccinations (age 12-23)
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1138,9 +1138,9 @@ ch_novac_either<-function(Rdata){
 #'NT_CH_NUT.do PR "Stunted child under 5 years"
 #'Stunting rate (Prevalence of stunted (HAZ < -2) children under five (0-59 months))
 #'Percentage of children under age five stunted (below -2 standard deviations of height-for-age according to the WHO standard).
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1179,9 +1179,9 @@ nt_ch_stunt<-function(Rdata){
 #' NT_CH_NUT.do PR "Wasted child under 5 years"
 #'Wasting rate (Prevalence of wasted (HAZ < -2) children under five (0-59 months))
 #'Percentage of children under age five with a weight-for-height z-score (WHZ) more than two standard deviations below the median WHO growth standards.
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1218,9 +1218,9 @@ nt_ch_wast<-function(Rdata){
 #'womananemia
 #'nt_wm_any_anem "Any anemia - women"  NT_WM_NUT.do
 #'Percentage of women aged 15-49 classified as having any anemia
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1255,9 +1255,9 @@ nt_wm_any_anem <- function(Rdata){
 #' Children exclusively breastfed
 #' NT_IYCF.do KR "Exclusively breastfed - last-born under 6 months"
 #' Children exclusively breastfed (Prevalence of exclusive breastfeeding of children under six months of age)
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1339,9 +1339,9 @@ colnames(KRiycf)[colnames(KRiycf) == 'nt_ebf'] <- "value"
 #'Children with any anemia
 #'"Any anemia - child 6-59 months" PR NT_CH_NUT.do
 #' Children under five with any anemia
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1375,9 +1375,9 @@ return(PRdata)
 #' Women who are thin according to BMI (<18.5)
 #' NT_WM_NUT.do "Thin BMI - women" IR !!!!!!!!
 #' Underweight (Prevalence of underweight (BMI < 18.5) women of reproductive age)
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1435,9 +1435,9 @@ return(IRdata)
 #' ML_NETS_HH.do  HR
 #'Households with >1 ITN per 2 household members
 #'Percentage of households with at least one ITN for every 2 persons who stayed in the household last night
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -1509,9 +1509,9 @@ ml_hhaccess<-function(Rdata){
 #'HA_HIVP_W_HIV
 #'hv_hiv_pos
 #'"HIV positive test result"
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -2658,9 +2658,9 @@ hv_hiv_pos<-function(Rdata){
 #'Percentage of households using an improved sanitation facility
 #'PH_SANI.do  PR
 #'ph_sani_improve "Access to improved sanitation" country-specific
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -2727,9 +2727,9 @@ hv_hiv_pos<-function(Rdata){
 #'Population with access to a basic sanitation service WS_TLET_P_BAS in DHS API
 #'PH_SANI.do  PR
 #'ph_sani_basic "Basic sanitation facility"
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
@@ -2813,9 +2813,9 @@ hv_hiv_pos<-function(Rdata){
 #'Population using a basic water source
 #' PH_WATER.do
 #'ph_wtr_basic "Basic water service" PR
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Qianyu Dong
 #' @examples
