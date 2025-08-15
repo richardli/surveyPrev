@@ -994,7 +994,7 @@ ridgeprevPlot <- function(res.obj,
     y.text.size =13
   }else{y.text.size=16}
   
-  ylabel <- ifelse(!is.null(admin1.focus), admin1.focus, "Region name")
+  ylabel <- ifelse(!is.na(admin1.focus), admin1.focus, "Region name")
   
   ridge.plot.adm <- ridge.plot.adm +
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5,size=20),
@@ -1476,4 +1476,5 @@ add_basemap <- function(original.map,
   
   return(return.map)
   
+
 }
