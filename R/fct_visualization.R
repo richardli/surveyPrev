@@ -35,6 +35,12 @@
 #' @return leaflet map object
 #' 
 #' @importFrom magrittr %>%
+#' @import htmltools
+#' @import leaflegend
+#' @import leaflet
+#' @import plotly
+#' @import scales
+#' @import viridisLite
 #' 
 #' @export
 #'
@@ -1052,7 +1058,7 @@ ridgeprevPlot <- function(res.obj,
 #' 
 #' @examples
 #' 
-#' #' \dontrun{
+#' \dontrun{
 #' geo <- getDHSgeo(country = "Zambia", year = 2018)
 #' cluster.info <- clusterInfo(geo = geo,
 #'                             poly.adm1 = ZambiaAdm1,
@@ -1078,7 +1084,7 @@ ridgeprevPlot <- function(res.obj,
 #'                   admin = 2)
 #' 
 #' scatterPlot.web(res_adm2_cl, res_adm2_fh)
-#' } 
+#' }
 #' 
 
 scatterPlot.web <- function(res.obj.x,

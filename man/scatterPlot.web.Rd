@@ -37,7 +37,7 @@ interactive scatter plot comparing estimates from two methods for the same admin
 }
 \examples{
 
-#' \dontrun{
+\dontrun{
 geo <- getDHSgeo(country = "Zambia", year = 2018)
 cluster.info <- clusterInfo(geo = geo,
                             poly.adm1 = ZambiaAdm1,
@@ -63,6 +63,6 @@ res_adm2_fh <- fhModel(data=data,
                   admin = 2)
 
 scatterPlot.web(res_adm2_cl, res_adm2_fh)
-} 
+}
 
 }
