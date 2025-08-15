@@ -17,6 +17,7 @@
 #' data <- getDHSindicator(dhsData, indicator = NULL,
 #'                          FUN = surveyPrev::fp_cruse_mod)
 #' }
+#' @importFrom expss apply_labels
 #' @export
 #'
 ED_EDUC_W_SEH <- function(Rdata){

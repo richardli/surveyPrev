@@ -14,7 +14,7 @@
 #' @param standardize whether to standardize the covariates/tiffs or not
 #' @param na.rm whether to remove rows that have no Population or admin 2 membership
 #' @importFrom sf st_as_sf
-#' @importFrom terra  aggregate xyFromCell extract resample ncell
+#' @importFrom terra  aggregate xyFromCell extract resample ncell global
 #'
 #' @return A list with two elements:
 #'   \item{natl.grid}{A data frame containing natl grid of pixels for covariates and Admin information.}

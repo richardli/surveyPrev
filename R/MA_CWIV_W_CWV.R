@@ -51,7 +51,7 @@ MA_CWIV_W_CWV <- function(IRdata){
 calc_median_age <-function() {
 
   # create a age at first marriage (afm) dataframe with cumulative proportions by each age, use survey weights
-  median_df <- data.frame(prop_cumulative = unclass(round(cumsum(prop.table(svytable(~temp_df$ms_age, design=dhssvy2))),4)))
+  median_df <- data.frame(prop_cumulative = unclass(round(cumsum(prop.table(survey::svytable(~temp_df$ms_age, design=dhssvy2))),4)))
   median_df$age <- as.numeric(row.names(median_df))
   
   # find age groups before and after the cumulative 50% 

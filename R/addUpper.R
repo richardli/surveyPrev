@@ -67,6 +67,7 @@
 #'
 #' @importFrom sf st_within st_nearest_feature st_centroid st_as_sf st_make_valid
 #' @importFrom dplyr mutate select arrange all_of
+#' @importFrom rlang :=
 #' @export
 
 

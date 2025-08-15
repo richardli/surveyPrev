@@ -12,9 +12,9 @@
 #' @param prop.census a data frame with two columns: `admin1` column correspond to the admin 1 names in the `poly.adm1` file. And `frac` column specifying the proportion of population in each admin 1 area during the census year. See examples for detail.
 #' @return a list of two data frames for admin 1 and admin 2 urban ratios and UR surface where 1 for urban.
 #'
-#' @importFrom raster extract
+#' @importFrom raster extract 
 #' @importFrom sp SpatialPoints SpatialPolygons getSpPPolygonsIDSlots
-#' @importFrom terra rast
+#' @importFrom terra rast cellFromXY values
 #' @export
 #' @examples
 #'
@@ -179,10 +179,10 @@ getUR <- function(tiff.census, tiff.survey, prop.census, fact = 10, poly.adm1, p
 	# Create empty raster with the same extent/resolution as tiff.survey
 	tiff.survey <- terra::rast(tiff.survey)
 	urban_rast <-tiff.survey
-	values(urban_rast) <- NA  # Start with NA
+	terra::values(urban_rast) <- NA  # Start with NA
 
 	# Re-map urban values into the raster using x/y matching
-	cell_idx <- cellFromXY(urban_rast, pop_grid[, c("x", "y")])
+	cell_idx <- terra::cellFromXY(urban_rast, pop_grid[, c("x", "y")])
 	urban_rast[cell_idx] <- pop_grid$urban
 
 

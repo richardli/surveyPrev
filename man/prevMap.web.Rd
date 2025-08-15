@@ -45,9 +45,13 @@ prevMap.web(
 
 \item{no.hatching}{whether to hatch region with problematic uncertainties, recommend F (depends on rgeos package, set to T if not installed)}
 
+\item{hatching.density}{density of the hatching lines}
+
 \item{use.basemap}{what basemap to use 'OSM', if NULL, no basemap}
 
 \item{threshold.p}{cutoff for the exceedance probability map}
+
+\item{legend.color.reverse}{logical indicator of reversing the color legend}
 }
 \value{
 leaflet map object

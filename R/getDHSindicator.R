@@ -17,6 +17,7 @@
 #' @import dplyr
 #' @import tidyverse
 #' @importFrom sjlabelled set_label add_labels
+#' @importFrom utils getFromNamespace
 #' @import labelled
 #' @author Qianyu Dong
 #' @examples

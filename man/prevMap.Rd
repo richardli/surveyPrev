@@ -38,6 +38,8 @@ prevMap(
 \item{color.reverse}{whether to use reverse color scale}
 
 \item{value.range}{what range to plot, useful if want to compare plots using the same scale}
+
+\item{...}{arguments passed to mapPlot function from SUMMER package}
 }
 \value{
 summer map object

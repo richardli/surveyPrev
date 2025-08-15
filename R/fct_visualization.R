@@ -26,6 +26,10 @@
 #'
 #' @param no.hatching whether to hatch region with problematic uncertainties, recommend F (depends on rgeos package, set to T if not installed)
 #'
+#' @param hatching.density density of the hatching lines
+#' 
+#' @param legend.color.reverse logical indicator of reversing the color legend
+#' 
 #' @param map.title title for the map
 #'
 #' @param use.basemap what basemap to use 'OSM', if NULL, no basemap
@@ -35,12 +39,8 @@
 #' @return leaflet map object
 #' 
 #' @importFrom magrittr %>%
-#' @import htmltools
-#' @import leaflegend
-#' @import leaflet
-#' @import plotly
-#' @import scales
-#' @import viridisLite
+#' @importFrom htmltools HTML
+#' @import tidyr
 #' 
 #' @export
 #'
@@ -96,6 +96,15 @@ prevMap.web <- function(res.obj,
                     res.obj$admin.info$by.adm.upper)
   adm_level <- res.obj$admin
   
+  
+  if (!requireNamespace("htmltools", quietly = TRUE)) {
+    stop("Package 'htmltools' is required for interactive plots. ",
+         "Install it with: install.packages('htmltools')")
+  }
+  if (!requireNamespace("leaflet", quietly = TRUE)) {
+    stop("Package 'leaflet' is required for interactive plots. ",
+       "Install it with: install.packages('leaflet')")
+  }
   if (!requireNamespace("leaflegend", quietly = TRUE)) {
     stop("Package 'leaflegend' is required for this function. Please install it with install.packages('leaflegend').")
   }
@@ -520,10 +529,14 @@ prevMap.web <- function(res.obj,
 #' @param map.title title for the map
 #'
 #' @param threshold.p cutoff for the exceedance probability map
+#' 
+#' @param ... arguments passed to mapPlot function from SUMMER package
 #'
 #' @return summer map object
 #'
 #' @importFrom magrittr %>%
+#' @import scales
+#' 
 #' 
 #' @export
 #'
@@ -1101,6 +1114,11 @@ scatterPlot.web <- function(res.obj.x,
     by.res = 'region.name.full'
   }else{
     by.res = 'region.name'
+  }
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required for interactive plots. ",
+         "Install it with: install.packages('plotly')")
   }
   
   ########################################################
