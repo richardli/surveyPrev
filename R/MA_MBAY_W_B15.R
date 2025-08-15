@@ -1,9 +1,9 @@
 ##' MA_MBAY_W_B15  Young women age 20-24 first married by exact age 15
 ##' ms_afm_15 in github
 ##' IR
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples

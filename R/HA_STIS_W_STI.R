@@ -2,9 +2,9 @@
 ##' HA_STIS_W_STI  Percentage of women reporting a sexually transmitted infection in the 12 months preceding the survey among women who ever had sexual intercourse
 ##' hk_sti in github
 ##' IR
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples

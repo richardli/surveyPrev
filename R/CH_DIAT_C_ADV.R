@@ -1,9 +1,9 @@
 ##'CH_DIAT_C_ADV Treatment of diarrhea: Advice or treatment was sought;
 ##' ch_diar_care in github
 ##' KR
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples

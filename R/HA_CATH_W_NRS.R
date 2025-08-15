@@ -1,17 +1,7 @@
 ##'HA_CATH_W_NRS
-#' @param IRdata  data.frame from survryPrev::getDHSdata
+#' @param IRdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
-#'
-#' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
-#' @examples
-#' \dontrun{
-#' }
-#' @export
-##'HA_CATH_W_NRS
-#' @param IRdata  data.frame from survryPrev::getDHSdata
-#'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
@@ -19,9 +9,19 @@
 #' }
 #' @export
 ##'HA_CATH_W_NRS
-#' @param IRdata  data.frame from survryPrev::getDHSdata
+#' @param IRdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
+#'
+#' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
+#' @examples
+#' \dontrun{
+#' }
+#' @export
+##'HA_CATH_W_NRS
+#' @param IRdata  data.frame from surveyPrev::getDHSdata
+#'
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples

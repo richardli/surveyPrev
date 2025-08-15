@@ -1,9 +1,9 @@
 ##' DV_EXPV_W_12M  Percentage of women who have experienced physical violence in the past 12 months often or sometimes
 ##' dv_phy_12m in github
 ##' IR
-#' @param Rdata  data.frame from survryPrev::getDHSdata
+#' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
-#' @return A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+#' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 #'
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
