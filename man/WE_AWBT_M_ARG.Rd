@@ -7,10 +7,10 @@
 WE_AWBT_M_ARG(MRdata)
 }
 \arguments{
-\item{MRdata}{data.frame from survryPrev::getDHSdata}
+\item{MRdata}{data.frame from surveyPrev::getDHSdata}
 }
 \value{
-A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 }
 \description{
 WE_AWBT_M_ARG

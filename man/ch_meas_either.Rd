@@ -12,10 +12,10 @@ ch_meas_either   CH_VAC.do  KR
 ch_meas_either(Rdata)
 }
 \arguments{
-\item{Rdata}{data.frame from survryPrev::getDHSdata}
+\item{Rdata}{data.frame from surveyPrev::getDHSdata}
 }
 \value{
-A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 }
 \description{
 CH_VACC_C_MSL

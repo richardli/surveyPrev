@@ -9,10 +9,10 @@ KR}
 CH_DIAT_C_ADV(Rdata)
 }
 \arguments{
-\item{Rdata}{data.frame from survryPrev::getDHSdata}
+\item{Rdata}{data.frame from surveyPrev::getDHSdata}
 }
 \value{
-A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 }
 \description{
 CH_DIAT_C_ADV Treatment of diarrhea: Advice or treatment was sought;

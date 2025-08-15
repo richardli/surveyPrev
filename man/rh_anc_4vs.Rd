@@ -9,10 +9,10 @@ Antenatal visits for pregnancy: 4+ visits}
 rh_anc_4vs(Rdata)
 }
 \arguments{
-\item{Rdata}{data.frame from survryPrev::getDHSdata}
+\item{Rdata}{data.frame from surveyPrev::getDHSdata}
 }
 \value{
-A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 }
 \description{
 RH_ANCN_W_N4P

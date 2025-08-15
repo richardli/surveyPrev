@@ -9,10 +9,10 @@ IR}
 DV_EXPV_W_12M(Rdata)
 }
 \arguments{
-\item{Rdata}{data.frame from survryPrev::getDHSdata}
+\item{Rdata}{data.frame from surveyPrev::getDHSdata}
 }
 \value{
-A partially processed data.frame that will be used in survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 }
 \description{
 DV_EXPV_W_12M  Percentage of women who have experienced physical violence in the past 12 months often or sometimes

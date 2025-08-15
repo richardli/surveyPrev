@@ -9,10 +9,10 @@ Population in the second wealth quintile}
 HC_WIXQ_P_2ND(Rdata)
 }
 \arguments{
-\item{Rdata}{data.frame from survryPrev::getDHSdata}
+\item{Rdata}{data.frame from surveyPrev::getDHSdata}
 }
 \value{
-A partially processed data.frame that will be used in  survryPrev::getDHSindicator. The whole function can be used as a parameter in survryPrev::getDHSindicator
+A partially processed data.frame that will be used in  surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
 }
 \description{
 HC_WIXQ_P_2ND
