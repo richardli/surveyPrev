@@ -25,7 +25,6 @@
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #' @import dplyr
 #' @importFrom survey svydesign svyby
-#' @importFrom tidyr replace_na
 #' @importFrom data.table data.table
 #' @importFrom utils tail
 #' @importFrom stats sd quantile rnorm
@@ -1061,7 +1060,8 @@ if(X.unit.model==FALSE){
           summarise(weighted_value = sum(p.u * Population) / sum(Population), .groups = "drop") %>%
           right_join(data.frame(admin1.name = unique_areas), by = "admin1.name") %>%  # Ensure all areas are present
           arrange(admin1.name) %>%
-          mutate(weighted_value = replace_na(weighted_value, 0)) %>%  # Replace NA with 0
+          # mutate(weighted_value = replace_na(weighted_value, 0)) %>%  # Replace NA with 0
+          mutate(weighted_value = ifelse(is.na(weighted_value), 0, weighted_value))
           pull(weighted_value)
 
         draw.r1[i, ]=covpixel%>%
@@ -1070,7 +1070,8 @@ if(X.unit.model==FALSE){
           summarise(weighted_value = sum(p.r * Population) / sum(Population), .groups = "drop") %>%
           right_join(data.frame(admin1.name = unique_areas), by = "admin1.name") %>% # Ensure all areas are present
           arrange(admin1.name) %>%
-          mutate(weighted_value = replace_na(weighted_value, 0)) %>%  # Replace NA with 0
+          # mutate(weighted_value = replace_na(weighted_value, 0)) %>%  # Replace NA with 0
+          mutate(weighted_value = ifelse(is.na(weighted_value), 0, weighted_value))
           pull(weighted_value)
 
         draw.all1[i, ]=covpixel%>%
