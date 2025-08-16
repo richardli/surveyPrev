@@ -38,9 +38,6 @@
 #'
 #' @return leaflet map object
 #' 
-#' @importFrom magrittr %>%
-#' @importFrom htmltools HTML
-#' @import tidyr
 #' 
 #' @export
 #'
@@ -477,7 +474,7 @@ prevMap.web <- function(res.obj,
   
   if(!is.null(map.title)){
     
-    tag.map.title <- tags$style(HTML("
+    tag.map.title <- tags$style(htmltools::HTML("
     .leaflet-control.map-title {
     transform: translate(-50%,20%);
     position: fixed !important;
@@ -492,7 +489,7 @@ prevMap.web <- function(res.obj,
     "))
     
     title <- tags$div(
-      tag.map.title, HTML(paste0(map.title))
+      tag.map.title, htmltools::HTML(paste0(map.title))
     )
     
     adm.map <- adm.map %>%
@@ -534,8 +531,7 @@ prevMap.web <- function(res.obj,
 #'
 #' @return summer map object
 #'
-#' @importFrom magrittr %>%
-#' @import scales
+#' @importFrom scales percent label_percent
 #' 
 #' 
 #' @export
@@ -763,8 +759,6 @@ prevMap <- function(res.obj,
 #' @param top.bottom.label c('Top','Bottom') how to name the extremes, top 10 bottom 10? need to change when close to 0 is bad for the indicator
 #'
 #' @return ggplot2 object
-#'
-#' @importFrom magrittr %>%
 #'
 #' @export
 #' 
@@ -1065,7 +1059,7 @@ ridgeprevPlot <- function(res.obj,
 #'
 #' @return plotly or ggplot2 object
 #'
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 #'
 #' @export
 #' 
@@ -1442,8 +1436,11 @@ harmonize_all_cols <- function(survey.res){
       survey.res$region.name <-  survey.res$admin2.name
       survey.res$upper.adm.name <- survey.res[['admin1.name']]
     }else{
-      survey.res <- survey.res %>%
-        tidyr::separate(admin2.name.full, into = c("upper.adm.name", "region.name"), sep = "_", remove = FALSE)
+      # survey.res <- survey.res %>%
+      #   tidyr::separate(admin2.name.full, into = c("upper.adm.name", "region.name"), sep = "_", remove = FALSE)
+        parts <- stringr::str_split_fixed(survey.res$admin2.name.full, "_", 2)
+        survey.res$upper.adm.name <- parts[,1]
+        survey.res$region.name <- parts[,2]
     }
     
     survey.res$region.name.full <- survey.res[['admin2.name.full']]
