@@ -17,7 +17,9 @@ RH_DELP_C_DHF
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "RH_DELP_C_DHF", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

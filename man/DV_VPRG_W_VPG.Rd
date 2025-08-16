@@ -17,7 +17,9 @@ DV_VPRG_W_VPG
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "DV_VPRG_W_VPG", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

@@ -21,7 +21,9 @@ IR
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "AN_NUTS_W_OVW", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

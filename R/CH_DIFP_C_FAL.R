@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CH_DIFP_C_FAL", year = 2018)
 #' }
+#'
 #' @export
 CH_DIFP_C_FAL <- function(KRdata){
 # /*****************************************************************************************************

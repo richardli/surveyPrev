@@ -17,7 +17,9 @@ ED_MDIA_W_N3M
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "ED_MDIA_W_N3M", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

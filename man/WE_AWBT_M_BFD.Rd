@@ -17,7 +17,9 @@ WE_AWBT_M_BFD
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "WE_AWBT_M_BFD", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

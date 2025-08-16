@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "WS_WTRT_P_STN", year = 2018)
 #' }
+#'
 #' @export
 WS_WTRT_P_STN <- function(WASHdata){
 # /*****************************************************************************

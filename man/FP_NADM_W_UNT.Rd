@@ -23,7 +23,9 @@ Married women with an unmet need for family planning for spacing and limiting, l
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "FP_NADM_W_UNT", year = 2018)
 }
+
 }
 \author{
 Qianyu Dong

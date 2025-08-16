@@ -17,7 +17,9 @@ HC_AGEG_P_ADL
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "HC_AGEG_P_ADL", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

@@ -21,7 +21,9 @@ DV_AFSV_W_A10
 \dontrun{
 }
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "DV_AFSV_W_A10", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

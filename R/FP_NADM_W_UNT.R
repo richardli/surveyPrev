@@ -10,7 +10,9 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "FP_NADM_W_UNT", year = 2018)
 #' }
+#'
 #' @export
 #'
 FP_NADM_W_UNT<- function(Rdata){

@@ -17,7 +17,9 @@ FP_CUSA_W_IUD
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "FP_CUSA_W_IUD", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

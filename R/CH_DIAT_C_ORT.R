@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CH_DIAT_C_ORT", year = 2018)
 #' }
+#'
 #' @export
 CH_DIAT_C_ORT <- function(KRdata){
 # /*****************************************************************************************************

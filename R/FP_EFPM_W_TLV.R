@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "FP_EFPM_W_TLV", year = 2018)
 #' }
+#'
 #' @export
 FP_EFPM_W_TLV <- function(IRdata){
 # ******************************************************************************

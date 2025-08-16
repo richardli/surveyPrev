@@ -9,7 +9,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "HA_KAID_W_HRD", year = 2018)
 #' }
+#'
 #' @export
 HA_KAID_W_HRD<- function(Rdata){
 

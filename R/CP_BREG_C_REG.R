@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CP_BREG_C_REG", year = 2018)
 #' }
+#'
 #' @export
 CP_BREG_C_REG <- function(PRdata){
 # /*****************************************************************************************************

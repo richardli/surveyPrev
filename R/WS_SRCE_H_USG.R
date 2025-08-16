@@ -8,7 +8,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "WS_SRCE_H_USG", year = 2018)
 #' }
+#'
 #' @export
 WS_SRCE_H_USG<-function(Rdata){
 

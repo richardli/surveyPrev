@@ -17,7 +17,9 @@ CO_MOBB_W_MBF
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "CO_MOBB_W_MBF", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

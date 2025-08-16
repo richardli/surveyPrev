@@ -8,7 +8,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CM_ECMR_C_NNF", year = 2018)
 #' }
+#'
 #' @export
 #'
 CM_ECMR_C_NNF<- function(Rdata){
@@ -23,4 +25,3 @@ CM_ECMR_C_NNF<- function(Rdata){
 
   return(BRdata)
 }
-

@@ -17,7 +17,9 @@ FP_KMTA_W_FCN
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "FP_KMTA_W_FCN", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

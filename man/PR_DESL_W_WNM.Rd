@@ -17,7 +17,9 @@ PR_DESL_W_WNM
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "PR_DESL_W_WNM", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

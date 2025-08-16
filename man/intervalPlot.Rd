@@ -52,6 +52,7 @@ admin.info2 <- adminInfo(poly.adm = ZambiaAdm2,
                         admin = 2,
                         agg.pop =ZambiaPopWomen$admin2_pop,
                         proportion = ZambiaPopWomen$admin2_urban)
+ # unstratified model
 cl_res_ad2_unstrat <- clusterModel(data = data,
                   cluster.info = cluster.info,
                   admin.info = admin.info2,
@@ -66,6 +67,7 @@ head(cl_res_ad2_unstrat$agg.admin1)
 plots <- intervalPlot(cl_res_ad2_unstrat)
 plots[["Central"]]
 
+ # unstratified model
 cl_res_ad2 <- clusterModel(data = data,
                   cluster.info = cluster.info,
                   admin.info = admin.info2,

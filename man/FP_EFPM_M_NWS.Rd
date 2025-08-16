@@ -17,7 +17,9 @@ FP_EFPM_M_NWS
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "FP_EFPM_M_NWS", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

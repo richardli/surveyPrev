@@ -17,7 +17,9 @@ CH_DIAT_C_AMO
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "CH_DIAT_C_AMO", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

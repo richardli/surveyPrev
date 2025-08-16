@@ -17,7 +17,9 @@ CH_FEVR_C_FEV
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "CH_FEVR_C_FEV", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

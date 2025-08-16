@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "MA_CWIV_W_CWV", year = 2018)
 #' }
+#'
 #' @export
 MA_CWIV_W_CWV <- function(IRdata){
 # ******************************************************************************

@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CO_MOBB_W_MOB", year = 2018)
 #' }
+#'
 #' @export
 CO_MOBB_W_MOB <- function(IRdata){
 # /*****************************************************************************************************

@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "HC_AGEG_P_ADL", year = 2018)
 #' }
+#'
 #' @export
 HC_AGEG_P_ADL <- function(PRdata){
 # /*****************************************************************************************************

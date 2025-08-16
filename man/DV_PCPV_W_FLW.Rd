@@ -17,7 +17,9 @@ DV_PCPV_W_FLW
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "DV_PCPV_W_FLW", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

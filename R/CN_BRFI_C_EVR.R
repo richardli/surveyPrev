@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CN_BRFI_C_EVR", year = 2018)
 #' }
+#'
 #' @export
 CN_BRFI_C_EVR <- function(KRdata){
 # /*****************************************************************************************************

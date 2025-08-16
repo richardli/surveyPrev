@@ -17,7 +17,9 @@ CN_NUTS_C_WA2
 }
 \examples{
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "CN_NUTS_C_WA2", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong

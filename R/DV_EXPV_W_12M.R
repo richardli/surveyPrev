@@ -8,7 +8,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "DV_EXPV_W_12M", year = 2018)
 #' }
+#'
 #' @export
 DV_EXPV_W_12M<- function(Rdata){
 

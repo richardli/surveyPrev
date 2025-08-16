@@ -6,7 +6,9 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CN_NUTS_C_WAP", year = 2018)
 #' }
+#'
 #' @export
 CN_NUTS_C_WAP <- function(PRdata){
 # /*****************************************************************************************************

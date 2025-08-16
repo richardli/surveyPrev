@@ -25,7 +25,9 @@ HA_CATH_W_NRS
 \dontrun{
 }
 \dontrun{
+dhsData <- getDHSdata(country = "Zambia", indicator = "HA_CATH_W_NRS", year = 2018)
 }
+
 }
 \author{
 Miaolei Bao, Yunhan Wu, Qianyu Dong
