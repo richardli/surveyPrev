@@ -1,7 +1,7 @@
 Package: surveyPrev
 Type: Package
 Title: Mapping the Prevalence of Binary Indicators using Survey Data in Small Areas
-Version: 1.0.0
+Version: 2.0.0
 Authors@R: c(
     person(given = "Qianyu", family = "Dong", email= "qdong14@ucsc.edu", role = c("cre", "aut")),
     person(given = "Zehang R", family = "Li", email= "lizehang@gmail.com", role = "aut"),
@@ -19,7 +19,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Additional_repositories: https://inla.r-inla-download.org/R/testing/
-Suggests: INLA, knitr, rmarkdown, R.rsp, kableExtra, geodata, patchwork, htmltools, leaflegend, leaflet, plotly, viridisLite, htmltools
+Suggests: INLA, knitr, rmarkdown, R.rsp, kableExtra, geodata, patchwork, htmltools, leaflegend, leaflet, plotly, viridisLite
 VignetteBuilder: R.rsp, knitr
 NeedsCompilation: no
 Config/build/clean-inst-doc: FALSE
