@@ -15,7 +15,6 @@
 #' @importFrom rlang parse_expr
 #' @importFrom stats as.formula
 #' @import dplyr
-#' @import tidyverse
 #' @importFrom sjlabelled set_label add_labels
 #' @importFrom utils getFromNamespace
 #' @import labelled
