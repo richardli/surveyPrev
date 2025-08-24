@@ -5,7 +5,7 @@
 \alias{match_all_result}
 \title{Indicator matching table.}
 \format{
-An object of class \code{data.frame} with 142 rows and 20 columns.
+An object of class \code{data.frame} with 146 rows and 21 columns.
 }
 \usage{
 data(match_all_result)

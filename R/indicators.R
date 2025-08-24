@@ -989,7 +989,7 @@ ch_allvac_either<-function(Rdata){
 
 }
 
-#'CH_VACS_C_NON
+#' CH_VACC_C_NON
 #'KR
 #'Children with no vaccinations (age 12-23)
 #' @param Rdata  data.frame from surveyPrev::getDHSdata

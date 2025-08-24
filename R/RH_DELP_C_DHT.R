@@ -1,4 +1,4 @@
-##'RH_DELP_C_DHF
+##'RH_DELP_C_DHT
 #' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
 #' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
@@ -6,15 +6,15 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
-#' dhsData <- getDHSdata(country = "Zambia", indicator = "RH_DELP_C_DHF", year = 2018)
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "RH_DELP_C_DHT", year = 2018)
 #' }
 #'
 #' @export
-RH_DELP_C_DHF<- function(Rdata){
+RH_DELP_C_DHT<- function(Rdata){
 
   #Manually added function by Qianyu
   #Validated by Zambia 2018 admin 1 level(Five years preceding the survey)
-  # This is five year
+  #RH_DELP_C_DHT is made up of the two year version for RH_DELP_C_DHF(five year version/ official id name)
 
   # /*****************************************************************************************************
   # Program: 			RH_DEL.R
@@ -43,7 +43,7 @@ RH_DELP_C_DHF<- function(Rdata){
   # choose reference period, last 2 years (24 months) or last 5 years (60 months)
   # Using a period of the last 2 years will not match final report but would provide more recent information.
   BRdata <- BRdata %>%
-    mutate(period = 60)
+    mutate(period = 24)
 
   # age of child. If b19 is not available in the data use v008 - b3
   if ("TRUE" %in% (!("b19" %in% names(BRdata))))
@@ -63,6 +63,8 @@ RH_DELP_C_DHF<- function(Rdata){
   # This directly changes the number of rows (the sample size).
   BRdata <- BRdata %>%
     filter(age < period)
+
+
   # //Place of delivery
   # Note: please check the categories of m15 especially for older surveys. The category values may differ.
   BRdata <- BRdata %>%
