@@ -11,16 +11,18 @@
 #'
 #' @export
 CO_MOBB_W_MOB <- function(IRdata){
+
+# qianyu: v745c,d v169a is not in DHS 6
 # /*****************************************************************************************************
 # Program: 			  WE_ASSETS.R
 # Purpose: 			  Code to compute employment, earnings, and asset ownership in men and women
 # Data inputs: 		IR or MR dataset
 # Data outputs:		coded variables
 # Author:				  Shireen Assaf
-# Date last modified: Nov 18, 2021 by Shireen Assaf 
-# Note:				    The indicators below can be computed for men and women. 
+# Date last modified: Nov 18, 2021 by Shireen Assaf
+# Note:				    The indicators below can be computed for men and women.
 # *****************************************************************************************************/
-# 
+#
 # /*----------------------------------------------------------------------------
 # Variables created in this file:
 # we_empl				      "Employment status in the last 12 months among those currently in a union"
@@ -43,7 +45,7 @@ IRdata <- IRdata %>%
   mutate(wt = v005/1000000)
 
 # *** Employment and earnings ***
-# 
+#
 # //Employment in the last 12 months
 IRdata <- IRdata %>%
   mutate(we_empl =
@@ -70,7 +72,7 @@ IRdata <- IRdata %>%
 # //Comparison of earnings with husband/partner
 IRdata <- IRdata %>%
   mutate(we_earn_wm_compare =
-           case_when(v502==1 & v731 %in% c(1,2,3) & v741 %in% c(1,2) & (v746==4 | v743f==7) ~ 4, 
+           case_when(v502==1 & v731 %in% c(1,2,3) & v741 %in% c(1,2) & (v746==4 | v743f==7) ~ 4,
                      v502==1 & v731 %in% c(1,2,3) & v741 %in% c(1,2) & v746==3 ~ 3,
                      v502==1 & v731 %in% c(1,2,3) & v741 %in% c(1,2) & v746==2 ~ 2,
                      v502==1 & v731 %in% c(1,2,3) & v741 %in% c(1,2) & v746==1 ~ 1,
@@ -89,14 +91,14 @@ IRdata <- IRdata %>%
   set_variable_labels(we_earn_hs_decide = "Who decides on husband's cash earnings for employment in the last 12 months among women currently in a union")
 
 # *** Ownership of assets ***
-# 
+#
 # //Own a house
 IRdata <- IRdata %>%
   mutate(we_own_house = v745a) %>%
   set_variable_labels(we_own_house = "Ownership of housing")
 
-# //Own land
-IRdata <- IRdata %>%
+# # //Own land
+ IRdata <- IRdata %>%
   mutate(we_own_land = v745b) %>%
   set_variable_labels(we_own_land = "Ownership of land")
 
