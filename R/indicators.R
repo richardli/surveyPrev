@@ -209,7 +209,7 @@ rh_del_pvskill <- function(Rdata){
   # choose reference period, last 2 years (24 months) or last 5 years (60 months)
   # Using a period of the last 2 years will not match final report but would provide more recent information.
   BRdata <- BRdata %>%
-    mutate(period = 60)
+    mutate(period = 24)
 
   # age of child. If b19 is not available in the data use v008 - b3
   if ("TRUE" %in% (!("b19" %in% names(BRdata))))
@@ -224,6 +224,10 @@ rh_del_pvskill <- function(Rdata){
     BRdata <- BRdata %>%
       mutate(age = v008 - b3)
   }
+  # ** NEW STEP: Explicitly filter the data to keep only recent births **
+  # This directly changes the number of rows (the sample size).
+  BRdata <- BRdata %>%
+    filter(age < period)
   # //Assistance during delivery
   # **Note: Assistance during delivery and skilled provider indicators are both country specific indicators.
   # **The table for these indicators in the final report would need to be checked to confirm the code below.
@@ -326,7 +330,7 @@ rh_del_pvskill <- function(Rdata){
 
 
 
-  if (BRdata$v000[1] %in% c("NG7")) {
+  if (BRdata$v000[1] %in% c("NG7","NG6")) {
   # //Skilled provider during delivery -- ****SPECIFIC FOR NIGERIA*******
   # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
   BRdata <- BRdata %>%
