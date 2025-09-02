@@ -78,7 +78,7 @@ RH_DELA_C_SKF <- function(Rdata){
     set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
     set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
 
-  if (BRdata$v000[1] %in% c("BF7","BF6","CD6","ET8","ET7","NG7","NG6","MZ8","MZ6","TZ7","TZ8")) {
+  if (BRdata$v000[1] %in% c("BF8","BF6","CD6","ET8","ET7","NG7","NG6","MZ8","MZ6","TZ7","TZ8")) {
     # //Skilled provider during delivery -- ****SPECIFIC FOR NIGERIA*******
     # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
     BRdata <- BRdata %>%D
