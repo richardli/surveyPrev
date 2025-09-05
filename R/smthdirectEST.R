@@ -112,6 +112,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                                  aggregation = FALSE,
                                  var.fix = TRUE
         )
+
         fit0$res.admin2$region<-fit0$res.admin2$admin2.name.full
         fit0$res.admin2$HT.logit.est<-fit0$res.admin2$direct.logit.est
         fit0$res.admin2$HT.logit.var<-fit0$res.admin2$direct.logit.var
@@ -151,6 +152,14 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
        fit2$smooth$median=apply(tmp2, 1,  median)
        fit2$smooth$lower=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,]
        fit2$smooth$upper=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
+
+
+
+
+
+
+
+
 
 
 
