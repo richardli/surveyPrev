@@ -208,6 +208,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                       model = fit2,
                       admin2_post=draw.all,
                       admin.info=admin.info.output,
+                      fixed_areas=fit0$fixed_areas,
                       admin=admin)
 
     }else{
@@ -265,6 +266,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                       admin1_post=admin1.samp,
                       nation_post=post.all,
                       admin.info=admin.info.output,
+                      fixed_areas=fit0$fixed_areas,
                       admin=admin
                       )
     }

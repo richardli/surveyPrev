@@ -12,6 +12,7 @@
 #' @param aggregation whether or not report aggregation results.
 #' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
 #' @param var.fix Whether to add phantom cluster to fix admin 2 direct estimate with variance close to 0.
+#' @param threshold the threshold of variance to implement the variance fix method.
 #' @param ... Additional arguments passed on to the `smoothSurvey` function
 #'
 #'
@@ -70,7 +71,7 @@
 #'
 #' @export
 
-directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL,var.fix = FALSE, ...){
+directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL,var.fix = FALSE, threshold=1e-12, ...){
 
 
   options(survey.adjust.domain.lonely=TRUE)
@@ -97,7 +98,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       message("Subnational stratum-specific direct estimates are not implemented yet. Only overall estimates are computed")
     }
     #prepare data
-    modt<- left_join(data,cluster.info$data,by="cluster")
+    modt<- dplyr::left_join(data,cluster.info$data,by="cluster")
     modt<- modt[!(is.na(modt$admin2.name)), ]
     modt$strata.full <- factor(paste(modt$admin1.name, modt$strata))
     if(!is.null(alt.strata)){
@@ -138,7 +139,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
     res.admin2=admin2_res
-
+    fixed_areas=c()
 
 
     ################## Variance Fix ##################
@@ -288,16 +289,21 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
       # =========================
       # 3) Apply fix for each Admin2: broader trigger + lower bound protection
       # =========================
-      eps <- 1e-12          # === MOD: very small threshold
+      eps <- threshold          # === MOD: very small threshold
       floor_var <- 1e-12    # === MOD: variance floor (avoid writing as 0)
 
       admin_areas <- admin2_res$admin2.name.full
+
       for (i in admin_areas) {
         dat_tmp <- modt %>% dplyr::filter(admin2.name.full == i, !is.na(value))
         v_raw   <- admin2_res$direct.var[admin2_res$admin2.name.full == i]
 
         # === MOD: broader trigger condition
         if (!is.finite(v_raw) || v_raw < eps) {
+
+          fixed_areas <- c(fixed_areas, i)
+
+
           key_rows <- key %>% dplyr::filter(admin2.name.full == i)
           if (nrow(key_rows) == 0) {
             # Fallback: national stratum tw and p_h_nat
@@ -377,6 +383,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
      # admin2_res<-na.omit(admin2_res)# exclude NA when weighted mean to admin1
 
      # make direct.logit.est to 36 or -36 for HT=1 or 0.
+
+     admin2_res=res.admin2
      for (i in 1:dim(admin2_res)[1]) {
 
        if(is.na(admin2_res[i,]$direct.logit.est)&& round(admin2_res[i,]$direct.est,digits = 8)==1 ){
@@ -399,9 +407,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
      res.admin2=list(res.admin2=res.admin2,
                     admin2_post= draw.all,
                     admin.info=admin.info.output,
+                    fixed_areas=fixed_areas,
                     admin=admin)
    }else{
 
+     admin2_res=res.admin2
 
         ##aggregation
         # admin2_res<-na.omit(admin2_res)# exclude NA when weighted mean to admin1
@@ -551,6 +561,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                         admin1_post=admin1.samp,
                         nation_post=nation.samp,
                         admin.info=admin.info.output,
+                        fixed_areas=fixed_areas,
                         admin=admin
                         )
 

@@ -15,6 +15,7 @@ directEST(
   aggregation = FALSE,
   alt.strata = NULL,
   var.fix = FALSE,
+  threshold = 1e-12,
   ...
 )
 }
@@ -38,6 +39,8 @@ directEST(
 \item{alt.strata}{the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.}
 
 \item{var.fix}{Whether to add phantom cluster to fix admin 2 direct estimate with variance close to 0.}
+
+\item{threshold}{the threshold of variance to implement the variance fix method.}
 
 \item{...}{Additional arguments passed on to the `smoothSurvey` function}
 }
