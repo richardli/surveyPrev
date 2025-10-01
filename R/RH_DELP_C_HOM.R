@@ -39,9 +39,8 @@ RH_DELP_C_HOM<- function(Rdata){
 
   # period and age of child
   # choose reference period, last 2 years (24 months) or last 5 years (60 months)
-  # Using a period of the last 2 years will not match final report but would provide more recent information.
   BRdata <- BRdata %>%
-    mutate(period = 24)
+    mutate(period = 60)
 
   # age of child. If b19 is not available in the data use v008 - b3
   if ("TRUE" %in% (!("b19" %in% names(BRdata))))
