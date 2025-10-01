@@ -1,4 +1,4 @@
-##'RH_DELP_C_HOT
+##'RH_DELP_C_HOM
 #' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
 #' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
@@ -10,10 +10,9 @@
 #' }
 #'
 #' @export
-RH_DELP_C_HOT<- function(Rdata){
+RH_DELP_C_HOM<- function(Rdata){
 
-  #Manually added function by Qianyu
-  #RH_DELP_C_HOT is made up of the two year version for RH_DELP_C_HOM(five year version/ official id name)
+  # RH_DELP_C_HOM: delivery at home five year proceeding the survey.
 
   # /*****************************************************************************************************
   # Program: 			RH_DEL.R
@@ -80,13 +79,13 @@ RH_DELP_C_HOT<- function(Rdata){
 
 
   BRdata <- BRdata %>%
-    mutate(RH_DELP_C_HOT =
+    mutate(RH_DELP_C_HOM =
              case_when(
                rh_del_place==2 ~ 1,
                rh_del_place %in% c(1,3,9)   ~ 0 )) %>%
-    set_value_labels(RH_DELP_C_HOT = c("Yes" = 1, "No"=0)) %>%
-    set_variable_labels(RH_DELP_C_HOT = "Live births by place of delivery: Home")
+    set_value_labels(RH_DELP_C_HOM = c("Yes" = 1, "No"=0)) %>%
+    set_variable_labels(RH_DELP_C_HOM = "Live births by place of delivery: Home")
 
-  colnames(BRdata)[colnames(BRdata) == 'RH_DELP_C_HOT'] <- 'value'
+  colnames(BRdata)[colnames(BRdata) == 'RH_DELP_C_HOM'] <- 'value'
   return(BRdata)
 }
