@@ -184,10 +184,14 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name.full'
     admin2_res$sd<-sqrt(admin2_res$var)
 
-    admin2_res$cv=admin2_res$sd/admin2_res$mean
+    admin2_res$cv.mean=admin2_res$sd/admin2_res$mean
+    admin2_res$cv.median=admin2_res$sd/admin2_res$median
+    admin2_res$cv.star=pmax(admin2_res$sd/ admin2_res$median, admin2_res$sd/ (1-admin2_res$median) )
+
+
     admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name", "admin2.name.full")])
     admin2_res <- admin2_res[, c("admin2.name.full", "mean", "median", "sd", "var",
-                                 "lower", "upper", "cv", "logit.mean", "logit.median",
+                                 "lower", "upper", "cv.mean","cv.median","cv.star", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper", "admin1.name",  "admin2.name")]
 
 
@@ -204,12 +208,26 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
       # colnames(admin2.res)[colnames(admin2.res) == 'admin2.name.full'] <- 'admin2.name.full'
       draw.all=expit(t(fit2$draws.est[,-c(1,2)]))
 
+
+
+      if(var.fix==TRUE){
       admin2.res=list(res.admin2=admin2.res,
                       model = fit2,
                       admin2_post=draw.all,
                       admin.info=admin.info.output,
                       fixed_areas=fit0$fixed_areas,
                       admin=admin)
+      }else{
+        admin2.res=list(res.admin2=admin2.res,
+                        model = fit2,
+                        admin2_post=draw.all,
+                        admin.info=admin.info.output,
+                        admin=admin)
+      }
+
+
+
+
 
     }else{
 
@@ -258,6 +276,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
 
       # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
+
+      if(var.fix==TRUE){
       admin2.res=list(res.admin2=admin2_res,
                       agg.admin1=agg.admin1,
                       agg.natl=agg.natl,
@@ -269,6 +289,20 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                       fixed_areas=fit0$fixed_areas,
                       admin=admin
                       )
+
+      }else{
+        admin2.res=list(res.admin2=admin2_res,
+                        agg.admin1=agg.admin1,
+                        agg.natl=agg.natl,
+                        model = fit2,
+                        admin2_post=t(draw.all),
+                        admin1_post=admin1.samp,
+                        nation_post=post.all,
+                        admin.info=admin.info.output,
+                        admin=admin
+        )
+      }
+
     }
 
     # return(admin2.res)
@@ -302,9 +336,13 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     admin1_res$sd<-sqrt(admin1_res$var)
-    admin1_res$cv=admin1_res$sd/admin1_res$mean
+    admin1_res$cv.mean=admin1_res$sd/admin1_res$mean
+    admin1_res$cv.median=admin1_res$sd/admin1_res$median
+    admin1_res$cv.star=pmax(admin1_res$sd/ admin1_res$median, admin1_res$sd/ (1-admin1_res$median) )
+
+
     admin1_res <- admin1_res[, c("admin1.name", "mean", "median", "sd", "var",
-                                 "lower", "upper", "cv", "logit.mean", "logit.median",
+                                 "lower", "upper", "cv.mean","cv.median", "cv.star", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper")]
 
     ####message for aggregation=T but missing some components and return results without aggregation
@@ -345,8 +383,10 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
                              var = var(post.all),
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
-     agg.natl$cv=agg.natl$sd/agg.natl$mean
 
+     agg.natl$cv.mean=agg.natl$sd/agg.natl$mean
+     agg.natl$cv.median=agg.natl$sd/agg.natl$median
+     agg.natl$cv.star=pmax(agg.natl$sd/ agg.natl$median, agg.natl$sd/ (1-agg.natl$median) )
 
 
       admin1.res=list(res.admin1 = admin1_res,
