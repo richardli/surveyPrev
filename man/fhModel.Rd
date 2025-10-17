@@ -9,6 +9,7 @@ fhModel(
   cluster.info,
   admin.info = NULL,
   X = NULL,
+  nested = FALSE,
   admin,
   CI = 0.95,
   model = c("bym2", "iid"),
@@ -26,6 +27,8 @@ fhModel(
 \item{admin.info}{list contains data and mat, data contains population and urban/rural proportion at specific admin level and mat is the adjacency matrix, output of adminInfo function}
 
 \item{X}{dataframe that contains areal covariates, the first column should be the same admin name as in admin.info$data.}
+
+\item{nested}{whether or not to fit a nested model.}
 
 \item{admin}{admin level for the model}
 

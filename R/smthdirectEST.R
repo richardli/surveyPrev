@@ -12,6 +12,7 @@
 #' @param aggregation whether or not report aggregation results.
 #' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
 #' @param var.fix Whether to use fix variance admin 2 direct estimate as input for the model.
+#' @param nested whether or not to fit a nested model.
 #' @param ... Additional arguments passed on to the `smoothSurvey` function
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
@@ -51,7 +52,7 @@
 #'
 #' @export
 
-fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL,var.fix=FALSE, ...){
+fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE,admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL,var.fix=FALSE, ...){
 
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -102,7 +103,20 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     # missing_admin2 <- vector1[!(vector1 %in% vector2)]
 
 
+     if(nested){
+       if(is.null(admin.info)){
+         nested=FALSE
+         message("Need admin.info for nested model")
+       }else{
 
+       if(!is.null(X)){
+         X1=admin.info[,c( "admin2.name.full","admin1.name")]
+         X<-left_join(X,X1,by="admin2.name.full")
+       }else{
+       X=admin.info[,c( "admin2.name.full","admin1.name")]
+       }
+       }
+     }
     #model
 
     if(var.fix==TRUE){
@@ -186,12 +200,12 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
     admin2_res$cv.mean=admin2_res$sd/admin2_res$mean
     admin2_res$cv.median=admin2_res$sd/admin2_res$median
-    admin2_res$cv.star=pmax(admin2_res$sd/ admin2_res$median, admin2_res$sd/ (1-admin2_res$median) )
+    admin2_res$cv2=pmax(admin2_res$sd/ admin2_res$median, admin2_res$sd/ (1-admin2_res$median) )
 
 
     admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name", "admin2.name.full")])
     admin2_res <- admin2_res[, c("admin2.name.full", "mean", "median", "sd", "var",
-                                 "lower", "upper", "cv.mean","cv.median","cv.star", "logit.mean", "logit.median",
+                                 "lower", "upper", "cv.mean","cv.median","cv2", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper", "admin1.name",  "admin2.name")]
 
 
@@ -338,11 +352,11 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
     admin1_res$sd<-sqrt(admin1_res$var)
     admin1_res$cv.mean=admin1_res$sd/admin1_res$mean
     admin1_res$cv.median=admin1_res$sd/admin1_res$median
-    admin1_res$cv.star=pmax(admin1_res$sd/ admin1_res$median, admin1_res$sd/ (1-admin1_res$median) )
+    admin1_res$cv2=pmax(admin1_res$sd/ admin1_res$median, admin1_res$sd/ (1-admin1_res$median) )
 
 
     admin1_res <- admin1_res[, c("admin1.name", "mean", "median", "sd", "var",
-                                 "lower", "upper", "cv.mean","cv.median", "cv.star", "logit.mean", "logit.median",
+                                 "lower", "upper", "cv.mean","cv.median", "cv2", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper")]
 
     ####message for aggregation=T but missing some components and return results without aggregation
@@ -386,7 +400,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, admin, CI = 
 
      agg.natl$cv.mean=agg.natl$sd/agg.natl$mean
      agg.natl$cv.median=agg.natl$sd/agg.natl$median
-     agg.natl$cv.star=pmax(agg.natl$sd/ agg.natl$median, agg.natl$sd/ (1-agg.natl$median) )
+     agg.natl$cv2=pmax(agg.natl$sd/ agg.natl$median, agg.natl$sd/ (1-agg.natl$median) )
 
 
       admin1.res=list(res.admin1 = admin1_res,
