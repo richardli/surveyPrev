@@ -9,7 +9,8 @@ clusterInfo(
   poly.adm1,
   poly.adm2 = NULL,
   by.adm1 = "NAME_1",
-  by.adm2 = "NAME_2"
+  by.adm2 = "NAME_2",
+  map = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ clusterInfo(
 \item{by.adm1}{the column name of column for Admin names for admin 1}
 
 \item{by.adm2}{the column name of column for Admin names for admin 2 or other lower admin level.}
+
+\item{map}{whether to return a map of clusters or not}
 }
 \value{
 This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
@@ -36,7 +39,7 @@ data(ZambiaAdm1)
 data(ZambiaAdm2)
 cluster.info <- clusterInfo(geo = geo,
                             poly.adm1 = ZambiaAdm1,
-                            poly.adm2 = ZambiaAdm2)
+                            poly.adm2 = ZambiaAdm2d)
 }
 }
 \author{
