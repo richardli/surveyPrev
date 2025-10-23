@@ -218,6 +218,15 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
   #   return(list(data=cluster.info, wrong.points = wrong.points))
   # }
 
+  # helper: pick a decent projected CRS for distance (meters)
+  .pick_utm <- function(x) {
+    c <- st_coordinates(st_centroid(st_as_sfc(st_bbox(x))))
+    lon <- c[1]; lat <- c[2]
+    zone <- floor((lon + 180)/6) + 1
+    epsg <- if (lat >= 0) 32600 + zone else 32700 + zone
+    st_crs(epsg)
+  }
+
 
     if(is.null(poly.adm2)){
 
@@ -243,8 +252,9 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
                                            1e-07 & abs(cluster.info$LONGNUM) <1e-07), ]$cluster
 
       wrong.points <- c(wrong.points,cluster.info[ which(is.na(cluster.info$admin1.name)),]$cluster)
-
-      if(!is.null(wrong.points)){
+      result.wrong.points1=c()
+      result.wrong.points2=c()
+      if(!length(wrong.points) == 0){
         pts <- geo %>% filter(DHSCLUST %in% wrong.points)
 
         # sanity: assign CRS if missing and make polygons valid
@@ -270,8 +280,10 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           )
 
         result$match=result$nearest_admin1==result$ADM1NAME
-        fixed.points<- result[result$match==TRUE |  result$dist_km_to_boundary<5,]$DHSCLUST
+        fixed.points<- result[result$match==TRUE |  result$dist_km_to_boundary< 10,]$DHSCLUST
         wrong.points <- wrong.points[!wrong.points %in% fixed.points]
+        result.wrong.points2<- result[ result$dist_km_to_boundary < 10,]
+        result.wrong.points1<- result[! result$dist_km_to_boundary < 10,]
 
         if(sum(fixed.points)>0){
           message("Assign to the closest Admin 1 for points outside the country boundary due to jittering.")
@@ -315,7 +327,13 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
       # return(cluster.info)
       cluster.info<-as.data.frame(cluster.info)
-      return(list(data=cluster.info, wrong.points = wrong.points, fixed.points=fixed.points, map=map))
+      return(list(data=cluster.info,
+                  wrong.points = wrong.points,
+                  fixed.points=fixed.points,
+                  result.wrong.points1=result.wrong.points1,
+                  result.wrong.points2=result.wrong.points2,
+                  map=map
+                ))
     }else{
 
 
@@ -329,14 +347,17 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
       # Select required columns and filter out wrong points
       cluster.info <- points_sf %>%
-        select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
+        select(cluster = DHSCLUST,
+               LONGNUM,
+               LATNUM,
+               ADM1NAME ) #%>%
 
 
 
       admin1.sf <- st_join(cluster.info, poly.adm1) %>%
         sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
 
-      cluster.info$admin1.name <- as.data.frame( admin1.sf)[,by.adm1]
+      cluster.info$admin1.name.s1 <- as.data.frame( admin1.sf)[,by.adm1]
 
       # Spatial join for admin2
       admin2.sf <- st_join(cluster.info, poly.adm2) %>%
@@ -348,7 +369,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       }
 
       cluster.info$admin2.name <- as.data.frame( admin2.sf)[,by.adm2]
-      cluster.info$admin1.name.check <- as.data.frame( admin2.sf)[,by.adm1]
+      cluster.info$admin1.name <- as.data.frame( admin2.sf)[,by.adm1]
 
 
       wrong.points <- cluster.info[which(abs(cluster.info$LATNUM) <
@@ -362,8 +383,10 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       # wrong.points case 3: mismatches between Admin 1 and Admin 2 caused by inconsistent boundaries
 
       #step 1: Assign the wrong points (case 2) to the closest boundary
+      result.wrong.points1=c()
+      result.wrong.points2=c()
 
-      if(!is.null(wrong.points)){
+      if(!length(wrong.points) == 0){
         pts <- geo %>% filter(DHSCLUST %in% wrong.points)
 
         # sanity: assign CRS if missing and make polygons valid
@@ -390,18 +413,25 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           )
 
         result$match=result$nearest_admin1==result$ADM1NAME
-        fixed.points<- result[result$match==TRUE |  result$dist_km_to_boundary<5,]$DHSCLUST
+        result.wrong.points2<- result[ result$dist_km_to_boundary < 10,]
+        result.wrong.points1<- result[! result$dist_km_to_boundary < 10,]
+
+        fixed.points<- result[isTRUE(result$match) | result$dist_km_to_boundary < 10,]$DHSCLUST
         wrong.points <- wrong.points[!wrong.points %in% fixed.points]
 
         if(sum(fixed.points)>0){
           message("Assign to the closest Admin 2 for points outside the country boundary due to jittering.")
 
-          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"]<- result[result$DHSCLUST %in% fixed.points, "nearest_admin1"]
+          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"]<- adm2_m[adm2_m$NAME_2 %in% result$nearest_admin2,]$NAME_1
           cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name"]<- result[result$DHSCLUST %in% fixed.points, "nearest_admin2"]
-          cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name.full"] <- paste0(cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"], "_",  cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name"])
+          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name.s1"]<-  result[result$DHSCLUST %in% fixed.points, "nearest_admin1"]
+
+           # cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name.full"] <- paste0(cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"], "_",  cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name"])
 
         }
 
+        cluster.info <- cluster.info %>%
+          mutate(admin2.name.full =  paste0(admin1.name, "_", admin2.name))
 
         if( any(result$match==FALSE) && any(abs(result$LATNUM) > 1e-07) && any(abs(result$LONGNUM) >1e-07)){
           message("Take a closer look of wrong points")
@@ -414,29 +444,21 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
 
       #step 2: mismatched based on admin 2  case 3
-      mis= cluster.info[cluster.info$admin1.name!= cluster.info$admin1.name.check,]
+      mis= cluster.info[cluster.info$admin1.name!= cluster.info$admin1.name.s1,]
 
-      if(!sum(is.na(mis$cluster))==0){
-        cluster.info <- cluster.info %>%
-          mutate(admin2.name.full = NA_character_) %>%   # create the column first
-          mutate(
-            admin2.name.full = if_else(
-              admin1.name == admin1.name.check,
-              paste0(admin1.name, "_", admin2.name),
-              admin2.name.full
-            )
-          )
-      }else{
-        cluster.info <- cluster.info %>%
-          mutate(admin2.name.full = NA_character_) %>%   # create the column first
-          mutate(
-            admin2.name.full = if_else(
-              admin1.name == admin1.name.check,
-              paste0(admin1.name, "_", admin2.name),
-              paste0(admin1.name.check, "_", admin2.name)
-            )
-          )
+      cluster.info <- cluster.info %>%
+        mutate(admin2.name.full =  paste0(admin1.name, "_", admin2.name))
+        # %>%   # create the column first
+        # mutate(
+        #   admin2.name.full = if_else(
+        #     admin1.name == admin1.name.s1,
+        #     paste0(admin1.name.s1, "_", admin2.name),
+        #     paste0(admin1.name, "_", admin2.name)
+        #   )
+        # )
+      cluster.info$admin1.name.s1=cluster.info$ADM1NAME=NULL
 
+      if(!any(is.na(mis$cluster))){
         fixed.points=c(fixed.points, mis$cluster)
       }
 
@@ -451,7 +473,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
         # Compute points safely
         points_inside <- st_point_on_surface(poly_proj)
 
-        if (nrow(mis) > 0) {
+        if (any(!is.na(mis$cluster))) {
           # Convert back to lon/lat if you need to plot with WGS84 data
           points_inside <- st_transform(points_inside, 4326)
           mis <- st_transform(mis, st_crs(poly.adm1))
@@ -464,7 +486,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             geom_sf(data = poly.adm1,  color = "grey25", linewidth = 0.3) +
             geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
             geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.8) +
-            geom_sf(data = filter(geo_join,  outside), color = "darkgreen",      shape = 4, size = 1.0, alpha = 0.9) +
+            geom_sf(data = filter(geo_join,  outside), color = "darkgreen", shape = 4, size = 1.0, alpha = 0.9) +
             geom_sf(data = mis, color = "red", shape = 9, size = 2, stroke = 1) +
             geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1)
           theme_bw() +
@@ -478,8 +500,8 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           map <- ggplot() +
             geom_sf(data = poly.adm1,  color = "grey25", linewidth = 0.3) +
             geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
-            geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.8) +
-            geom_sf(data = filter(geo_join,  outside), color = "darkgreen",      shape = 4, size = 1.0, alpha = 0.9) +
+            geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.6) +
+            geom_sf(data = filter(geo_join,  outside), color = "red",      shape = 4, size = 2, alpha = 0.9) +
             # geom_sf(data = mis, color = "red", shape = 9, size = 2, stroke = 1) +
             # geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1)
             theme_bw() +
@@ -493,7 +515,13 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       cluster.info<-as.data.frame(cluster.info)
 
 
-      return(list(data=cluster.info, wrong.points = wrong.points, fixed.points=fixed.points, map=map))
+      return(list(data=cluster.info,
+                  wrong.points = wrong.points,
+                  fixed.points=fixed.points,
+                  map=map,
+                  result.wrong.points1=result.wrong.points1,
+                  result.wrong.points2=result.wrong.points2,
+                  result.wrong.points3=mis))
 
 
   }
