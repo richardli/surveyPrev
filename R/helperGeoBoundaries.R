@@ -125,7 +125,8 @@ addUpper <- function(poly.adm.upper, poly.adm, by.adm, by.adm.upper,
 #'   Defaults to `"ADM1"`.
 #' @param release Character. geoBoundaries release type. Either `"gbOpen"` (default) for open
 #'   data or `"gbAuthoritative"` for official boundaries.
-#'
+#' @importFrom sf st_read
+#' @importFrom jsonlite fromJSON
 #' @return An `sf` object containing the requested administrative boundaries.
 #'
 #' @examples
@@ -138,7 +139,7 @@ addUpper <- function(poly.adm.upper, poly.adm, by.adm, by.adm.upper,
 #' }
 #'
 #' @export
-get_geoBoundaries <- function(iso3, adm = "ADM1", release = "gbOpen") {
+get_geoBoundaries <- function(iso3=iso3, adm = "ADM1", release = "gbOpen") {
   ep <- sprintf("https://www.geoboundaries.org/api/current/%s/%s/%s/",
                 release, toupper(iso3), toupper(adm))
   meta <- jsonlite::fromJSON(ep)
