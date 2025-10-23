@@ -1,6 +1,6 @@
 #' Get cluster information
 #'
-#' This function add admin 1 and admin2 information to a paticular DHS survey.
+#' This function add admin 1 and admin2 information to a particular DHS survey.
 #'
 #' @param geo  spatial point dataframe
 #' @param poly.adm1 spatial polygons dataframe for admin 1
@@ -227,6 +227,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
     st_crs(epsg)
   }
 
+  fixed.points<-c()
 
     if(is.null(poly.adm2)){
 
@@ -489,7 +490,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             geom_sf(data = filter(geo_join,  outside), color = "darkgreen", shape = 4, size = 1.0, alpha = 0.9) +
             geom_sf(data = mis, color = "red", shape = 9, size = 2, stroke = 1) +
             geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1)
-          theme_bw() +
+            theme_bw() +
             theme(legend.position = "none")
 
         }else{

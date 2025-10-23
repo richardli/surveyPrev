@@ -30,7 +30,7 @@ clusterInfo(
 This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
 }
 \description{
-This function add admin 1 and admin2 information to a paticular DHS survey.
+This function add admin 1 and admin2 information to a particular DHS survey.
 }
 \examples{
 \dontrun{
