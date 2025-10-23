@@ -139,7 +139,7 @@ addUpper <- function(poly.adm.upper, poly.adm, by.adm, by.adm.upper,
 #' }
 #'
 #' @export
-get_geoBoundaries <- function(iso3=iso3, adm = "ADM1", release = "gbOpen") {
+get_geoBoundaries <- function(iso3, adm = "ADM1", release = "gbOpen") {
   ep <- sprintf("https://www.geoboundaries.org/api/current/%s/%s/%s/",
                 release, toupper(iso3), toupper(adm))
   meta <- jsonlite::fromJSON(ep)
