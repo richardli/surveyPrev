@@ -111,3 +111,37 @@ addUpper <- function(poly.adm.upper, poly.adm, by.adm, by.adm.upper,
   return(res)
 }
 
+
+
+
+#' Download geoBoundaries Shapefile as sf Object
+#'
+#' Retrieves official administrative boundary shapefiles from the
+#' [geoBoundaries](https://www.geoboundaries.org/) API for a given country ISO3 code
+#' and administrative level. Returns the data as an `sf` object for direct spatial use.
+#'
+#' @param iso3 Character. The three-letter ISO3 country code (e.g., `"NGA"`, `"ZMB"`).
+#' @param adm Character. Administrative level to download (e.g., `"ADM0"`, `"ADM1"`, `"ADM2"`).
+#'   Defaults to `"ADM1"`.
+#' @param release Character. geoBoundaries release type. Either `"gbOpen"` (default) for open
+#'   data or `"gbAuthoritative"` for official boundaries.
+#'
+#' @return An `sf` object containing the requested administrative boundaries.
+#'
+#' @examples
+#' \dontrun{
+#' # Download Nigeria Admin 1 boundaries
+#' nga_adm1 <- get_geoBoundaries("NGA", adm = "ADM1")
+#'
+#' # Download Burkina Faso Admin 2 boundaries from the authoritative release
+#' bfa_adm2 <- get_geoBoundaries("BFA", adm = "ADM2", release = "gbAuthoritative")
+#' }
+#'
+#' @export
+get_geoBoundaries <- function(iso3, adm = "ADM1", release = "gbOpen") {
+  ep <- sprintf("https://www.geoboundaries.org/api/current/%s/%s/%s/",
+                release, toupper(iso3), toupper(adm))
+  meta <- jsonlite::fromJSON(ep)
+  sf::st_read(meta$gjDownloadURL[1], quiet = TRUE)
+}
+
