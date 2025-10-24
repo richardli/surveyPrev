@@ -9,17 +9,10 @@
 #' @param by.adm2 the column name of column for Admin names for admin 2 or other lower admin level.
 #' @param map whether to return a map of clusters or not
 #' @return This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @importFrom magrittr %>%
-#' @importFrom dplyr select filter mutate arrange group_by summarise
-#' @importFrom dplyr left_join right_join n_distinct bind_rows
 #' @importFrom sf st_as_sf st_is_valid st_join st_transform st_crs
 #' @importFrom sf st_coordinates st_centroid st_as_sfc st_bbox
 #' @importFrom sf st_boundary st_distance st_drop_geometry
 #' @importFrom sf st_buffer st_intersection st_nearest_feature st_point_on_surface
-#' @importFrom sp SpatialPolygons SpatialPoints over proj4string
-#' @importFrom ggplot2 ggplot geom_sf geom_sf_text geom_point aes theme_bw theme
-#' @importFrom ggplot2 scale_color_manual scale_shape_manual scale_fill_manual scale_size_manual
-#' @importFrom ggplot2 guides guide_legend
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -236,6 +229,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
     st_crs(epsg)
   }
 
+
   fixed.points<-c()
 
     if(is.null(poly.adm2)){
@@ -245,7 +239,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       if( !any(sf::st_is_valid(poly.adm1)) ){stop('sf object not valid, consider validating it via sf::st_make_valid')}
 
       cluster.info <- points_sf %>%
-        select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
+        dplyr::select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
 
       admin1.sf <- st_join(cluster.info, poly.adm1) %>%
         sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
@@ -265,7 +259,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       result.wrong.points1=c()
       result.wrong.points2=c()
       if(!length(wrong.points) == 0){
-        pts <- geo %>% filter(DHSCLUST %in% wrong.points)
+        pts <- points_sf %>% dplyr::filter(DHSCLUST %in% wrong.points)
 
         # sanity: assign CRS if missing and make polygons valid
         if (is.na(st_crs(pts)))        st_crs(pts)      <- 4326
@@ -311,7 +305,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       }
 
       if(map==TRUE){
-        geo_no0<-geo[geo$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
+        geo_no0<-points_sf[points_sf$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
                                                             1e-07 & abs(cluster.info$LONGNUM)  >1e-07), ]$cluster,]
 
 
@@ -384,7 +378,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
       # Select required columns and filter out wrong points
       cluster.info <- points_sf %>%
-        select(cluster = DHSCLUST,
+        dplyr::select(cluster = DHSCLUST,
                LONGNUM,
                LATNUM,
                ADM1NAME ) #%>%
@@ -424,7 +418,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       result.wrong.points2=c()
 
       if(!length(wrong.points) == 0){
-        pts <- geo %>% filter(DHSCLUST %in% wrong.points)
+        pts <- points_sf %>% dplyr::filter(DHSCLUST %in% wrong.points)
 
         # sanity: assign CRS if missing and make polygons valid
         if (is.na(st_crs(pts)))        st_crs(pts)      <- 4326
@@ -518,7 +512,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           points_inside <- st_transform(points_inside, 4326)
           mis <- st_transform(mis, st_crs(poly.adm1))
 
-          geo_no0<-geo[geo$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
+          geo_no0<-points_sf[points_sf$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
                                                               1e-07 & abs(cluster.info$LONGNUM)  >1e-07), ]$cluster,]
 
 
@@ -529,8 +523,8 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
           # Combine all cluster points
           pts_all <- bind_rows(
-            st_drop_geometry(filter(geo_join, !outside)) |> mutate(type = "No issue"),
-            st_drop_geometry(filter(geo_join,  outside)) |> mutate(type = "Outside"),
+            st_drop_geometry(dplyr::filter(geo_join, !outside)) |> mutate(type = "No issue"),
+            st_drop_geometry(dplyr::filter(geo_join,  outside)) |> mutate(type = "Outside"),
             st_drop_geometry(mis)                        |> mutate(type = "Mismatch")
           )
 
@@ -568,7 +562,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
         }else{
 
-          geo_no0<-geo[geo$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
+          geo_no0<-points_sf[points_sf$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
                                                               1e-07 & abs(cluster.info$LONGNUM)  >1e-07), ]$cluster,]
 
 
