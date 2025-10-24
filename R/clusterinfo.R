@@ -334,13 +334,13 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           # ONE layer for points → one combined legend
           geom_point(
             data = pts_all,
-            aes(x = LONGNUM, y = LATNUM, shape = type, color = type),
-            size = 1.8, alpha = 0.8
+            aes(x = LONGNUM, y = LATNUM, shape = type, color = type, size = type),
+         alpha = 1
           ) +
           scale_shape_manual(
             name = "Cluster Type",
             breaks = levels,
-            values = c("No issue" = 1, "Outside" = 4)
+            values = c("No issue" = 1, "Outside" = 17)
           ) +
           scale_color_manual(
             name = "Cluster Type",
@@ -350,7 +350,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           scale_size_manual(
             name = "Cluster Type",
             breaks = levels,
-            values = c("No issue" = 1, "Outside" = 4)
+            values = c("No issue" = 1, "Outside" = 3)
           ) +
           guides(size = guide_legend(override.aes = list(alpha = 1))) +
           theme_bw() +
@@ -543,14 +543,14 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             geom_point(
               data = pts_all,
               aes(x = LONGNUM, y = LATNUM, shape = type, color = type, size = type),
-              alpha = 0.8
+              alpha = 1
             ) +
             # geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1) +
 
             scale_shape_manual(
               name = "Cluster Type",
               breaks = levels,
-              values = c("No issue" = 1, "Outside" = 4, "Mismatch" = 18)
+              values = c("No issue" = 1, "Outside" = 17, "Mismatch" = 18)
             ) +
             scale_color_manual(
               name = "Cluster Type",
@@ -560,7 +560,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             scale_size_manual(
               name = "Cluster Type",
               breaks = levels,
-              values = c("No issue" = 1, "Outside" = 4, "Mismatch" = 3)
+              values = c("No issue" = 1, "Outside" = 3, "Mismatch" = 3)
             ) +
             guides(size = guide_legend(override.aes = list(alpha = 1))) +
             theme_bw() +
@@ -593,13 +593,13 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             # ONE layer for points → one combined legend
             geom_point(
               data = pts_all,
-              aes(x = LONGNUM, y = LATNUM, shape = type, color = type),
-              size = 1.8, alpha = 0.8
+              aes(x = LONGNUM, y = LATNUM, shape = type, color = type, size = type),
+              alpha = 1
             ) +
             scale_shape_manual(
               name = "Cluster Type",
               breaks = levels,
-              values = c("No issue" = 1, "Outside" = 4)
+              values = c("No issue" = 1, "Outside" = 17)
             ) +
             scale_color_manual(
               name = "Cluster Type",
@@ -609,7 +609,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             scale_size_manual(
               name = "Cluster Type",
               breaks = levels,
-              values = c("No issue" = 1, "Outside" = 4)
+              values = c("No issue" = 1, "Outside" = 3 )
             ) +
             guides(size = guide_legend(override.aes = list(alpha = 1))) +
             theme_bw() +
@@ -633,7 +633,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 #
 #             scale_shape_manual(
 #               name = "Cluster Type",
-#               values = c("No issue" = 1, "Outside" = 4)
+#               values = c("No issue" = 1, "Outside" = 3)
 #             ) +
 #             scale_color_manual(
 #               values = c("No issue" = "darkblue", "Outside" = "red")
