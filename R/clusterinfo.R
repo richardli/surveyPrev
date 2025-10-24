@@ -310,7 +310,7 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
         # --- 2. Plot ---
         map<-ggplot() +
-          geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.3) +
+          geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.3,alpha=0.4) +
           # geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
           geom_sf(
             data = geo_join,
@@ -445,7 +445,6 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
 
       #step 2: mismatched based on admin 2  case 3
-      mis= cluster.info[cluster.info$admin1.name!= cluster.info$admin1.name.s1,]
 
       cluster.info <- cluster.info %>%
         mutate(admin2.name.full =  paste0(admin1.name, "_", admin2.name))
@@ -457,7 +456,11 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
         #     paste0(admin1.name, "_", admin2.name)
         #   )
         # )
+      mis= cluster.info[cluster.info$admin1.name!= cluster.info$admin1.name.s1,]
+
       cluster.info$admin1.name.s1=cluster.info$ADM1NAME=NULL
+
+
 
       if(!any(is.na(mis$cluster))){
         fixed.points=c(fixed.points, mis$cluster)
@@ -484,12 +487,18 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             mutate(outside = is.na(NAME_1))
 
           map <- ggplot() +
-            geom_sf(data = poly.adm1,  color = "grey25", linewidth = 0.3) +
+            # Use fill = NAME_1 to color each Admin 1 region differently
+            geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.1,alpha=0.4) +
             geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
             geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.8) +
-            geom_sf(data = filter(geo_join,  outside), color = "darkgreen", shape = 4, size = 1.0, alpha = 0.9) +
+            geom_sf(data = filter(geo_join, outside), color = "darkgreen", shape = 4, size = 1.0, alpha = 0.9) +
             geom_sf(data = mis, color = "red", shape = 9, size = 2, stroke = 1) +
-            geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1)
+            geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1) +
+
+            # This line creates a unique color for each Admin 1
+            scale_fill_manual(
+              values = scales::hue_pal()(length(unique(poly.adm1$NAME_1)))
+            ) +
             theme_bw() +
             theme(legend.position = "none")
 
@@ -499,12 +508,13 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
             mutate(outside = is.na(NAME_1))
 
           map <- ggplot() +
-            geom_sf(data = poly.adm1,  color = "grey25", linewidth = 0.3) +
+            geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.1,alpha=0.4) +
             geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
             geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.6) +
             geom_sf(data = filter(geo_join,  outside), color = "red",      shape = 4, size = 2, alpha = 0.9) +
-            # geom_sf(data = mis, color = "red", shape = 9, size = 2, stroke = 1) +
-            # geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1)
+            scale_fill_manual(
+              values = scales::hue_pal()(length(unique(poly.adm1$NAME_1)))
+            ) +
             theme_bw() +
             theme(legend.position = "none")
         }
