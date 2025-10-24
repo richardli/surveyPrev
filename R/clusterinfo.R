@@ -9,8 +9,17 @@
 #' @param by.adm2 the column name of column for Admin names for admin 2 or other lower admin level.
 #' @param map whether to return a map of clusters or not
 #' @return This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
-#' @importFrom dplyr select
-#' @import sf
+#' @importFrom magrittr %>%
+#' @importFrom dplyr select filter mutate arrange group_by summarise
+#' @importFrom dplyr left_join right_join n_distinct bind_rows
+#' @importFrom sf st_as_sf st_is_valid st_join st_transform st_crs
+#' @importFrom sf st_coordinates st_centroid st_as_sfc st_bbox
+#' @importFrom sf st_boundary st_distance st_drop_geometry
+#' @importFrom sf st_buffer st_intersection st_nearest_feature st_point_on_surface
+#' @importFrom sp SpatialPolygons SpatialPoints over proj4string
+#' @importFrom ggplot2 ggplot geom_sf geom_sf_text geom_point aes theme_bw theme
+#' @importFrom ggplot2 scale_color_manual scale_shape_manual scale_fill_manual scale_size_manual
+#' @importFrom ggplot2 guides guide_legend
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -302,26 +311,53 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
       }
 
       if(map==TRUE){
-        geo_join <- st_join(geo, poly.adm1, left = TRUE)
+        geo_no0<-geo[geo$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
+                                                            1e-07 & abs(cluster.info$LONGNUM)  >1e-07), ]$cluster,]
 
-        # Points outside any polygon will have NA for NAME_1 (or admin name column)
-        geo_join <- geo_join %>%
+
+
+        geo_join <- st_join(geo_no0, poly.adm1, left = TRUE) %>%
           mutate(outside = is.na(NAME_1))
 
-        # --- 2. Plot ---
-        map<-ggplot() +
-          geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.3,alpha=0.4) +
-          # geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
-          geom_sf(
-            data = geo_join,
-            aes(color = outside, shape = outside),
-            size = 0.8, alpha = 0.8
+        # Build one points data frame with a common 'type' column
+        pts_no  <- st_drop_geometry(dplyr::filter(geo_join, !outside)) |> mutate(type = "No issue")
+        pts_out <- st_drop_geometry(dplyr::filter(geo_join,  outside)) |> mutate(type = "Outside")
+
+        pts_all <- dplyr::bind_rows(pts_no, pts_out)
+
+        levels <- c("No issue", "Outside")
+
+        map=ggplot() +
+          geom_sf(data = poly.adm1, color = "red", fill = NA, linewidth = 0.6, alpha = 0.9) +
+          geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linewidth = 0.4) +
+
+          # ONE layer for points → one combined legend
+          geom_point(
+            data = pts_all,
+            aes(x = LONGNUM, y = LATNUM, shape = type, color = type),
+            size = 1.8, alpha = 0.8
           ) +
-          scale_color_manual(values = c("FALSE" = "darkblue", "TRUE" = "red")) +
-          scale_shape_manual(values = c("FALSE" = 1, "TRUE" = 4)) +  # 1=open circle, 4=x
-          # scale_fill_brewer(palette = "Set3") +
+          scale_shape_manual(
+            name = "Cluster Type",
+            breaks = levels,
+            values = c("No issue" = 1, "Outside" = 4)
+          ) +
+          scale_color_manual(
+            name = "Cluster Type",
+            breaks = levels,
+            values = c("No issue" = "darkblue", "Outside" = "seagreen")
+          ) +
+          scale_size_manual(
+            name = "Cluster Type",
+            breaks = levels,
+            values = c("No issue" = 1, "Outside" = 4)
+          ) +
+          guides(size = guide_legend(override.aes = list(alpha = 1))) +
           theme_bw() +
-          theme(legend.position = "none")
+          theme(legend.position = "right")
+
+
+
       }else{
         map=NULL
       }
@@ -482,41 +518,131 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
           points_inside <- st_transform(points_inside, 4326)
           mis <- st_transform(mis, st_crs(poly.adm1))
 
-          # inside/outside flag for all geo points (as you had)
-          geo_join <- st_join(geo, poly.adm1, left = TRUE) %>%
+          geo_no0<-geo[geo$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
+                                                              1e-07 & abs(cluster.info$LONGNUM)  >1e-07), ]$cluster,]
+
+
+
+          geo_join <- st_join(geo_no0, poly.adm1, left = TRUE) %>%
             mutate(outside = is.na(NAME_1))
 
-          map <- ggplot() +
-            # Use fill = NAME_1 to color each Admin 1 region differently
-            geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.1,alpha=0.4) +
-            geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
-            geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.8) +
-            geom_sf(data = filter(geo_join, outside), color = "darkgreen", shape = 4, size = 1.0, alpha = 0.9) +
-            geom_sf(data = mis, color = "red", shape = 9, size = 2, stroke = 1) +
-            geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1) +
 
-            # This line creates a unique color for each Admin 1
-            scale_fill_manual(
-              values = scales::hue_pal()(length(unique(poly.adm1$NAME_1)))
+          # Combine all cluster points
+          pts_all <- bind_rows(
+            st_drop_geometry(filter(geo_join, !outside)) |> mutate(type = "No issue"),
+            st_drop_geometry(filter(geo_join,  outside)) |> mutate(type = "Outside"),
+            st_drop_geometry(mis)                        |> mutate(type = "Mismatch")
+          )
+
+          levels <- c("No issue", "Outside", "Mismatch")
+
+         map<- ggplot() +
+            geom_sf(data = poly.adm1, color = "red", fill = NA, linewidth = 0.6, alpha = 0.9) +
+            geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linewidth = 0.4) +
+
+            geom_point(
+              data = pts_all,
+              aes(x = LONGNUM, y = LATNUM, shape = type, color = type, size = type),
+              alpha = 0.8
             ) +
+            # geom_sf_text(data = mis, aes(label = cluster), size = 2.8, nudge_y = 0.1) +
+
+            scale_shape_manual(
+              name = "Cluster Type",
+              breaks = levels,
+              values = c("No issue" = 1, "Outside" = 4, "Mismatch" = 18)
+            ) +
+            scale_color_manual(
+              name = "Cluster Type",
+              breaks = levels,
+              values = c("No issue" = "darkblue", "Outside" = "seagreen", "Mismatch" = "seagreen")
+            ) +
+            scale_size_manual(
+              name = "Cluster Type",
+              breaks = levels,
+              values = c("No issue" = 1, "Outside" = 4, "Mismatch" = 3)
+            ) +
+            guides(size = guide_legend(override.aes = list(alpha = 1))) +
             theme_bw() +
-            theme(legend.position = "none")
+            theme(legend.position = "right")
 
         }else{
-          # inside/outside flag for all geo points (as you had)
-          geo_join <- st_join(geo, poly.adm1, left = TRUE) %>%
+
+          geo_no0<-geo[geo$DHSCLUST %in% cluster.info[which(abs(cluster.info$LATNUM) >
+                                                              1e-07 & abs(cluster.info$LONGNUM)  >1e-07), ]$cluster,]
+
+
+
+          geo_join <- st_join(geo_no0, poly.adm1, left = TRUE) %>%
             mutate(outside = is.na(NAME_1))
 
-          map <- ggplot() +
-            geom_sf(data = poly.adm1, aes(fill = NAME_1), color = "grey25", linewidth = 0.1,alpha=0.4) +
-            geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linetype = 2, linewidth = 0.4) +
-            geom_sf(data = filter(geo_join, !outside), color = "darkblue", shape = 1, size = 0.8, alpha = 0.6) +
-            geom_sf(data = filter(geo_join,  outside), color = "red",      shape = 4, size = 2, alpha = 0.9) +
-            scale_fill_manual(
-              values = scales::hue_pal()(length(unique(poly.adm1$NAME_1)))
+
+
+          # Build one points data frame with a common 'type' column
+          pts_no  <- st_drop_geometry(dplyr::filter(geo_join, !outside)) |> mutate(type = "No issue")
+          pts_out <- st_drop_geometry(dplyr::filter(geo_join,  outside)) |> mutate(type = "Outside")
+
+          pts_all <- dplyr::bind_rows(pts_no, pts_out)
+
+          levels <- c("No issue", "Outside")
+
+          map=ggplot() +
+            geom_sf(data = poly.adm1, color = "red", fill = NA, linewidth = 0.6, alpha = 0.9) +
+            geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linewidth = 0.4) +
+
+            # ONE layer for points → one combined legend
+            geom_point(
+              data = pts_all,
+              aes(x = LONGNUM, y = LATNUM, shape = type, color = type),
+              size = 1.8, alpha = 0.8
             ) +
+            scale_shape_manual(
+              name = "Cluster Type",
+              breaks = levels,
+              values = c("No issue" = 1, "Outside" = 4)
+            ) +
+            scale_color_manual(
+              name = "Cluster Type",
+              breaks = levels,
+              values = c("No issue" = "darkblue", "Outside" = "seagreen")
+            ) +
+            scale_size_manual(
+              name = "Cluster Type",
+              breaks = levels,
+              values = c("No issue" = 1, "Outside" = 4)
+            ) +
+            guides(size = guide_legend(override.aes = list(alpha = 1))) +
             theme_bw() +
-            theme(legend.position = "none")
+            theme(legend.position = "right")
+
+#
+#           map <- ggplot() +
+#             geom_sf(data = poly.adm1, color = "red", fill = NA, linewidth = 0.6, alpha = 0.9) +
+#             geom_sf(data = poly.adm2, fill = NA, color = "#2C7FB8", linewidth = 0.4) +
+#
+#             geom_point(
+#               data = st_drop_geometry(dplyr::filter(geo_join, !outside)),
+#               aes(x = LONGNUM, y = LATNUM, shape = "No issue", color = "No issue"),
+#               size = 1.5, alpha = 0.7
+#             ) +
+#             geom_point(
+#               data = st_drop_geometry(dplyr::filter(geo_join, outside)),
+#               aes(x = LONGNUM, y = LATNUM, shape = "Outside", color = "Outside"),
+#               size = 2.5, alpha = 0.9
+#             ) +
+#
+#             scale_shape_manual(
+#               name = "Cluster Type",
+#               values = c("No issue" = 1, "Outside" = 4)
+#             ) +
+#             scale_color_manual(
+#               values = c("No issue" = "darkblue", "Outside" = "red")
+#               # ,
+#               # guide = "none"   # hide color legend
+#             ) +
+#             theme_bw() +
+#             theme(legend.position = "right")
+
         }
       }else{
         map=NULL
