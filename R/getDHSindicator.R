@@ -106,7 +106,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
               case_when((!!rlang::parse_expr(noCondition)) ~ 0,
                         (!!rlang::parse_expr(yesCondition)) ~ 1))
 
-  }else if(indicator %in% match_all_result$indicator_ID_DHS){
+  }else if(indicator %in% indicatorList$ID){
 
     FUN=getFromNamespace(indicator, "surveyPrev")
     raw.dat.tmp <-FUN(Rdata)
