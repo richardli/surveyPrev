@@ -438,8 +438,9 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
         result <- pts %>%
           st_drop_geometry() %>%
           mutate(
-            nearest_admin2 = adm2_m$NAME_2[nearest_idx],
             nearest_admin1 = adm2_m$NAME_1[nearest_idx],
+            nearest_admin2 = adm2_m$NAME_2[nearest_idx],
+            nearest_admins1 = adm2_m$NAME_1[nearest_idx],
             dist_km_to_boundary = as.numeric(min_dist_m) / 1000
           )
 
@@ -453,9 +454,9 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
         if(sum(fixed.points)>0){
           message("Assign to the closest Admin 2 for points outside the country boundary due to jittering.")
 
-          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"]<- adm2_m[adm2_m$NAME_2 %in% result$nearest_admin2,]$NAME_1
+          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"]<-  result[result$DHSCLUST %in% fixed.points, "nearest_admin1"]
           cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name"]<- result[result$DHSCLUST %in% fixed.points, "nearest_admin2"]
-          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name.s1"]<-  result[result$DHSCLUST %in% fixed.points, "nearest_admin1"]
+          cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name.s1"]<-  result[result$DHSCLUST %in% fixed.points, "nearest_admins1"]
 
            # cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name.full"] <- paste0(cluster.info[cluster.info$cluster %in% fixed.points, "admin1.name"], "_",  cluster.info[cluster.info$cluster %in% fixed.points, "admin2.name"])
 

@@ -39,7 +39,7 @@ data(ZambiaAdm1)
 data(ZambiaAdm2)
 cluster.info <- clusterInfo(geo = geo,
                             poly.adm1 = ZambiaAdm1,
-                            poly.adm2 = ZambiaAdm2d)
+                            poly.adm2 = ZambiaAdm2)
 }
 }
 \author{
