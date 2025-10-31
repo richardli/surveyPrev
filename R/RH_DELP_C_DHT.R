@@ -70,9 +70,9 @@ RH_DELP_C_DHT<- function(Rdata){
   BRdata <- BRdata %>%
     mutate(rh_del_place =
              case_when(
-               m15 >=20 & m15<40   ~ 1 ,
+               m15 >=20 & m15<50   ~ 1 ,
                m15 >=10 & m15<20   ~ 2,
-               m15 >=40 & m15<99   ~ 3 ,
+               m15 >=50 & m15<99   ~ 3 ,
                m15 == 99 ~ 9 ,
                age>=period ~ 99)) %>%
     replace_with_na(replace = list(rh_del_place = c(99))) %>%
