@@ -62,6 +62,40 @@ RH_DELP_C_HOT<- function(Rdata){
   # This directly changes the number of rows (the sample size).
   BRdata <- BRdata %>%
     filter(age < period)
+  # Labels:
+  #   value                                             label
+  # 10                                              home
+  # 11                                 respondent's home
+  #   12                                        other home
+  #   13                                      tba premises
+  #   14                        on the way to the hospital
+  #   20                                     public sector
+  #   21        public national/zonal/specialised hospital
+  #   22                 public regional referral hospital
+  #   23                          public regional hospital
+  #   24                          public district hospital
+  #   25                              public health centre
+  #   26                                 public dispensary
+  #   27                                     public clinic
+  #   30                            private medical sector
+  #   31                      private specialised hospital
+  #   32                            private other hospital
+  #   33                             private health centre
+  #   34                                private dispensary
+  #   35                                    private clinic
+  #   36                      other private medical sector
+  #   40                         ---religious/voluntary---
+  #   41 religious/voluntary referral/specialised hospital
+  #   42             religious/voluntary district hospital
+  #   43                religious/voluntary other hospital
+  #   44                 religious/voluntary health centre
+  #   45                    religious/voluntary dispensary
+  #   46                        religious/voluntary clinic
+  #   47                  other religious/voluntary sector
+  #   96                                             other
+
+
+
 
 
   # //Place of delivery
@@ -77,6 +111,25 @@ RH_DELP_C_HOT<- function(Rdata){
     replace_with_na(replace = list(rh_del_place = c(99))) %>%
     set_value_labels(rh_del_place = c("Health facility" = 1, "Home"=2, "Other"=3, "Missing"=9  )) %>%
     set_variable_labels(rh_del_place = "Live births by place of delivery")
+
+
+  if( BRdata$v000[1] %in% c("TZ8")){ #Includes woman’s home, another home, and premises of a traditional birth attendant //exact the same for   m15 >=10 and   m15 >=11
+    BRdata <- BRdata %>%
+      mutate(rh_del_place =
+               case_when(
+                 m15 >=20 & m15<40   ~ 1 ,
+                 m15 >=10 & m15<14   ~ 2,
+                 m15 >=50 & m15<99   ~ 3 ,
+                 m15 == 99 ~ 9 ,
+                 age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_place = c(99))) %>%
+      set_value_labels(rh_del_place = c("Health facility" = 1, "Home"=2, "Other"=3, "Missing"=9  )) %>%
+      set_variable_labels(rh_del_place = "Live births by place of delivery")
+
+
+  }
+
+
 
 
   BRdata <- BRdata %>%

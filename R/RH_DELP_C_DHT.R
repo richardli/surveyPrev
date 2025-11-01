@@ -67,7 +67,17 @@ RH_DELP_C_DHT<- function(Rdata){
 
   # //Place of delivery
   # Note: please check the categories of m15 especially for older surveys. The category values may differ.
-  BRdata <- BRdata %>%
+  #
+
+
+
+
+
+
+
+
+
+   BRdata <- BRdata %>%
     mutate(rh_del_place =
              case_when(
                m15 >=20 & m15<50   ~ 1 ,
@@ -80,14 +90,17 @@ RH_DELP_C_DHT<- function(Rdata){
     set_variable_labels(rh_del_place = "Live births by place of delivery")
 
 
+
+
+
   BRdata <- BRdata %>%
-    mutate(RH_DELP_C_DHF =
+    mutate(RH_DELP_C_DHT =
              case_when(
                rh_del_place==1 ~ 1,
                rh_del_place %in% c(2,3,9)   ~ 0 )) %>%
-    set_value_labels(RH_DELP_C_DHF = c("Yes" = 1, "No"=0)) %>%
-    set_variable_labels(RH_DELP_C_DHF = "Live births by place of delivery: Health facility")
+    set_value_labels(RH_DELP_C_DHT = c("Yes" = 1, "No"=0)) %>%
+    set_variable_labels(RH_DELP_C_DHT = "Live births by place of delivery: Health facility")
 
-  colnames(BRdata)[colnames(BRdata) == 'RH_DELP_C_DHF'] <- 'value'
+  colnames(BRdata)[colnames(BRdata) == 'RH_DELP_C_DHT'] <- 'value'
   return(BRdata)
 }

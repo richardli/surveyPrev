@@ -1,4 +1,4 @@
-##'RH_DELP_C_HOM
+##'RH_DELP_C_PRT
 #' @param Rdata  data.frame from surveyPrev::getDHSdata
 #'
 #' @return A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
@@ -6,13 +6,14 @@
 #' @author Miaolei Bao, Yunhan Wu, Qianyu Dong
 #' @examples
 #' \dontrun{
-#' dhsData <- getDHSdata(country = "Zambia", indicator = "RH_DELP_C_DHT", year = 2018)
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "RH_DELP_C_PRT", year = 2018)
 #' }
 #'
 #' @export
-RH_DELP_C_HOM<- function(Rdata){
+RH_DELP_C_PRT<- function(Rdata){
 
-  # RH_DELP_C_HOM: delivery at home five year proceeding the survey.
+  #Manually added function by Qianyu
+  #RH_DELP_C_PRT is made up of the two year version for RH_DELP_C_PRV(five year version/ official id name)
 
   # /*****************************************************************************************************
   # Program: 			RH_DEL.R
@@ -39,8 +40,9 @@ RH_DELP_C_HOM<- function(Rdata){
 
   # period and age of child
   # choose reference period, last 2 years (24 months) or last 5 years (60 months)
+  # Using a period of the last 2 years will not match final report but would provide more recent information.
   BRdata <- BRdata %>%
-    mutate(period = 60)
+    mutate(period = 24)
 
   # age of child. If b19 is not available in the data use v008 - b3
   if ("TRUE" %in% (!("b19" %in% names(BRdata))))
@@ -65,44 +67,29 @@ RH_DELP_C_HOM<- function(Rdata){
   # //Place of delivery
   # Note: please check the categories of m15 especially for older surveys. The category values may differ.
   BRdata <- BRdata %>%
-    mutate(rh_del_place =
+    mutate(rh_del_pltype =
              case_when(
-               m15 >=20 & m15<40   ~ 1 ,
-               m15 >=10 & m15<20   ~ 2,
-               m15 >=40 & m15<99   ~ 3 ,
+               m15 >=20 & m15<30  ~ 1 ,
+               m15 >=30 & m15<50  ~ 2 ,
+               m15 >=10 & m15<20  ~ 3,
+               m15 >=50 & m15<99  ~ 4 ,
                m15 == 99 ~ 9 ,
                age>=period ~ 99)) %>%
-    replace_with_na(replace = list(rh_del_place = c(99))) %>%
-    set_value_labels(rh_del_place = c("Health facility" = 1, "Home"=2, "Other"=3, "Missing"=9  )) %>%
-    set_variable_labels(rh_del_place = "Live births by place of delivery")
+    replace_with_na(replace = list(rh_del_pltype = c(99))) %>%
+    set_value_labels(rh_del_pltype = c("Health facility - public" = 1, "Health facility - private" = 2, "Home"=3, "Other"=4, "Missing"=9 )) %>%
+    set_variable_labels(rh_del_pltype = "Live births by type of health facility- private")
 
-
-  if( BRdata$v000[1] %in% c("TZ8")){
-    BRdata <- BRdata %>%
-      mutate(rh_del_place =
-               case_when(
-                 m15 >=20 & m15<40   ~ 1 ,
-                 m15 >=11 & m15<13   ~ 2,
-                 m15 >=50 & m15<99   ~ 3 ,
-                 m15 == 99 ~ 9 ,
-                 age>=period ~ 99)) %>%
-      replace_with_na(replace = list(rh_del_place = c(99))) %>%
-      set_value_labels(rh_del_place = c("Health facility" = 1, "Home"=2, "Other"=3, "Missing"=9  )) %>%
-      set_variable_labels(rh_del_place = "Live births by place of delivery")
-
-
-  }
 
 
 
   BRdata <- BRdata %>%
-    mutate(RH_DELP_C_HOM =
+    mutate(RH_DELP_C_PRT =
              case_when(
-               rh_del_place==2 ~ 1,
-               rh_del_place %in% c(1,3,9)   ~ 0 )) %>%
-    set_value_labels(RH_DELP_C_HOM = c("Yes" = 1, "No"=0)) %>%
-    set_variable_labels(RH_DELP_C_HOM = "Live births by place of delivery: Home")
+               rh_del_pltype==2 ~ 1,
+               rh_del_pltype %in% c(1,3,4,9)   ~ 0 )) %>%
+    set_value_labels(RH_DELP_C_PRT = c("Yes" = 1, "No"=0)) %>%
+    set_variable_labels(RH_DELP_C_PRT = "Live births by place of delivery: Health facility- private")
 
-  colnames(BRdata)[colnames(BRdata) == 'RH_DELP_C_HOM'] <- 'value'
+  colnames(BRdata)[colnames(BRdata) == 'RH_DELP_C_PRT'] <- 'value'
   return(BRdata)
 }
