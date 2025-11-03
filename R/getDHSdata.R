@@ -31,7 +31,7 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
   # data(match_all_result)
 
 
-  if(indicator %in% match_all_result$indicator_ID_DHS ){
+  if(!is.null(indicator) && indicator %in% match_all_result$indicator_ID_DHS ){
 
   dataset=match_all_result[match_all_result$indicator_ID_DHS==indicator, "updated_recode_name"]#"IRdata"
 
