@@ -3,7 +3,7 @@
 \name{RH_PCCT_C_DY2}
 \alias{RH_PCCT_C_DY2}
 \title{RH_PCCT_C_DY2 Newborn's first postnatal checkup: 1-2 days
-rh_pnc_nb_2days in github
+RH_PCCT_C_DY2 in github
 IR}
 \usage{
 RH_PCCT_C_DY2(Rdata)
@@ -16,7 +16,7 @@ A partially processed data.frame that will be used in surveyPrev::getDHSindicato
 }
 \description{
 RH_PCCT_C_DY2 Newborn's first postnatal checkup: 1-2 days
-rh_pnc_nb_2days in github
+RH_PCCT_C_DY2 in github
 IR
 }
 \examples{
