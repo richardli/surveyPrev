@@ -80,7 +80,7 @@ RH_DELA_C_SKP <- function(Rdata){
     set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
     set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
 
-  if (BRdata$v000[1] %in% c("NG7","NG6","MZ6")) {
+  if (BRdata$v000[1] %in% c("NG7","NG6")) {
     # //Skilled provider during delivery -- ****SPECIFIC FOR NIGERIA*******
     # ** Note: Please check the final report for this indicator to determine what provider is considered skilled.
     BRdata <- BRdata %>%
@@ -97,7 +97,7 @@ RH_DELA_C_SKP <- function(Rdata){
       set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery in Nigeria")
   }
 
-  if (BRdata$v000[1] %in% c("BF8","BF6","TZ8","ET7","ET8","CD6","SN8","MZ8","RW6","RW8")) {
+  if (BRdata$v000[1] %in% c("BF8","BF6","TZ8","ET7","ET8","CD6","SN7","MZ8","RW6","RW7","SL6","SL7","ZM7","MZ6")) {
 
     ## "Country specific health professional"=3 AS Skilled provider FOR "BF8","BF6","TZ8" ,"ET7","ET8","CD6","SN8","MZ8"
 
@@ -194,6 +194,7 @@ RH_DELA_C_SKP <- function(Rdata){
     # # combine into a data.frame
     # labelf=data.frame(variable = vars, label = labels, stringsAsFactors = FALSE)
 
+
     BRdata <- BRdata %>%
       mutate(rh_del_pv =
                case_when(
@@ -227,6 +228,112 @@ RH_DELA_C_SKP <- function(Rdata){
 
   }
 
+
+
+  if (BRdata$v000[1] %in% c("MZ6")) {
+    #
+    # labelf
+    # variable                                         label
+    # m3a      m3a                            assistance: doctor
+    # m3b      m3b           assistance: nurse/medical assistant
+    # m3c      m3c                           assistance: midwife
+    # m3d      m3d       na - assistance: cs health professional
+    # m3e      m3e       na - assistance: cs health professional
+    # m3f      m3f       na - assistance: cs health professional
+    # m3g      m3g                assistance: traditional healer
+    # m3h      m3h           assistance: community health worker
+    # m3i      m3i assistance: community health mother and child
+    # m3j      m3j                         assistance: relatives
+    # m3k      m3k             assistance: friends and neighbors
+    # m3l      m3l                     na - assistance: cs other
+    # m3m      m3m                             assistance: other
+    # m3n      m3n                            assistance: no one
+    # >
+    #
+
+    BRdata <- BRdata %>%
+  mutate(rh_del_pv =
+           case_when(
+             m3a == 1 ~ 1 ,
+             m3b == 1 ~ 2,
+             m3c == 1 ~ 3 ,
+             m3g == 1 ~ 4 ,
+             m3d == 1  | m3h == 1 | m3e == 1 | m3f == 1  | m3i == 1 | m3j == 1 | m3k == 1 | m3l == 1 | m3m == 1 ~ 5 ,
+             m3n ==1 ~ 6,
+             m3a ==8 | m3a==9 ~ 9 ,
+             age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_pv = c(99))) %>%
+      set_value_labels(rh_del_pv = c("Doctor" = 1, "Nurse/midwife"=2, "Country specific health professional"=3, "Traditional birth attendant"=4, "Relative/other"=5, "No one"=6, "Don't know/missing"=9  )) %>%
+      set_variable_labels(rh_del_pv = "Person providing assistance during delivery")
+
+    BRdata <- BRdata %>%
+      mutate(rh_del_pvskill =
+               case_when(
+                 rh_del_pv %in% c(1,2,3)  ~ 1 ,  # "Country specific health professional"=3 AS Skilled provider
+                 rh_del_pv %in% c( 4, 5) ~ 2,
+                 rh_del_pv ==6 ~ 3 ,
+                 rh_del_pv==9 ~ 9 ,
+                 age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_pvskill = c(99))) %>%
+      set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
+      set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
+
+
+  }
+
+
+
+  if (BRdata$v000[1] %in% c("ML7")) {
+    #ML7
+    # labelf
+    # variable                                           label
+    # m3a      m3a                              assistance: doctor
+    # m3b      m3b                       assistance: nurse/midwife
+    # m3c      m3c                              assistance: matron
+    # m3d      m3d assistance: trained traditional birth attendant
+    # m3e      m3e         na - assistance: cs health professional
+    # m3f      m3f         na - assistance: cs health professional
+    # m3g      m3g         assistance: traditional birth attendant
+    # m3h      m3h             assistance: community health worker
+    # m3i      m3i                    assistance: relative/ friend
+    # m3j      m3j                na - assistance: cs other person
+    # m3k      m3k                               assistance: other
+    # m3l      m3l                       na - assistance: cs other
+    # m3m      m3m                       na - assistance: cs other
+    # m3n      m3n                              assistance: no one
+
+
+    #
+
+    BRdata <- BRdata %>%
+      mutate(rh_del_pv =
+               case_when(
+                 m3a == 1   ~ 1 ,
+                 m3b == 1 ~ 2,
+                 m3c == 1 ~ 3 ,
+                 m3g == 1 ~ 4 ,
+                 m3d == 1  | m3h == 1 | m3e == 1 | m3f == 1  | m3i == 1 | m3j == 1 | m3k == 1 | m3l == 1 | m3m == 1 ~ 5 ,
+                 m3n ==1 ~ 6,
+                 m3a ==8 | m3a==9 ~ 9 ,
+                 age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_pv = c(99))) %>%
+      set_value_labels(rh_del_pv = c("Doctor" = 1, "Nurse/midwife"=2, "Country specific health professional"=3, "Traditional birth attendant"=4, "Relative/other"=5, "No one"=6, "Don't know/missing"=9  )) %>%
+      set_variable_labels(rh_del_pv = "Person providing assistance during delivery")
+
+    BRdata <- BRdata %>%
+      mutate(rh_del_pvskill =
+               case_when(
+                 rh_del_pv %in% c(1,2,3)  ~ 1 ,  # "Country specific health professional"=3 AS Skilled provider
+                 rh_del_pv %in% c( 4, 5) ~ 2,
+                 rh_del_pv ==6 ~ 3 ,
+                 rh_del_pv==9 ~ 9 ,
+                 age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_pvskill = c(99))) %>%
+      set_value_labels(rh_del_pvskill = c("Skilled provider" = 1, "Unskilled provider"=2, "No one"=3, "Don't know/missing"=9  )) %>%
+      set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery")
+
+
+  }
 
 
 
