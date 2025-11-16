@@ -95,7 +95,7 @@ RH_DELA_C_SKF <- function(Rdata){
       set_variable_labels(rh_del_pvskill = "Skilled assistance during delivery in Nigeria")
   }
 
-  if (BRdata$v000[1] %in% c("BF8","BF6","TZ8","ET7","ET8","CD6","SN7","MZ8","RW6","RW7","SL6","SL7","ZM7","MZ6")) {
+  if (BRdata$v000[1] %in% c("BF8","BF6","TZ8","ET7","ET8","CD6","SN7","SN8","MZ8","RW6","RW7","SL6","SL7","ZM7","MZ6")) {
 
     ## "Country specific health professional"=3 AS Skilled provider FOR "BF8","BF6","TZ8" ,"ET7","ET8","CD6","SN8","MZ8"
 
