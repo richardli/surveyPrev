@@ -49,17 +49,17 @@
 #' @export
 
 
-datainfo=function( data=data,
-                   cluster.info=cluster.info,
-                   admin.info1=admin.info1,
-                   admin.info2=admin.info2){
+datainfo=function( data,
+                   cluster.info,
+                   admin.info1=NULL,
+                   admin.info2=NULL){
 
   data <- data[rowSums(is.na(data)) == 0, ]
 
   if(!is.null(admin.info1)){
 
     modt<- left_join(data,cluster.info$data,by="cluster")%>%
-      left_join(., admin.info1$data,by="admin1.name")
+      right_join(., admin.info1$data,by="admin1.name")
     modt<- modt[!(is.na(modt$admin1.name)), ]
 
 
@@ -68,7 +68,7 @@ datainfo=function( data=data,
       summarise(
         n_samples = sum(!is.na(value)),
         n_events  = sum(value == 1, na.rm = TRUE),
-        n_clusters = n_distinct(cluster),
+        n_clusters = n_distinct(cluster, na.rm = TRUE),
       ) |>
       arrange(admin1.name)
 
@@ -90,7 +90,7 @@ datainfo=function( data=data,
       summarise(
         n_samples = sum(!is.na(value)),
         n_events  = sum(value == 1, na.rm = TRUE),
-        n_clusters = n_distinct(cluster),
+        n_clusters = n_distinct(cluster, na.rm = TRUE),
       ) |>
       arrange(admin2.name.full)
 
