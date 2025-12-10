@@ -118,15 +118,26 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
        }
        }
      }
+
+
+    ## U5MR fix
+    if("age" %in% colnames(data)){
+      # temporarily not do variance fix for U5MR for now
+      # U5MR codes not implemented within the following var.fix == TRUE section
+      var.fix <- FALSE
+      mortality.model <- TRUE
+    }else{
+      mortality.model <- FALSE
+    }
+
     #model
 
-    if(var.fix==TRUE){
+    if(var.fix==TRUE || mortality.model){
         fit0 <- surveyPrev::directEST(data = data,
                                  cluster.info = cluster.info,
                                  admin = 2,
                                  aggregation = FALSE,
-                                 var.fix = TRUE
-        )
+                                 var.fix = var.fix)
 
         fit0$res.admin2$region<-fit0$res.admin2$admin2.name.full
         fit0$res.admin2$HT.logit.est<-fit0$res.admin2$direct.logit.est
@@ -167,12 +178,6 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
        fit2$smooth$median=apply(tmp2, 1,  median)
        fit2$smooth$lower=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,]
        fit2$smooth$upper=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
-
-
-
-
-
-
 
 
 
@@ -334,19 +339,93 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
     if(!is.null(alt.strata)){
         modt$strata.full <- factor(modt[, alt.strata])
     }
-    #model
-    fit1 <- smoothSurvey(as.data.frame(modt),
-                         responseType ="binary",
-                         responseVar= "value",
-                         regionVar = "admin1.name",
-                         clusterVar = "~cluster+householdID",
-                         region.list = unique(admin.info$admin1.name),
-                         weightVar = "weight",
-                         strataVar = "strata.full",
-                         Amat =Amat,
-                         CI = CI,
-                         save.draws = TRUE,
-                         X=X, ...)
+
+     ## U5MR fix
+    if("age" %in% colnames(data)){
+      # temporarily not do variance fix for U5MR for now
+      # U5MR codes not implemented within the following var.fix == TRUE section
+      var.fix <- FALSE
+      mortality.model <- TRUE
+    }else{
+      mortality.model <- FALSE
+    }
+
+    if(mortality.model == TRUE){
+       ######################################
+       ######################################
+       ######################################
+       ######################################
+       ######################################
+       ######################################
+
+       fit0 <- surveyPrev::directEST(data = data,
+                                 cluster.info = cluster.info,
+                                 admin = 1,
+                                 aggregation = FALSE,
+                                 var.fix = var.fix)
+
+        fit0$res.admin1$region<-fit0$res.admin1$admin1.name
+        fit0$res.admin1$HT.logit.est<-fit0$res.admin1$direct.logit.est
+        fit0$res.admin1$HT.logit.var<-fit0$res.admin1$direct.logit.var
+
+
+      direct.logit <- fit0$res.admin1[, c("region", "HT.logit.est", "HT.logit.var")]
+      if(!is.null(X)){colnames(X)[colnames(X) == "admin1.name"] <- "region"}
+      if( dim(direct.logit)[1]<dim(admin.info)[1]){
+      direct.logit_na=data.frame( region=setdiff(admin.info$admin1.name,direct.logit$region),
+                                  HT.logit.est=NA,
+                                  HT.logit.var=NA
+                                  )
+      direct.logit=rbind(direct.logit,direct.logit_na)
+      }
+      fit1 <- smoothSurvey(data=NULL,
+                           direct.est = direct.logit,
+                           Amat=Amat,
+                           regionVar="region",
+                           responseVar="HT.logit.est",
+                           direct.est.var = "HT.logit.var",
+                           responseType = "gaussian",
+                           CI = CI,
+                           smooth=TRUE,
+                           save.draws = TRUE,
+                           X=X,...
+                           )
+       fit1$smooth$logit.mean=fit1$smooth$mean
+       fit1$smooth$logit.var=fit1$smooth$var
+       fit1$smooth$logit.median=fit1$smooth$median
+       fit1$smooth$logit.lower=fit1$smooth$lower
+       fit1$smooth$logit.upper=fit1$smooth$upper
+
+       FUN <- function(x) exp( x ) / ( 1 + exp( x ) )
+       tmp2 <- apply(fit1$draws.est[,-c(1,2)], 2, FUN)
+       fit1$smooth$mean=apply(tmp2, 1,  mean)
+       fit1$smooth$var=apply(tmp2, 1,  var)
+       fit1$smooth$median=apply(tmp2, 1,  median)
+       fit1$smooth$lower=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,]
+       fit1$smooth$upper=apply(tmp2, 1,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,]
+
+       ######################################
+       ######################################
+       ######################################
+       ######################################
+       ######################################
+       ######################################
+
+    }else{
+        #model
+        fit1 <- smoothSurvey(as.data.frame(modt),
+                             responseType ="binary",
+                             responseVar= "value",
+                             regionVar = "admin1.name",
+                             clusterVar = "~cluster+householdID",
+                             region.list = unique(admin.info$admin1.name),
+                             weightVar = "weight",
+                             strataVar = "strata.full",
+                             Amat =Amat,
+                             CI = CI,
+                             save.draws = TRUE,
+                             X=X, ...)      
+    }
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
