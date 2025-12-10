@@ -67,6 +67,7 @@ dhsData <- getDHSdata(country = "Zambia",
 data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
 admin.info1 <- adminInfo(poly.adm = ZambiaAdm1,
                         admin = 1,
+                        by.adm = "NAME_1",
                         agg.pop =ZambiaPopWomen$admin1_pop,
                         proportion = ZambiaPopWomen$admin1_urban)
 smth_res_ad1 <- fhModel(data,

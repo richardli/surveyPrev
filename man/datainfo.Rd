@@ -4,12 +4,7 @@
 \alias{datainfo}
 \title{Summarize Sample and Event Information by Administrative Level}
 \usage{
-datainfo(
-  data = data,
-  cluster.info = cluster.info,
-  admin.info1 = admin.info1,
-  admin.info2 = admin.info2
-)
+datainfo(data, cluster.info, admin.info1 = NULL, admin.info2 = NULL)
 }
 \arguments{
 \item{data}{A data frame containing at least the variables \code{cluster} and \code{value}.
