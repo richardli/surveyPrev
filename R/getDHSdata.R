@@ -30,7 +30,6 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
 
   # data(match_all_result)
 
-
   if(!is.null(indicator) && indicator %in% match_all_result$indicator_ID_DHS ){
 
   dataset=match_all_result[match_all_result$indicator_ID_DHS==indicator, "updated_recode_name"]#"IRdata"
@@ -97,7 +96,8 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
  BRdata_Birth<-c(
    "RH_DELA_C_SKP"
    ,"CM_ECMR_C_NNR"#"nmr"
-   ,"nmr"
+   ,"nmr",
+   "u5mr"
  )
 
  HRdata_Household<-c(
