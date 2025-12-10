@@ -94,6 +94,21 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
         filter = NULL, yesCondition = NULL, noCondition = NULL) {
 # data(match_all_result)
 
+  ## U5MR ##
+  if(indicator == "u5mr"){
+    # convert v5 to factor using libraries already imported in surveyPrev
+    Rdata$b5 <- labelled::to_factor(Rdata$b5)
+    # Using the same way as surveyPrev in defining 10 year cutoff by month
+    Rdata <- subset(Rdata, v008-12*nmr.year-b3 < 0)
+    Rdata$strata <- NA
+    # Get birth coded as person-months
+    # year.cut is specified for a wide range to avoid SUMMER's rule of dropping partial year observations for now
+    raw.dat.tmp <- SUMMER::getBirths(data = Rdata,  strata = c("strata"), 
+                   year.cut = c(0, 30000)) 
+    raw.dat.tmp$value <- raw.dat.tmp$died
+  }
+
+
   if(is.null(indicator) && !is.null(FUN)){
     raw.dat.tmp <- FUN(Rdata)
   }else if(is.null(indicator) && !is.null(yesCondition)){
@@ -472,7 +487,9 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
   raw.dat.tmp[, paste0(pre, "v023")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v023")]))
   raw.dat.tmp[, paste0(pre, "v022")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v022")]))
 
-  dat.tmp<-  raw.dat.tmp %>%
+  
+  if(indicator == "u5mr"){
+    dat.tmp<-  raw.dat.tmp %>%
       dplyr::  select(c(cluster= paste0(pre, "v001"),
                         householdID= paste0(pre, "v002"),
                         v022= paste0(pre, "v022"),
@@ -480,7 +497,19 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
                         v024= paste0(pre, "v024"),
                         weight= paste0(pre, "v005"),
                         strata= paste0(pre, "v025"),
-                        value="value"))
+                        value="value", 
+                        age = "age"))
+  }else{
+    dat.tmp<-  raw.dat.tmp %>%
+        dplyr::  select(c(cluster= paste0(pre, "v001"),
+                          householdID= paste0(pre, "v002"),
+                          v022= paste0(pre, "v022"),
+                          v023= paste0(pre, "v023"),
+                          v024= paste0(pre, "v024"),
+                          weight= paste0(pre, "v005"),
+                          strata= paste0(pre, "v025"),
+                          value="value"))    
+  }
 
 
   # Check urban/rural
