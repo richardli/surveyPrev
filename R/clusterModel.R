@@ -75,6 +75,13 @@
 clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
+  
+  ## U5MR fix
+  if ("age" %in% colnames(data)) {
+      call <- match.call()
+      call[[1]] <- as.name("clusterModel_u5mr")
+      return(eval(call))
+  }
 
   if (sum(is.na(data$value)) > 0) {
     data <- data[rowSums(is.na(data)) == 0, ]
