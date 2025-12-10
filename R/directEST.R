@@ -106,7 +106,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     }
     modt<-  modt[order(modt$admin1.name,modt$admin2.name), ]
 
-    smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
+    # U5MR fix
+    if("age" %in% colnames(modt)){
+      smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin2.name.full")
+    }else{
+      smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
                                    regionVar = "admin2.name.full",
@@ -117,6 +121,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                    CI = CI,
                                    is.unit.level=FALSE,
                                    smooth=FALSE,...)
+    }
     admin2_res<-as.data.frame(smoothSurvey_res$HT)
     admin2_res$direct.se<-sqrt(admin2_res$HT.var)
 
@@ -604,7 +609,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     # design = design, survey::svymean, drop.empty.groups = FALSE)
 
   #  aggregate results
-
+  
+    # U5MR fix
+    if("age" %in% colnames(modt)){
+      smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin1.name")
+    }else{
        smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                  responseType ="binary",
                  responseVar= "value",
@@ -616,6 +625,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                  CI = CI,
                  is.unit.level=FALSE,
                  smooth=FALSE, ...)
+     }
 
     admin1_res<-smoothSurvey_res$HT
     admin1_res$direct.se<-sqrt(admin1_res$HT.var)
@@ -770,8 +780,11 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     }else if(strata=="rural"){
       modt<-modt%>% filter(., strata == "rural")
     }
-
-    smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+    # U5MR fix
+    if("age" %in% colnames(modt)){
+      smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin0.name")
+    }else{
+      smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
                                    regionVar = "admin0.name",
@@ -782,6 +795,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                    CI = CI,
                                    is.unit.level=FALSE,
                                    smooth=FALSE, ...)
+    }
     admin0_res<-smoothSurvey_res$HT
     admin0_res$direct.se<-sqrt(admin0_res$HT.var)
     colnames(admin0_res)[colnames(admin0_res) == 'HT.est'] <- 'direct.est'
