@@ -103,8 +103,8 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
     Rdata$strata <- NA
     # Get birth coded as person-months
     # year.cut is specified for a wide range to avoid SUMMER's rule of dropping partial year observations for now
-    raw.dat.tmp <- SUMMER::getBirths(data = Rdata,  strata = c("strata"), 
-                   year.cut = c(0, 30000)) 
+    raw.dat.tmp <- SUMMER::getBirths(data = Rdata,  strata = c("strata"),
+                   year.cut = c(0, 30000))
     raw.dat.tmp$value <- raw.dat.tmp$died
   }
 
@@ -487,8 +487,8 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
   raw.dat.tmp[, paste0(pre, "v023")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v023")]))
   raw.dat.tmp[, paste0(pre, "v022")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v022")]))
 
-  
-  if(indicator == "u5mr"){
+
+  if(indicator %in% c("u5mr","CM_ECMR_C_U5M","CM_ECMR_C_U5F")){
     dat.tmp<-  raw.dat.tmp %>%
       dplyr::  select(c(cluster= paste0(pre, "v001"),
                         householdID= paste0(pre, "v002"),
@@ -497,7 +497,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
                         v024= paste0(pre, "v024"),
                         weight= paste0(pre, "v005"),
                         strata= paste0(pre, "v025"),
-                        value="value", 
+                        value="value",
                         age = "age"))
   }else{
     dat.tmp<-  raw.dat.tmp %>%
@@ -508,7 +508,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
                           v024= paste0(pre, "v024"),
                           weight= paste0(pre, "v005"),
                           strata= paste0(pre, "v025"),
-                          value="value"))    
+                          value="value"))
   }
 
 
