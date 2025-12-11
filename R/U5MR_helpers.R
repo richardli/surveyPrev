@@ -71,7 +71,7 @@ directEST_u5mr <- function(modt, regionVar){
 clusterModel_u5mr <- function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3, age.space.group = NULL){
-	call <- match.call()
+	# call <- match.call()
 
 	# Extract month count for each age group
     all_ages <- unique(data$age)
@@ -102,9 +102,28 @@ clusterModel_u5mr <- function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,
 		data_sub <- subset(data, age %in% age_bins)
 		data_sub <- data_sub[, colnames(data_sub) != "age"]
 
-	    call[[1]] <- as.name("clusterModel")
-		call[[2]] <- as.name("data_sub")
-		all_models[[a]] <- eval(call)
+		all_models[[a]] <- clusterModel(data = data_sub,
+                                cluster.info = cluster.info, 
+                                admin.info = admin.info, 
+                                X=X,
+                                X.unit=X.unit,
+                                X.pixel=X.pixel,
+                                admin = admin, 
+                                CI = CI, 
+                                model = model,
+                                stratification =  stratification,
+                                aggregation = aggregation,
+                                nested=nested,
+                                interact=interact,
+                                overdisp.mean=overdisp.mean, 
+                                overdisp.prec=overdisp.prec , 
+                                pc.u = pc.u,  
+                                pc.alpha = pc.alpha, 
+                                pc.u.phi=pc.u.phi,
+                                pc.alpha.phi=pc.alpha.phi)
+	    # call[[1]] <- as.name("clusterModel")
+		# call[[2]] <- as.name("data_sub")
+		# all_models[[a]] <- eval(call)
 	}
 
 

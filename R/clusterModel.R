@@ -78,9 +78,26 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
   
   ## U5MR fix
   if ("age" %in% colnames(data)) {
-      call <- match.call()
-      call[[1]] <- as.name("clusterModel_u5mr")
-      return(eval(call))
+      fit <- clusterModel_u5mr(data = data,
+                                cluster.info = cluster.info, 
+                                admin.info = admin.info, 
+                                X=X,
+                                X.unit=X.unit,
+                                X.pixel=X.pixel,
+                                admin = admin, 
+                                CI = CI, 
+                                model = model,
+                                stratification =  stratification,
+                                aggregation = aggregation,
+                                nested=nested,
+                                interact=interact,
+                                overdisp.mean=overdisp.mean, 
+                                overdisp.prec=overdisp.prec , 
+                                pc.u = pc.u,  
+                                pc.alpha = pc.alpha, 
+                                pc.u.phi=pc.u.phi,
+                                pc.alpha.phi=pc.alpha.phi)
+      return(fit)
   }
 
   if (sum(is.na(data$value)) > 0) {
