@@ -231,6 +231,9 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
 
   fixed.points<-c()
+    if(identical(poly.adm1, poly.adm2)){
+      poly.adm2=NULL
+      message("poly.adm1 and poly.adm2 are identical, only poly.adm1 will be used, and admin2.name.full will not be produced")}
 
     if(is.null(poly.adm2)){
 
