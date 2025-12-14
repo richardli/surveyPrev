@@ -75,26 +75,31 @@
 clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
                        overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
-  
+
+
+  cvf <- function(p, sd) {
+    pmax(sd / p, sd / (1 - p))
+  }
+
   ## U5MR fix
   if ("age" %in% colnames(data)) {
       fit <- clusterModel_u5mr(data = data,
-                                cluster.info = cluster.info, 
-                                admin.info = admin.info, 
+                                cluster.info = cluster.info,
+                                admin.info = admin.info,
                                 X=X,
                                 X.unit=X.unit,
                                 X.pixel=X.pixel,
-                                admin = admin, 
-                                CI = CI, 
+                                admin = admin,
+                                CI = CI,
                                 model = model,
                                 stratification =  stratification,
                                 aggregation = aggregation,
                                 nested=nested,
                                 interact=interact,
-                                overdisp.mean=overdisp.mean, 
-                                overdisp.prec=overdisp.prec , 
-                                pc.u = pc.u,  
-                                pc.alpha = pc.alpha, 
+                                overdisp.mean=overdisp.mean,
+                                overdisp.prec=overdisp.prec ,
+                                pc.u = pc.u,
+                                pc.alpha = pc.alpha,
                                 pc.u.phi=pc.u.phi,
                                 pc.alpha.phi=pc.alpha.phi)
       return(fit)
@@ -655,7 +660,7 @@ if(X.unit.model==FALSE){
           var = post.all.sd^2,
           lower= post.all.ci[1,],
           upper= post.all.ci[2,],
-          cv=post.all.sd/post.all
+          cv=  cvf(post.all.median,post.all.sd)#pmax(post.all.sd/post.all.median, post.all.sd/(1 - post.all.median))
         )
       }else{
 
@@ -674,7 +679,7 @@ if(X.unit.model==FALSE){
       admin1.bb.res$var<-admin1.bb.res$sd^2
       admin1.bb.res$lower<-as.numeric (admin1.bb.res$lower)
       admin1.bb.res$upper<-as.numeric (admin1.bb.res$upper)
-      admin1.bb.res$cv=admin1.bb.res$sd/admin1.bb.res$mean
+      admin1.bb.res$cv= cvf(admin1.bb.res$median,admin1.bb.res$sd) #pmax(admin1.bb.res$sd/admin1.bb.res$median, admin1.bb.res$sd/(1 - admin1.bb.res$median))
       }
 
     }else if(stratification){
@@ -703,7 +708,10 @@ if(X.unit.model==FALSE){
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
-                                  cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
+                                  cv=c( cvf(post.u.median,post.u.sd),
+                                        cvf(post.r.median,post.r.sd),
+                                        cvf(post.all.median,post.all.sd)
+                                         ),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("full", nregion))
                                   )
@@ -721,7 +729,7 @@ if(X.unit.model==FALSE){
                            var = var(post.all),
                            lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                            upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
-    agg.natl$cv=agg.natl$sd/agg.natl$mean
+    agg.natl$cv=  cvf(agg.natl$median,agg.natl$sd )
     rownames(agg.natl)=NULL
 
 }
@@ -781,7 +789,7 @@ if(X.unit.model==FALSE){
       admin2.bb.res$var <- admin2.bb.res$sd^2
       admin2.bb.res$lower<-as.numeric (admin2.bb.res$lower)
       admin2.bb.res$upper<-as.numeric (admin2.bb.res$upper)
-      admin2.bb.res$cv=admin2.bb.res$sd/admin2.bb.res$mean
+      admin2.bb.res$cv= cvf(admin2.bb.res$median,admin2.bb.res$sd )
 
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
 
@@ -810,7 +818,9 @@ if(X.unit.model==FALSE){
                                   var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                   lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                   upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
-                                  cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
+                                    cv=c( cvf(post.u.median,post.u.sd),
+                                        cvf(post.r.median,post.r.sd),
+                                        cvf(post.all.median,post.all.sd)),
                                   type = c(rep("urban", nregion), rep("rural", nregion),
                                            rep("full", nregion)))
       admin2.bb.res<-left_join(admin2.bb.res,distinct(admin.info),by="admin2.name.full")
@@ -839,7 +849,8 @@ if(X.unit.model==FALSE){
                              var =  apply(admin1.samp, 2, var),
                              lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
                              upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,],
-                             cv=apply(admin1.samp, 2, sd)/colMeans(admin1.samp)
+                             cv=cvf(colMedians(admin1.samp),apply(admin1.samp, 2, sd))
+
                             )
     agg.admin1$admin1.name=rownames(agg.admin1)
     rownames(agg.admin1)=NULL
@@ -855,7 +866,7 @@ if(X.unit.model==FALSE){
                            var = var(post.all),
                            lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                            upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
-     agg.natl$cv=agg.natl$sd/agg.natl$mean
+     agg.natl$cv=  cvf(agg.natl$median,agg.natl$sd )
      rownames(agg.natl)=NULL
 
 }
@@ -1202,7 +1213,9 @@ if(X.unit.model==FALSE){
                                 var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
                                 lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
                                 upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
-                                cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
+                                cv=c( cvf(post.u.median,post.u.sd),
+                                      cvf(post.r.median,post.r.sd),
+                                      cvf(post.all.median,post.all.sd)),
                                 type = c(rep("urban", length(unique(X.pixel$admin2.name.full))),
                                          rep("rural", length(unique(X.pixel$admin2.name.full))),
                                          rep("full", length(unique(X.pixel$admin2.name.full)))
@@ -1238,7 +1251,9 @@ if(X.unit.model==FALSE){
       var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
       lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
       upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
-      cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
+      cv=c( cvf(post.u.median,post.u.sd),
+            cvf(post.r.median,post.r.sd),
+            cvf(post.all.median,post.all.sd)),
       type = c(rep("urban", length(unique(X.pixel$admin1.name))),
                rep("rural", length(unique(X.pixel$admin1.name))),
                rep("full", length(unique(X.pixel$admin1.name))))
@@ -1271,7 +1286,9 @@ if(X.unit.model==FALSE){
       var = c(post.u.sd^2, post.r.sd^2, post.all.sd^2),
       lower=c(post.u.ci[1,], post.r.ci[1,], post.all.ci[1,]),
       upper=c(post.u.ci[2,], post.r.ci[2,], post.all.ci[2,]),
-      cv=c(post.u.sd/post.u,post.r.sd/post.r,post.all.sd/post.all),
+      cv=c( cvf(post.u.median,post.u.sd),
+            cvf(post.r.median,post.r.sd),
+            cvf(post.all.median,post.all.sd)),
       type = c(rep("urban", 1),
                rep("rural", 1),
                rep("full",1)
@@ -1330,7 +1347,7 @@ if(X.unit.model==FALSE){
                                 var = c(post.all.sd^2),
                                 lower=c(post.all.ci[1,]),
                                 upper=c( post.all.ci[2,]),
-                                cv=c(post.all.sd/post.all))
+                                cv=cvf(post.all.median,post.all.sd))
 
     }else{
       admin2.bb.res <- data.frame(admin2.name.full= sort(unique(X.pixel$admin2.name.full)),
@@ -1340,7 +1357,7 @@ if(X.unit.model==FALSE){
                                   var = c(post.all.sd^2),
                                   lower=c(post.all.ci[1,]),
                                   upper=c( post.all.ci[2,]),
-                                  cv=c(post.all.sd/post.all))
+                                  cv=cvf(post.all.median,post.all.sd))
 }
 
     ###admin1
@@ -1361,7 +1378,7 @@ if(X.unit.model==FALSE){
       var = c( post.all.sd^2),
       lower=c( post.all.ci[1,]),
       upper=c(post.all.ci[2,]),
-      cv=c(post.all.sd/post.all))
+      cv=cvf(post.all.median,post.all.sd) )
 
 
     ###national
@@ -1379,7 +1396,7 @@ if(X.unit.model==FALSE){
       var = c( post.all.sd^2),
       lower=c(post.all.ci[1,]),
       upper=c( post.all.ci[2,]),
-      cv=c(post.all.sd/post.all)
+      cv= cvf(post.all.median, post.all.sd)
     )
 
 
