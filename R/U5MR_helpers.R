@@ -63,17 +63,19 @@ directEST_u5mr <- function(modt, regionVar){
 #' @param pc.alpha pc prior alpha for iid or bym2 precision.
 #' @param pc.u.phi pc prior u for bym2 mixing paramete.
 #' @param pc.alpha.phi pc prior u for bym2 mixing paramete.
-#' @param age.space.group vector indicating grouping of the ages groups in the spatial model. For example, if each age group is assigned a different spatial component, then set age.group.group to c(1:length(age.group)); if all age groups share the same spatial component, then set age.group.group to a rep(1, length(age.group)). The default for 6 age groups is c(1,2,3,3,3,3), which assigns a separate hazards to the first two groups and a common hazard for the rest of the age groups. The vector should contain values starting from 1.  
+#' @param age.space.group vector indicating grouping of the ages groups in the spatial model. For example, if each age group is assigned a different spatial component, then set age.group.group to c(1:length(age.group)); if all age groups share the same spatial component, then set age.group.group to a rep(1, length(age.group)). The default for 8 age groups is c(1,2,2,2,3,3,3,3), which assigns a separate hazards to the first two groups and a common hazard for the rest of the age groups. The vector should contain values starting from 1.  
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
 
 clusterModel_u5mr <- function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
-                       overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3, age.space.group = NULL){
+                       overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3, age.space.group = c(1, 2, 2, 2, 3, 3, 3, 3)){
 	# call <- match.call()
 
-	# Extract month count for each age group
+	# Extract month count for each age group, 
+	# unique() preserves order since data$age is expected to be factor
+	if(!is.factor(data$age)) warning("The 'age' variable is not a factor. This is likely due to manual update to the input data. The order of the age groups may be incorrect. Please make the 'age' variable an ordered factor from younger to older age groups") 
     all_ages <- unique(data$age)
     ns <- rep(1, length(as.character(all_ages)))
     for(i in 1:length(all_ages)){
@@ -84,15 +86,22 @@ clusterModel_u5mr <- function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,
         tmp <- as.numeric(strsplit(as.character(all_ages[i]), "-")[[1]])
         ns[i] <- tmp[2] - tmp[1] + 1
     }
-    age_groups <- all_ages
-    ns_group <- ns
 
-    # TODO: age.space.group right now is not used. Instead here I am hard-coding the grouping
-    # hard-coding starts
-    age_groups_map <- c("0", "1-11", "12-59", "12-59", "12-59", "12-59")
-    age_groups <- c("0", "1-11", "12-59")
-    ns_group <- c(1, 11, 48)
-    # hard-coding ends
+    age_groups <- ns_group <- rep(NA, length(unique(age.space.group)))
+    for(j in 1:length(unique(age.space.group))){
+    	sub <- which(age.space.group == unique(age.space.group)[j])
+    	age_groups[j] <- paste(all_ages[sub], collapse = ",")
+    	ns_group[j] <- sum(ns[sub])
+    }
+    for(j in 1:length(age_groups)){
+    	parts <- strsplit(age_groups[j], "[,-]")[[1]]
+		if(parts[1] != parts[length(parts)]) age_groups[j] <- paste0(parts[1], "-", parts[length(parts)])
+    }
+    age_groups_map <- age_groups[age.space.group]
+
+    # age_groups_map <- c("0", "1-11", "12-59", "12-59", "12-59", "12-59")
+    # age_groups <- c("0", "1-11", "12-59")
+    # ns_group <- c(1, 11, 48)
 
 
 	all_models <- NULL

@@ -21,6 +21,7 @@
 #' @param pc.alpha pc prior alpha for iid or bym2 precision.
 #' @param pc.u.phi pc prior u for bym2 mixing paramete.
 #' @param pc.alpha.phi pc prior u for bym2 mixing paramete.
+#' @param ... additional arguments for internal functions.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 #' @import dplyr
@@ -74,7 +75,7 @@
 
 clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
-                       overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3){
+                       overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3, ...){
   
   ## U5MR fix
   if ("age" %in% colnames(data)) {
@@ -96,7 +97,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
                                 pc.u = pc.u,  
                                 pc.alpha = pc.alpha, 
                                 pc.u.phi=pc.u.phi,
-                                pc.alpha.phi=pc.alpha.phi)
+                                pc.alpha.phi=pc.alpha.phi, 
+                                ...)
       return(fit)
   }
 
