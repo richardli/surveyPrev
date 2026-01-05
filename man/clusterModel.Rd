@@ -23,7 +23,8 @@ clusterModel(
   pc.u = 1,
   pc.alpha = 0.01,
   pc.u.phi = 0.5,
-  pc.alpha.phi = 2/3
+  pc.alpha.phi = 2/3,
+  ...
 )
 }
 \arguments{
@@ -64,6 +65,8 @@ clusterModel(
 \item{pc.u.phi}{pc prior u for bym2 mixing paramete.}
 
 \item{pc.alpha.phi}{pc prior u for bym2 mixing paramete.}
+
+\item{...}{additional arguments for internal functions.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

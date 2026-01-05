@@ -8,10 +8,12 @@ getDHSindicator(
   Rdata,
   indicator = NULL,
   FUN = NULL,
-  nmr.year = 10,
   filter = NULL,
   yesCondition = NULL,
-  noCondition = NULL
+  noCondition = NULL,
+  mort.year = NULL,
+  mort.cut = c(1, 2, 6, 12, 24, 36, 48, 60),
+  nmr.year = 10
 )
 }
 \arguments{
@@ -21,13 +23,19 @@ getDHSindicator(
 
 \item{FUN}{a function to process the DHS data into a binary indicator if not using one of the implemented indicators. See surveyPrev::AN_ANEM_W_ANY for an example function to obtain the indicator for women classified as having any anemia.}
 
-\item{nmr.year}{This is an argument specifically for NMR calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, i.e., NMR in the last 10 years prior to survey.}
-
 \item{filter}{This arguments specifies how the data should be filtered for creating a customized indicator. It should be a character string or a vector of character strings specifying the expression used to filter the data. See example for details}
 
 \item{yesCondition}{This arguments specifies how to define a yes label, i.e., value = 1, for creating a customized indicator. It should be a character string specifying the expression used to define the outcome value equal to 1. See example for details.}
 
 \item{noCondition}{This arguments specifies how to define a no label, i.e., value = 0, for creating a customized indicator. It should be a character string specifying the expression used to define the outcome value equal to 0. See example for details.}
+
+\item{mort.year}{This is an argument specifically for mortality calculation. It specifies births how many years do we include prior to the date of survey. Default to be 10, e.g., NMR in the last 10 years prior to survey. When mort.year is specified, it overrides nmr.year.}
+
+\item{mort.cut}{This is an argument specifically for mortality calculation. It specifies the cutoff of each bins of age group in the unit of months. Default values are consistent with the DHS calculation, i.e., c(1, 2, 6, 12, 24, 36, 48, 60), representing the age groups (0, 1), [1, 2), [2, 6), [6, 12), [12, 24), ..., [48, 60).}
+
+\item{nmr.year}{To be deprecated. It performs the same function as nmr.year.}
+
+\item{...}{arguments passed to internal functions}
 }
 \value{
 The function returns processed survey data that contains the indicator of interests.
@@ -102,7 +110,7 @@ data6c <- getDHSindicator(Rdata = dhsData4,
                         filter = "v008 - b3 < 60",
                         yesCondition = "b7 == 0",
                         noCondition = "b7 > 0 | is.na(b7)")
-data7 <- getDHSindicator(Rdata = dhsData4, indicator = "nmr", nmr.year = 5)
+data7 <- getDHSindicator(Rdata = dhsData4, indicator = "nmr", mort.year = 5)
 }
 
 }

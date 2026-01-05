@@ -24,7 +24,7 @@ clusterModel_u5mr(
   pc.alpha = 0.01,
   pc.u.phi = 0.5,
   pc.alpha.phi = 2/3,
-  age.space.group = NULL
+  age.space.group = c(1, 2, 2, 2, 3, 3, 3, 3)
 )
 }
 \arguments{
@@ -66,7 +66,7 @@ clusterModel_u5mr(
 
 \item{pc.alpha.phi}{pc prior u for bym2 mixing paramete.}
 
-\item{age.space.group}{vector indicating grouping of the ages groups in the spatial model. For example, if each age group is assigned a different spatial component, then set age.group.group to c(1:length(age.group)); if all age groups share the same spatial component, then set age.group.group to a rep(1, length(age.group)). The default for 6 age groups is c(1,2,3,3,3,3), which assigns a separate hazards to the first two groups and a common hazard for the rest of the age groups. The vector should contain values starting from 1.}
+\item{age.space.group}{vector indicating grouping of the ages groups in the spatial model. For example, if each age group is assigned a different spatial component, then set age.group.group to c(1:length(age.group)); if all age groups share the same spatial component, then set age.group.group to a rep(1, length(age.group)). The default for 8 age groups is c(1,2,2,2,3,3,3,3), which assigns a separate hazards to the first two groups and a common hazard for the rest of the age groups. The vector should contain values starting from 1.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
