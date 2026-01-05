@@ -72,7 +72,9 @@
 #' @export
 
 directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL,var.fix = FALSE, threshold=1e-12, ...){
-
+  cvf <- function(p, sd) {
+    pmax(sd / p, sd / (1 - p))
+  }
 
   options(survey.adjust.domain.lonely=TRUE)
   options(survey.lonely.psu="adjust")
@@ -136,8 +138,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     admin2_res$direct.lower <- expit(admin2_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
     admin2_res$direct.upper <- expit(admin2_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin2_res$direct.logit.var))
-    admin2_res$cv.mean <- admin2_res$direct.se / admin2_res$direct.est
-    admin2_res$cv2 <- pmax(admin2_res$direct.se/ admin2_res$direct.est, admin2_res$direct.se/ (1-admin2_res$direct.est) )
+    # admin2_res$cv.mean <- admin2_res$direct.se / admin2_res$direct.est
+     admin2_res$cv <-  cvf(admin2_res$direct.est, admin2_res$direct.se) #pmax(admin2_res$direct.se/ admin2_res$direct.est, admin2_res$direct.se/ (1-admin2_res$direct.est) )
 
 
     a<-strsplit(admin2_res$admin2.name.full,"_")
@@ -353,8 +355,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                              stats::qnorm((1 - CI)/2) * sqrt(res.admin2$direct.logit.var))
           res.admin2$direct.upper <- expit(res.admin2$direct.logit.est +
                                              stats::qnorm(1 - (1 - CI)/2) * sqrt(res.admin2$direct.logit.var))
-          res.admin2$cv.mean <- res.admin2$direct.se / res.admin2$direct.est
-          res.admin2$cv2<- pmax(res.admin2$direct.se/ res.admin2$direct.est, res.admin2$direct.se/ (1-res.admin2$direct.est)  )
+          # res.admin2$cv.mean <- res.admin2$direct.se / res.admin2$direct.est
+          res.admin2$cv<- cvf(res.admin2$direct.est, res.admin2$direct.se) #pmax(res.admin2$direct.se/ res.admin2$direct.est, res.admin2$direct.se/ (1-res.admin2$direct.est)  )
 
 
 
@@ -519,8 +521,10 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
        admin1_agg <- admin1_agg%>% left_join( aggregate(value1 ~ admin1.name, data = weight_dt_mean, sum), by="admin1.name")%>%
        rename( direct.est = value1)#admin1_agg: admin2toadmin1 result
+       admin1_agg$cv=cvf(admin1_agg$direct.est,admin1_agg$direct.se)
+         # pmax(admin1_agg$direct.se/ admin1_agg$direct.est, admin1_agg$direct.se/ (1-admin1_agg$direct.est) )
 
-       admin1_agg <- admin1_agg[, c("admin1.name", "direct.est", "direct.se", "direct.lower", "direct.upper")]
+       admin1_agg <- admin1_agg[, c("admin1.name", "direct.est", "direct.se", "direct.lower", "direct.upper","cv")]
 
 
        ### ### ### ### ### ### ### ### ### ###
@@ -561,8 +565,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                                direct.lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                                direct.upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
-       nation_agg$cv.mean=nation_agg$direct.se/nation_agg$direct.est
-       nation_agg$cv2=pmax(nation_agg$direct.se/ nation_agg$direct.est, nation_agg$direct.se/ (1-nation_agg$direct.est) )
+       # nation_agg$cv.mean=nation_agg$direct.se/nation_agg$direct.est
+       nation_agg$cv=cvf(nation_agg$direct.est,nation_agg$direct.se)
+         # pmax(nation_agg$direct.se/ nation_agg$direct.est, nation_agg$direct.se/ (1-nation_agg$direct.est) )
 
 
        #cleaning up colnames
@@ -609,7 +614,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     # design = design, survey::svymean, drop.empty.groups = FALSE)
 
   #  aggregate results
-  
+
     # U5MR fix
     if("age" %in% colnames(modt)){
       smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin1.name")
@@ -642,8 +647,8 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     admin1_res$direct.lower <- expit(admin1_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
     admin1_res$direct.upper <- expit(admin1_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin1_res$direct.logit.var))
-    admin1_res$cv.mean=admin1_res$direct.se/admin1_res$direct.est
-    admin1_res$cv2=pmax(admin1_res$direct.se/ admin1_res$direct.est, admin1_res$direct.se/ (1-admin1_res$direct.est) )
+    # admin1_res$cv.mean=admin1_res$direct.se/admin1_res$direct.est
+    admin1_res$cv=cvf(admin1_res$direct.est,admin1_res$direct.se)# pmax(admin1_res$direct.se/ admin1_res$direct.est, admin1_res$direct.se/ (1-admin1_res$direct.est) )
     res.admin1=admin1_res
 
 
@@ -740,8 +745,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
                              direct.lower=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[1],
                              direct.upper=quantile(nation.samp, probs = c((1 - CI)/2,1 - (1 - CI)/2))[2])
 
-    nation_agg$cv.mean=nation_agg$direct.se/nation_agg$direct.est
-    nation_agg$cv2=pmax(nation_agg$direct.se/ nation_agg$direct.est, nation_agg$direct.se/ (1-nation_agg$direct.est) )
+    # nation_agg$cv.mean=nation_agg$direct.se/nation_agg$direct.est
+    nation_agg$cv=cvf(nation_agg$direct.est,nation_agg$direct.se)
+      # pmax(nation_agg$direct.se/ nation_agg$direct.est, nation_agg$direct.se/ (1-nation_agg$direct.est) )
 
     res.admin1 = (list(res.admin1 = res.admin1,
                        agg.natl = nation_agg,
@@ -807,8 +813,9 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
     admin0_res$direct.lower <- expit(admin0_res$direct.logit.est + stats::qnorm((1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
     admin0_res$direct.upper <- expit(admin0_res$direct.logit.est + stats::qnorm(1 - (1 - CI) / 2) * sqrt(admin0_res$direct.logit.var))
-    admin0_res$cv.mean=admin0_res$direct.se/admin0_res$direct.est
-    admin0_res$cv2=pmax(admin0_res$direct.se/ admin0_res$direct.est, admin0_res$direct.se/ (1-admin0_res$direct.est) )
+    # admin0_res$cv.mean=admin0_res$direct.se/admin0_res$direct.est
+    admin0_res$cv=cvf(admin0_res$direct.est,admin0_res$direct.se)
+      # pmax(admin0_res$direct.se/ admin0_res$direct.est, admin0_res$direct.se/ (1-admin0_res$direct.est) )
 
    # colnames(admin0_res)[1] <- c("admin0.name")
    # return(list(res.admin0=admin0_res[,-1]))

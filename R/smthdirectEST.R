@@ -55,6 +55,11 @@
 
 fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE,admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL,var.fix=FALSE, ...){
 
+
+  cvf <- function(p, sd) {
+    pmax(sd / p, sd / (1 - p))
+  }
+
   if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
     message("Removing NAs in indicator response")
@@ -196,22 +201,22 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                          CI = CI,
                          smooth=T,
                          save.draws = TRUE,
-                         X=X,
-                         ,...)
+                         X=X,...)
 
     }
     admin2_res <- fit2$smooth
     colnames(admin2_res)[colnames(admin2_res) == 'region'] <- 'admin2.name.full'
     admin2_res$sd<-sqrt(admin2_res$var)
 
-    admin2_res$cv.mean=admin2_res$sd/admin2_res$mean
-    admin2_res$cv.median=admin2_res$sd/admin2_res$median
-    admin2_res$cv2=pmax(admin2_res$sd/ admin2_res$median, admin2_res$sd/ (1-admin2_res$median) )
+    # admin2_res$cv.mean=admin2_res$sd/admin2_res$mean
+    # admin2_res$cv.median=admin2_res$sd/admin2_res$median
+    admin2_res$cv=cvf(admin2_res$median,admin2_res$sd)
+      # pmax(admin2_res$sd/ admin2_res$median, admin2_res$sd/ (1-admin2_res$median) )
 
 
     admin2_res <- left_join(admin2_res, admin.info[, c("admin1.name", "admin2.name", "admin2.name.full")])
     admin2_res <- admin2_res[, c("admin2.name.full", "mean", "median", "sd", "var",
-                                 "lower", "upper", "cv.mean","cv.median","cv2", "logit.mean", "logit.median",
+                                 "lower", "upper", "cv", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper", "admin1.name",  "admin2.name")]
 
 
@@ -279,7 +284,11 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                var =  apply(admin1.samp, 2, var),
                                lower= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1,],
                                upper= apply(admin1.samp, 2,  quantile, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2,])
-      agg.admin1$cv = agg.admin1$sd / agg.admin1$mean
+      # agg.admin1$cv = agg.admin1$sd / agg.admin1$mean
+      agg.admin1$cv=cvf(agg.admin1$median,agg.admin1$sd)
+        # pmax(agg.admin1$sd/ agg.admin1$median, agg.admin1$sd/ (1-agg.admin1$median) )
+
+
       rownames(agg.admin1) <- NULL
 
       #agg national
@@ -292,10 +301,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                              var = var(post.all),
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
-      agg.natl$cv=agg.natl$sd/agg.natl$mean
-
-
-      # colnames(admin2_res)[colnames(admin2_res) == 'admin2.name.full'] <- 'admin2.name.full'
+      # agg.natl$cv=agg.natl$sd/agg.natl$mean
+      agg.natl$cv <- cvf(agg.natl$median,agg.natl$sd)
 
       if(var.fix==TRUE){
       admin2.res=list(res.admin2=admin2_res,
@@ -424,19 +431,19 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                              Amat =Amat,
                              CI = CI,
                              save.draws = TRUE,
-                             X=X, ...)      
+                             X=X, ...)
     }
 
     admin1_res <- fit1$smooth
     colnames(admin1_res)[colnames(admin1_res) == 'region'] <- 'admin1.name'
     admin1_res$sd<-sqrt(admin1_res$var)
-    admin1_res$cv.mean=admin1_res$sd/admin1_res$mean
-    admin1_res$cv.median=admin1_res$sd/admin1_res$median
-    admin1_res$cv2=pmax(admin1_res$sd/ admin1_res$median, admin1_res$sd/ (1-admin1_res$median) )
+    # admin1_res$cv.mean=admin1_res$sd/admin1_res$mean
+    # admin1_res$cv.median=admin1_res$sd/admin1_res$median
+    admin1_res$cv <- cvf(admin1_res$median, admin1_res$sd)
 
 
     admin1_res <- admin1_res[, c("admin1.name", "mean", "median", "sd", "var",
-                                 "lower", "upper", "cv.mean","cv.median", "cv2", "logit.mean", "logit.median",
+                                 "lower", "upper", "cv", "logit.mean", "logit.median",
                                  "logit.var", "logit.lower", "logit.upper")]
 
     ####message for aggregation=T but missing some components and return results without aggregation
@@ -478,9 +485,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                              lower=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[1],
                              upper=quantile(post.all, probs = c((1 - CI) / 2, 1 - (1 - CI) / 2))[2])
 
-     agg.natl$cv.mean=agg.natl$sd/agg.natl$mean
-     agg.natl$cv.median=agg.natl$sd/agg.natl$median
-     agg.natl$cv2=pmax(agg.natl$sd/ agg.natl$median, agg.natl$sd/ (1-agg.natl$median) )
+     # agg.natl$cv.mean=agg.natl$sd/agg.natl$mean
+     # agg.natl$cv.median=agg.natl$sd/agg.natl$median
+     agg.natl$cv= cvf(agg.natl$median,agg.natl$sd)# pmax(agg.natl$sd/ agg.natl$median, agg.natl$sd/ (1-agg.natl$median) )
 
 
       admin1.res=list(res.admin1 = admin1_res,

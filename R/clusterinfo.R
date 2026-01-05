@@ -231,6 +231,9 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
 
 
   fixed.points<-c()
+    if(identical(poly.adm1, poly.adm2)){
+      poly.adm2=NULL
+      message("poly.adm1 and poly.adm2 are identical, only poly.adm1 will be used, and admin2.name.full will be by.adm1_by.adm1 ")}
 
     if(is.null(poly.adm2)){
 
@@ -245,7 +248,8 @@ clusterInfo <- function(geo, poly.adm1, poly.adm2=NULL, by.adm1 = "NAME_1",by.ad
         sf::st_transform(st_crs(poly.adm1)) # Transform CRS if needed
 
       cluster.info$admin1.name <- as.data.frame( admin1.sf)[,by.adm1]
-
+      cluster.info$admin2.name <- as.data.frame( admin1.sf)[,by.adm1]
+      cluster.info$admin2.name.full<- paste0(cluster.info$admin1.name, "_", cluster.info$admin2.name)
       # wrong.points case 1: coordinates with LATNUM and LONGNUM < 1e-07
       # wrong.points case 2: points outside the country boundary due to jittering
 
