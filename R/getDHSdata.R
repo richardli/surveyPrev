@@ -97,7 +97,9 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
    "RH_DELA_C_SKP"
    ,"CM_ECMR_C_NNR"#"nmr"
    ,"nmr",
-   "u5mr"
+   "u5mr",
+   "CM_ECMR_C_U5M", # U5MR
+   "CM_ECMR_C_U5F"  # U5MR
  )
 
  HRdata_Household<-c(
