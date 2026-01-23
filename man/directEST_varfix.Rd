@@ -14,7 +14,7 @@ directEST_varfix(
   admin.info = NULL,
   aggregation = FALSE,
   alt.strata = NULL,
-  var.fix = FALSE,
+  var.fix = TRUE,
   eps = 1e-12,
   floor_var = 1e-12,
   tol = 1e-12,

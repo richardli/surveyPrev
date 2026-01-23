@@ -50,7 +50,7 @@
 #' @export
 directEST_varfix = function (data, cluster.info, admin, strata = "all", CI = 0.95,
                            weight = c("population", "survey")[1], admin.info = NULL,
-                           aggregation = FALSE, alt.strata = NULL, var.fix = FALSE, eps = 1e-12,
+                           aggregation = FALSE, alt.strata = NULL, var.fix = TRUE, eps = 1e-12,
                            floor_var = 1e-12, tol = 1e-12, all.fix = FALSE,
                            ...)
 {
