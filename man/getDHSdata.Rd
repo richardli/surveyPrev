@@ -4,7 +4,7 @@
 \alias{getDHSdata}
 \title{Download DHS survey data}
 \usage{
-getDHSdata(country, indicator = NULL, Recode = NULL, year)
+getDHSdata(country, indicator = NULL, Recode = NULL, year, SurveyType = "DHS")
 }
 \arguments{
 \item{country}{Country name.}
@@ -14,6 +14,8 @@ getDHSdata(country, indicator = NULL, Recode = NULL, year)
 \item{Recode}{Types of dhs Recode}
 
 \item{year}{Year the survey conducted.}
+
+\item{SurveyType}{Type of survey ("DHS","SPE"). Default is "DHS".}
 }
 \value{
 This function returns the survey dataset that contains the indicator.

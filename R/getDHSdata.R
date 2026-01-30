@@ -6,6 +6,7 @@
 #' @param indicator Indicator of interests. Current list of supported indicators include: "womananemia", "ancvisit4+", "stunting", "wasting", "DPT3".
 #' @param Recode Types of dhs Recode
 #' @param year Year the survey conducted.
+#' @param SurveyType Type of survey ("DHS","SPE"). Default is "DHS".
 #'
 #' @return This function returns the survey dataset that contains the indicator.
 #' @importFrom rdhs get_datasets
@@ -26,7 +27,7 @@
 #' }
 #'
 #' @export
-getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
+getDHSdata <- function(country, indicator = NULL, Recode= NULL, year, SurveyType="DHS") {
 
   # data(match_all_result)
 
@@ -49,11 +50,11 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
   CountryName <- country
   #CountryName<-stringr::str_to_title(country)
   countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
-  potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
+  potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year,surveyType=SurveyType)%>%
     dplyr::filter( FileFormat=='Stata dataset (.dta)')
 
   surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
-  data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, clear_cache = T)
+  data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, surveyType=SurveyType,clear_cache = T)
   Rdata<-readRDS(paste0(data.paths.tmp))
   return(Rdata)
   }else{
@@ -140,7 +141,7 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
   CountryName <- country
   #CountryName<-stringr::str_to_title(country)
   countryId <-rdhs::dhs_countries()[rdhs::dhs_countries()$CountryName==CountryName,]
-  potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year)%>%
+  potential_surveys <- rdhs::dhs_datasets(countryIds = countryId$DHS_CountryCode, surveyYear = year,surveyType=SurveyType)%>%
     dplyr::filter( FileFormat=='Stata dataset (.dta)')
 
   # file download
@@ -186,7 +187,8 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year) {
       else{
 
         data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear ==
-                                                 year, ]$FileName, clear_cache = T)
+                                                 year, ]$FileName,
+                                                 clear_cache = T)
         Rdata <- readRDS(paste0(data.paths.tmp))
         all[[listname[i]]] <- Rdata
       }
