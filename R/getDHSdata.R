@@ -54,7 +54,7 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year, SurveyType
     dplyr::filter( FileFormat=='Stata dataset (.dta)')
 
   surveys <- potential_surveys %>% dplyr::filter(FileType ==c(Type))
-  data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName, surveyType=SurveyType,clear_cache = T)
+  data.paths.tmp <- get_datasets(surveys[surveys$SurveyYear==year,]$FileName,clear_cache = T) # surveyType=SurveyType,
   Rdata<-readRDS(paste0(data.paths.tmp))
   return(Rdata)
   }else{
