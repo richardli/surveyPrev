@@ -3,7 +3,7 @@
 
 R package for the full workflow to map the prevalence of common DHS indicators.
 
-A Shiny App built on the surveyPrev package is avarilable at [https://rsc.stat.washington.edu/surveyPrevRShiny/](https://rsc.stat.washington.edu/surveyPrevRShiny/)
+A Shiny App built on the surveyPrev package is available at [https://rsc.stat.washington.edu/surveyPrevRShiny/](https://rsc.stat.washington.edu/surveyPrevRShiny/)
 
 
 ## Installation
@@ -17,4 +17,4 @@ install_github("richardli/surveyPrev")
 library(surveyPrev)
 ```
 
-Please note that the `surveyPrev` package is developed concurrently with the [`SUMMER` package](https://github.com/richardli/summer), so it is highly recommended that you update both packages to the latest version on Github first.
+Please note that the `surveyPrev` package is developed concurrently with the [`SUMMER` package](https://github.com/richardli/summer), so it is highly recommended that you update both packages to the latest version on GitHub first. Please use version 2.12.0 of `labelled` package when processing DHS indicators in surveyPrev::getDHSindicator().
