@@ -72,19 +72,30 @@
 #' @export
 
 directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight = c("population", "survey")[1], admin.info = NULL, aggregation = FALSE, alt.strata = NULL,var.fix = FALSE, threshold=1e-12, ...){
-  cvf <- function(p, sd) {
+
+
+
+  if (isTRUE(var.fix)) {
+    mc <- match.call(expand.dots = TRUE)
+    mc$var.fix <- NULL                 # avoid passing it twice / or at all
+    mc[[1]] <- quote(directEST_varfix) # switch target function
+    return(eval.parent(mc))
+  }
+
+
+
+   cvf <- function(p, sd) {
     pmax(sd / p, sd / (1 - p))
   }
 
   options(survey.adjust.domain.lonely=TRUE)
   options(survey.lonely.psu="adjust")
 
-  if(!is.null(admin.info)){
+ if(!is.null(admin.info)){
     admin.info.output=admin.info
   }else{
     admin.info.output=NULL
   }
-
 
  if(sum(is.na(data$value))>0){
     data <- data[rowSums(is.na(data)) == 0, ]
@@ -95,7 +106,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
    admin.info=admin.info$data
  }
 
-  if(admin==2){
+ if(admin==2){
     if(strata != "all"){
       message("Subnational stratum-specific direct estimates are not implemented yet. Only overall estimates are computed")
     }
@@ -152,219 +163,219 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
 
 
     ################## Variance Fix ##################
-    if (var.fix == TRUE) {
-      # =========================
-      # 1) Preparation: National stratum Hajék prior means, Admin1×stratum average cluster weights
-      # =========================
-
-      # === MOD: unify strata and use actual strata levels ===
-      modt <- modt %>%
-        dplyr::mutate(strata = tolower(trimws(strata)))
-      strata_levels <- sort(unique(modt$strata))
-
-      # National stratum Hajék (phantom prior mean p_h_nat)
-      nat_stratum_hj <- modt %>%
-        dplyr::group_by(strata) %>%
-        dplyr::summarise(
-          num = sum(weight * value, na.rm = TRUE),
-          den = sum(weight,         na.rm = TRUE),
-          p_h_nat = dplyr::if_else(den > 0, num/den, NA_real_),
-          .groups = "drop"
-        ) %>%
-        tidyr::complete(strata = strata_levels) %>%         # === MOD
-        tidyr::replace_na(list(p_h_nat = 0.5)) %>%          # tolerance
-        dplyr::select(strata, p_h_nat)
-
-      # Total cluster weight v_hc· = sum_k weight
-      tw_by_cluster <- modt %>%
-        dplyr::group_by(admin1.name, strata, cluster) %>%
-        dplyr::summarise(v_hc_dot = sum(weight, na.rm = TRUE), .groups = "drop")
-
-      # Admin1×stratum average cluster weight (phantom v_ph = tw_ph)
-      avg_tw_admin1_stratum <- tw_by_cluster %>%
-        dplyr::group_by(admin1.name, strata) %>%
-        dplyr::summarise(tw_ph = mean(v_hc_dot, na.rm = TRUE), .groups = "drop")
-
-      # National stratum average cluster weight (fallback)
-      avg_tw_nat_stratum <- tw_by_cluster %>%
-        dplyr::group_by(strata) %>%
-        dplyr::summarise(tw_ph_nat = mean(v_hc_dot, na.rm = TRUE), .groups = "drop")
-
-      # Robust admin2 -> admin1 mapping
-      ad2_admin1_from_modt <- modt %>%
-        dplyr::distinct(admin2.name.full, admin1.name)
-
-      ad2_admin1_fallback <- admin2_res %>%
-        dplyr::transmute(
-          admin2.name.full,
-          admin1.name_fallback = sub("_.*$", "", admin2.name.full)
-        )
-
-      ad2_admin1 <- ad2_admin1_from_modt %>%
-        dplyr::full_join(ad2_admin1_fallback, by = "admin2.name.full") %>%
-        dplyr::mutate(admin1.name = dplyr::coalesce(admin1.name, admin1.name_fallback)) %>%
-        dplyr::select(admin2.name.full, admin1.name)
-
-      # Key table: prepare (p_h_nat, tw_ph) for each admin2 × strata
-      key <- admin2_res %>%
-        dplyr::select(admin2.name.full) %>%
-        dplyr::left_join(ad2_admin1, by = "admin2.name.full") %>%
-        tidyr::crossing(strata = strata_levels) %>%                            # === MOD
-        dplyr::left_join(nat_stratum_hj,        by = "strata") %>%             # p_h_nat
-        dplyr::left_join(avg_tw_admin1_stratum, by = c("admin1.name","strata")) %>%
-        dplyr::left_join(avg_tw_nat_stratum,    by = "strata") %>%
-        dplyr::mutate(
-          tw_ph  = dplyr::coalesce(tw_ph,  tw_ph_nat),
-          p_h_nat= dplyr::coalesce(p_h_nat, 0.5)
-        ) %>%
-        dplyr::select(admin2.name.full, admin1.name, strata, p_h_nat, tw_ph)
-
-      # =========================
-      # 2) Core: Unnormalized implementation of formula (9)
-      # =========================
-      phantom_fix_admin2_exact <- function(dat_one_adm2, key_rows){
-        # 2.1 Each real cluster’s v_hc· and p_hc (Hajék)
-        clus <- dat_one_adm2 %>%
-          dplyr::group_by(strata, cluster) %>%
-          dplyr::summarise(
-            v_hc_dot = sum(weight, na.rm = TRUE),
-            y_w      = sum(weight * value, na.rm = TRUE),
-            p_hc     = dplyr::if_else(v_hc_dot > 0, y_w / v_hc_dot, 0),
-            .groups  = "drop"
-          )
-
-        # 2.2 Stratum totals
-        layer_real <- clus %>%
-          dplyr::group_by(strata) %>%
-          dplyr::summarise(
-            n_h         = dplyr::n(),
-            v_h_dotdot  = sum(v_hc_dot, na.rm = TRUE),
-            num_h       = sum(v_hc_dot * p_hc, na.rm = TRUE),
-            .groups     = "drop"
-          )
-
-        # 2.3 Merge phantom parameters
-        layer <- key_rows %>%
-          dplyr::left_join(layer_real, by = "strata") %>%
-          dplyr::mutate(
-            n_h            = dplyr::coalesce(n_h, 0L),
-            v_h_dotdot     = dplyr::coalesce(v_h_dotdot, 0),
-            num_h          = dplyr::coalesce(num_h, 0),
-            n_h_aug        = n_h + 1L,
-            v_h_dotdot_aug = v_h_dotdot + tw_ph,
-            num_h_aug      = num_h + tw_ph * p_h_nat,
-            p_h_aug        = dplyr::if_else(v_h_dotdot_aug > 0, num_h_aug / v_h_dotdot_aug, 0)
-          )
-
-        # === MOD: Sum with na.rm to avoid NA propagation ===
-        v_dotdotdot_aug <- sum(layer$v_h_dotdot_aug, na.rm = TRUE)
-        p_aug <- if (v_dotdotdot_aug > 0) {
-          sum(layer$v_h_dotdot_aug * layer$p_h_aug, na.rm = TRUE) / v_dotdotdot_aug
-        } else 0
-
-        join_cols <- dplyr::select(layer, strata, n_h_aug, v_h_dotdot_aug, p_h_aug)
-
-        clus_aug_real <- clus %>%
-          dplyr::left_join(join_cols, by = "strata") %>%
-          dplyr::mutate(
-            B_c  = .data$v_hc_dot * (.data$p_hc - p_aug) -
-              (1 / .data$n_h_aug) * .data$v_h_dotdot_aug * (.data$p_h_aug - p_aug),
-            term = B_c^2
-          )
-
-        clus_aug_ph <- layer %>%
-          dplyr::transmute(
-            strata, n_h_aug, v_h_dotdot_aug,
-            v_hc_dot = tw_ph,
-            p_hc     = p_h_nat,
-            p_h_aug  = p_h_aug
-          ) %>%
-          dplyr::mutate(
-            B_c  = .data$v_hc_dot * (.data$p_hc - p_aug) -
-              (1 / .data$n_h_aug) * .data$v_h_dotdot_aug * (.data$p_h_aug - p_aug),
-            term = B_c^2
-          )
-
-        var_h <- dplyr::bind_rows(clus_aug_real, clus_aug_ph) %>%
-          dplyr::group_by(strata, n_h_aug) %>%
-          dplyr::summarise(sum_term = sum(.data$term, na.rm = TRUE), .groups = "drop") %>%
-          dplyr::mutate(v_h = dplyr::if_else(.data$n_h_aug > 1,
-                                             (.data$n_h_aug / (.data$n_h_aug - 1)) * .data$sum_term, 0))
-
-        var_aug <- if (v_dotdotdot_aug > 0) sum(var_h$v_h, na.rm = TRUE) / (v_dotdotdot_aug^2) else 0
-        list(p_aug = p_aug, var_aug = max(var_aug, 0))
-      }
-
-      # =========================
-      # 3) Apply fix for each Admin2: broader trigger + lower bound protection
-      # =========================
-      eps <- threshold          # === MOD: very small threshold
-      floor_var <- 1e-12    # === MOD: variance floor (avoid writing as 0)
-
-      admin_areas <- admin2_res$admin2.name.full
-
-      for (i in admin_areas) {
-        dat_tmp <- modt %>% dplyr::filter(admin2.name.full == i, !is.na(value))
-        v_raw   <- admin2_res$direct.var[admin2_res$admin2.name.full == i]
-
-        # === MOD: broader trigger condition
-        if (!is.finite(v_raw) || v_raw < eps) {
-
-          fixed_areas <- c(fixed_areas, i)
-
-
-          key_rows <- key %>% dplyr::filter(admin2.name.full == i)
-          if (nrow(key_rows) == 0) {
-            # Fallback: national stratum tw and p_h_nat
-            admin1_i <- (modt %>% dplyr::filter(admin2.name.full == i) %>%
-                           dplyr::pull(admin1.name) %>% unique())[1]
-            key_rows <- tibble::tibble(
-              admin2.name.full = i,
-              admin1.name = admin1_i,
-              strata = strata_levels
-            ) %>%
-              dplyr::left_join(nat_stratum_hj,     by = "strata") %>%
-              dplyr::left_join(avg_tw_nat_stratum, by = "strata") %>%
-              dplyr::mutate(tw_ph = tw_ph_nat)
-          }
-
-          aug <- phantom_fix_admin2_exact(dat_one_adm2 = dat_tmp, key_rows = key_rows)
-
-          p.i <- aug$p_aug
-          v.i <- aug$var_aug
-
-          # === MOD: prevent replacing tiny positive variance with 0; fallback if estimation fails
-          if (!is.finite(p.i)) {
-            p.i <- with(dat_tmp, sum(weight * value, na.rm = TRUE) / sum(weight, na.rm = TRUE))
-          }
-          if (!is.finite(v.i) || v.i <= eps) {
-            v.i <- if (is.finite(v_raw) && v_raw > eps) v_raw else floor_var
-          }
-
-          res.admin2$direct.est [res.admin2$admin2.name.full == i] <- p.i
-          res.admin2$direct.var [res.admin2$admin2.name.full == i] <- v.i
-          res.admin2$direct.se  [res.admin2$admin2.name.full == i] <- sqrt(v.i)
-
-          ht   <- qlogis(p.i)
-          htv  <- if (p.i > 0 && p.i < 1) v.i / (p.i^2 * (1 - p.i)^2) else 0
-          res.admin2$direct.logit.est [res.admin2$admin2.name.full == i] <- ifelse(is.finite(ht), ht, ifelse(p.i >= 1, 36, -36))
-          res.admin2$direct.logit.var [res.admin2$admin2.name.full == i] <- htv
-          res.admin2$direct.logit.prec[res.admin2$admin2.name.full == i] <- ifelse(htv > 0, 1/htv, 0)
-
-          res.admin2$direct.lower <- expit(res.admin2$direct.logit.est +
-                                             stats::qnorm((1 - CI)/2) * sqrt(res.admin2$direct.logit.var))
-          res.admin2$direct.upper <- expit(res.admin2$direct.logit.est +
-                                             stats::qnorm(1 - (1 - CI)/2) * sqrt(res.admin2$direct.logit.var))
-          # res.admin2$cv.mean <- res.admin2$direct.se / res.admin2$direct.est
-          res.admin2$cv<- cvf(res.admin2$direct.est, res.admin2$direct.se) #pmax(res.admin2$direct.se/ res.admin2$direct.est, res.admin2$direct.se/ (1-res.admin2$direct.est)  )
-
-
-
-
-
-        }
-      }
-    }
+    # if (var.fix == TRUE) {
+    #   # =========================
+    #   # 1) Preparation: National stratum Hajék prior means, Admin1×stratum average cluster weights
+    #   # =========================
+    #
+    #   # === MOD: unify strata and use actual strata levels ===
+    #   modt <- modt %>%
+    #     dplyr::mutate(strata = tolower(trimws(strata)))
+    #   strata_levels <- sort(unique(modt$strata))
+    #
+    #   # National stratum Hajék (phantom prior mean p_h_nat)
+    #   nat_stratum_hj <- modt %>%
+    #     dplyr::group_by(strata) %>%
+    #     dplyr::summarise(
+    #       num = sum(weight * value, na.rm = TRUE),
+    #       den = sum(weight,         na.rm = TRUE),
+    #       p_h_nat = dplyr::if_else(den > 0, num/den, NA_real_),
+    #       .groups = "drop"
+    #     ) %>%
+    #     tidyr::complete(strata = strata_levels) %>%         # === MOD
+    #     tidyr::replace_na(list(p_h_nat = 0.5)) %>%          # tolerance
+    #     dplyr::select(strata, p_h_nat)
+    #
+    #   # Total cluster weight v_hc· = sum_k weight
+    #   tw_by_cluster <- modt %>%
+    #     dplyr::group_by(admin1.name, strata, cluster) %>%
+    #     dplyr::summarise(v_hc_dot = sum(weight, na.rm = TRUE), .groups = "drop")
+    #
+    #   # Admin1×stratum average cluster weight (phantom v_ph = tw_ph)
+    #   avg_tw_admin1_stratum <- tw_by_cluster %>%
+    #     dplyr::group_by(admin1.name, strata) %>%
+    #     dplyr::summarise(tw_ph = mean(v_hc_dot, na.rm = TRUE), .groups = "drop")
+    #
+    #   # National stratum average cluster weight (fallback)
+    #   avg_tw_nat_stratum <- tw_by_cluster %>%
+    #     dplyr::group_by(strata) %>%
+    #     dplyr::summarise(tw_ph_nat = mean(v_hc_dot, na.rm = TRUE), .groups = "drop")
+    #
+    #   # Robust admin2 -> admin1 mapping
+    #   ad2_admin1_from_modt <- modt %>%
+    #     dplyr::distinct(admin2.name.full, admin1.name)
+    #
+    #   ad2_admin1_fallback <- admin2_res %>%
+    #     dplyr::transmute(
+    #       admin2.name.full,
+    #       admin1.name_fallback = sub("_.*$", "", admin2.name.full)
+    #     )
+    #
+    #   ad2_admin1 <- ad2_admin1_from_modt %>%
+    #     dplyr::full_join(ad2_admin1_fallback, by = "admin2.name.full") %>%
+    #     dplyr::mutate(admin1.name = dplyr::coalesce(admin1.name, admin1.name_fallback)) %>%
+    #     dplyr::select(admin2.name.full, admin1.name)
+    #
+    #   # Key table: prepare (p_h_nat, tw_ph) for each admin2 × strata
+    #   key <- admin2_res %>%
+    #     dplyr::select(admin2.name.full) %>%
+    #     dplyr::left_join(ad2_admin1, by = "admin2.name.full") %>%
+    #     tidyr::crossing(strata = strata_levels) %>%                            # === MOD
+    #     dplyr::left_join(nat_stratum_hj,        by = "strata") %>%             # p_h_nat
+    #     dplyr::left_join(avg_tw_admin1_stratum, by = c("admin1.name","strata")) %>%
+    #     dplyr::left_join(avg_tw_nat_stratum,    by = "strata") %>%
+    #     dplyr::mutate(
+    #       tw_ph  = dplyr::coalesce(tw_ph,  tw_ph_nat),
+    #       p_h_nat= dplyr::coalesce(p_h_nat, 0.5)
+    #     ) %>%
+    #     dplyr::select(admin2.name.full, admin1.name, strata, p_h_nat, tw_ph)
+    #
+    #   # =========================
+    #   # 2) Core: Unnormalized implementation of formula (9)
+    #   # =========================
+    #   phantom_fix_admin2_exact <- function(dat_one_adm2, key_rows){
+    #     # 2.1 Each real cluster’s v_hc· and p_hc (Hajék)
+    #     clus <- dat_one_adm2 %>%
+    #       dplyr::group_by(strata, cluster) %>%
+    #       dplyr::summarise(
+    #         v_hc_dot = sum(weight, na.rm = TRUE),
+    #         y_w      = sum(weight * value, na.rm = TRUE),
+    #         p_hc     = dplyr::if_else(v_hc_dot > 0, y_w / v_hc_dot, 0),
+    #         .groups  = "drop"
+    #       )
+    #
+    #     # 2.2 Stratum totals
+    #     layer_real <- clus %>%
+    #       dplyr::group_by(strata) %>%
+    #       dplyr::summarise(
+    #         n_h         = dplyr::n(),
+    #         v_h_dotdot  = sum(v_hc_dot, na.rm = TRUE),
+    #         num_h       = sum(v_hc_dot * p_hc, na.rm = TRUE),
+    #         .groups     = "drop"
+    #       )
+    #
+    #     # 2.3 Merge phantom parameters
+    #     layer <- key_rows %>%
+    #       dplyr::left_join(layer_real, by = "strata") %>%
+    #       dplyr::mutate(
+    #         n_h            = dplyr::coalesce(n_h, 0L),
+    #         v_h_dotdot     = dplyr::coalesce(v_h_dotdot, 0),
+    #         num_h          = dplyr::coalesce(num_h, 0),
+    #         n_h_aug        = n_h + 1L,
+    #         v_h_dotdot_aug = v_h_dotdot + tw_ph,
+    #         num_h_aug      = num_h + tw_ph * p_h_nat,
+    #         p_h_aug        = dplyr::if_else(v_h_dotdot_aug > 0, num_h_aug / v_h_dotdot_aug, 0)
+    #       )
+    #
+    #     # === MOD: Sum with na.rm to avoid NA propagation ===
+    #     v_dotdotdot_aug <- sum(layer$v_h_dotdot_aug, na.rm = TRUE)
+    #     p_aug <- if (v_dotdotdot_aug > 0) {
+    #       sum(layer$v_h_dotdot_aug * layer$p_h_aug, na.rm = TRUE) / v_dotdotdot_aug
+    #     } else 0
+    #
+    #     join_cols <- dplyr::select(layer, strata, n_h_aug, v_h_dotdot_aug, p_h_aug)
+    #
+    #     clus_aug_real <- clus %>%
+    #       dplyr::left_join(join_cols, by = "strata") %>%
+    #       dplyr::mutate(
+    #         B_c  = .data$v_hc_dot * (.data$p_hc - p_aug) -
+    #           (1 / .data$n_h_aug) * .data$v_h_dotdot_aug * (.data$p_h_aug - p_aug),
+    #         term = B_c^2
+    #       )
+    #
+    #     clus_aug_ph <- layer %>%
+    #       dplyr::transmute(
+    #         strata, n_h_aug, v_h_dotdot_aug,
+    #         v_hc_dot = tw_ph,
+    #         p_hc     = p_h_nat,
+    #         p_h_aug  = p_h_aug
+    #       ) %>%
+    #       dplyr::mutate(
+    #         B_c  = .data$v_hc_dot * (.data$p_hc - p_aug) -
+    #           (1 / .data$n_h_aug) * .data$v_h_dotdot_aug * (.data$p_h_aug - p_aug),
+    #         term = B_c^2
+    #       )
+    #
+    #     var_h <- dplyr::bind_rows(clus_aug_real, clus_aug_ph) %>%
+    #       dplyr::group_by(strata, n_h_aug) %>%
+    #       dplyr::summarise(sum_term = sum(.data$term, na.rm = TRUE), .groups = "drop") %>%
+    #       dplyr::mutate(v_h = dplyr::if_else(.data$n_h_aug > 1,
+    #                                          (.data$n_h_aug / (.data$n_h_aug - 1)) * .data$sum_term, 0))
+    #
+    #     var_aug <- if (v_dotdotdot_aug > 0) sum(var_h$v_h, na.rm = TRUE) / (v_dotdotdot_aug^2) else 0
+    #     list(p_aug = p_aug, var_aug = max(var_aug, 0))
+    #   }
+    #
+    #   # =========================
+    #   # 3) Apply fix for each Admin2: broader trigger + lower bound protection
+    #   # =========================
+    #   eps <- threshold          # === MOD: very small threshold
+    #   floor_var <- 1e-12    # === MOD: variance floor (avoid writing as 0)
+    #
+    #   admin_areas <- admin2_res$admin2.name.full
+    #
+    #   for (i in admin_areas) {
+    #     dat_tmp <- modt %>% dplyr::filter(admin2.name.full == i, !is.na(value))
+    #     v_raw   <- admin2_res$direct.var[admin2_res$admin2.name.full == i]
+    #
+    #     # === MOD: broader trigger condition
+    #     if (!is.finite(v_raw) || v_raw < eps) {
+    #
+    #       fixed_areas <- c(fixed_areas, i)
+    #
+    #
+    #       key_rows <- key %>% dplyr::filter(admin2.name.full == i)
+    #       if (nrow(key_rows) == 0) {
+    #         # Fallback: national stratum tw and p_h_nat
+    #         admin1_i <- (modt %>% dplyr::filter(admin2.name.full == i) %>%
+    #                        dplyr::pull(admin1.name) %>% unique())[1]
+    #         key_rows <- tibble::tibble(
+    #           admin2.name.full = i,
+    #           admin1.name = admin1_i,
+    #           strata = strata_levels
+    #         ) %>%
+    #           dplyr::left_join(nat_stratum_hj,     by = "strata") %>%
+    #           dplyr::left_join(avg_tw_nat_stratum, by = "strata") %>%
+    #           dplyr::mutate(tw_ph = tw_ph_nat)
+    #       }
+    #
+    #       aug <- phantom_fix_admin2_exact(dat_one_adm2 = dat_tmp, key_rows = key_rows)
+    #
+    #       p.i <- aug$p_aug
+    #       v.i <- aug$var_aug
+    #
+    #       # === MOD: prevent replacing tiny positive variance with 0; fallback if estimation fails
+    #       if (!is.finite(p.i)) {
+    #         p.i <- with(dat_tmp, sum(weight * value, na.rm = TRUE) / sum(weight, na.rm = TRUE))
+    #       }
+    #       if (!is.finite(v.i) || v.i <= eps) {
+    #         v.i <- if (is.finite(v_raw) && v_raw > eps) v_raw else floor_var
+    #       }
+    #
+    #       res.admin2$direct.est [res.admin2$admin2.name.full == i] <- p.i
+    #       res.admin2$direct.var [res.admin2$admin2.name.full == i] <- v.i
+    #       res.admin2$direct.se  [res.admin2$admin2.name.full == i] <- sqrt(v.i)
+    #
+    #       ht   <- qlogis(p.i)
+    #       htv  <- if (p.i > 0 && p.i < 1) v.i / (p.i^2 * (1 - p.i)^2) else 0
+    #       res.admin2$direct.logit.est [res.admin2$admin2.name.full == i] <- ifelse(is.finite(ht), ht, ifelse(p.i >= 1, 36, -36))
+    #       res.admin2$direct.logit.var [res.admin2$admin2.name.full == i] <- htv
+    #       res.admin2$direct.logit.prec[res.admin2$admin2.name.full == i] <- ifelse(htv > 0, 1/htv, 0)
+    #
+    #       res.admin2$direct.lower <- expit(res.admin2$direct.logit.est +
+    #                                          stats::qnorm((1 - CI)/2) * sqrt(res.admin2$direct.logit.var))
+    #       res.admin2$direct.upper <- expit(res.admin2$direct.logit.est +
+    #                                          stats::qnorm(1 - (1 - CI)/2) * sqrt(res.admin2$direct.logit.var))
+    #       # res.admin2$cv.mean <- res.admin2$direct.se / res.admin2$direct.est
+    #       res.admin2$cv<- cvf(res.admin2$direct.est, res.admin2$direct.se) #pmax(res.admin2$direct.se/ res.admin2$direct.est, res.admin2$direct.se/ (1-res.admin2$direct.est)  )
+    #
+    #
+    #
+    #
+    #
+    #     }
+    #   }
+    # }
 
     #### message for aggregation=T but missing some components and return results without aggregation
     if(aggregation==FALSE){

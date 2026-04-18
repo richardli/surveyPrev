@@ -138,13 +138,25 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
     #model
 
     if(var.fix==TRUE || mortality.model){
-        fit0 <- surveyPrev::directEST(data = data,
+
+        if(var.fix){
+          fit0 <- surveyPrev::directEST_varfix(data = data,
                                  cluster.info = cluster.info,
                                  admin = 2,
                                  aggregation = FALSE,
-                                 var.fix = var.fix,
+                                 var.fix=TRUE, all.fix = FALSE,
                                  alt.strata = alt.strata, 
                                  CI = CI)
+        }
+        if(mortality.model){
+          fit0 <- surveyPrev::directEST(data = data,
+                                 cluster.info = cluster.info,
+                                 admin = 2,
+                                 aggregation = FALSE,
+                                 var.fix=var.fix,
+                                 alt.strata = alt.strata, 
+                                 CI = CI)
+        }
 
         fit0$res.admin2$region<-fit0$res.admin2$admin2.name.full
         fit0$res.admin2$HT.logit.est<-fit0$res.admin2$direct.logit.est
