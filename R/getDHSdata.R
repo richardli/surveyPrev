@@ -97,6 +97,9 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year, SurveyType
  BRdata_Birth<-c(
    "RH_DELA_C_SKP"
    ,"CM_ECMR_C_NNR"#"nmr"
+   ,"CM_ECMR_C_NNF"#"nmr"
+   ,"CM_ECMR_C_IMR"
+   ,"CM_ECMR_C_IMF"
    ,"nmr",
    "u5mr",
    "CM_ECMR_C_U5M", # U5MR
