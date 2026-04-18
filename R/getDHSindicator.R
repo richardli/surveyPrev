@@ -283,7 +283,16 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
     raw.dat.tmp[, paste0(pre, "v022")] <- factor(labelled::unlabelled(raw.dat.tmp[, paste0(pre, "v022")]))
 
 
-  if (indicator %in% c("u5mr","CM_ECMR_C_U5M","CM_ECMR_C_U5F")&& !is.null(indicator)) {
+    is_mortality <- (!is.null(indicator) &&
+                       indicator %in% c( "CM_ECMR_C_U5M", "CM_ECMR_C_U5F",
+                                        "CM_ECMR_C_IMR","CM_ECMR_C_IMF")) ||
+      (!is.null(FUN) &&
+         any(sapply(c("CM_ECMR_C_U5M", "CM_ECMR_C_U5F","CM_ECMR_C_IMR","CM_ECMR_C_IMF"),
+                    function(nm) identical(FUN, getFromNamespace(nm, "surveyPrev")))))
+
+
+
+  if (is_mortality) {
     raw.dat.tmp %>% dplyr::select(
       cluster     = paste0(pre, "v001"),
       householdID = paste0(pre, "v002"),
