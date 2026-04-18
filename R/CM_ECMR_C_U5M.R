@@ -15,7 +15,7 @@
 #' @export
 #'
 CM_ECMR_C_U5M<- function(Rdata, mort.cut = c(1, 2, 6, 12, 24, 36, 48, 60), mort.year = 10){
-    
+
     Rdata$b5 <- labelled::to_factor(Rdata$b5)
     Rdata <- subset(Rdata, v008-12*(mort.year + 5)-b3 < 0)
     Rdata$strata <- NA
@@ -30,6 +30,7 @@ CM_ECMR_C_U5M<- function(Rdata, mort.cut = c(1, 2, 6, 12, 24, 36, 48, 60), mort.
     raw.dat.tmp1 <- subset(raw.dat.tmp1, v008 - mort.year*12 < obsStart)
     raw.dat.tmp <- raw.dat.tmp1[, -which(colnames(raw.dat.tmp1) == "v008")]
     raw.dat.tmp$value <- raw.dat.tmp$died
+
 
   return(raw.dat.tmp)
 }

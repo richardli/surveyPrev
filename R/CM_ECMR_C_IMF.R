@@ -1,4 +1,4 @@
-##' CM_ECMR_C_IMR imr 10 years prior to survey.
+##' CM_ECMR_C_IMF imr 5 years prior to survey.
 ##'
 ##' BR
 #' @param Rdata  data.frame from surveyPrev::getDHSdata
@@ -9,12 +9,12 @@
 #'
 #' @examples
 #' \dontrun{
-#' dhsData <- getDHSdata(country = "Zambia", indicator = "CM_ECMR_C_U5M", year = 2018)
+#' dhsData <- getDHSdata(country = "Zambia", indicator = "CM_ECMR_C_IMF", year = 2018)
 #' }
 #'
 #' @export
 #'
-CM_ECMR_C_IMR<- function(Rdata, mort.cut = c(1, 2, 6, 12, 24, 36, 48, 60), mort.year = 10){
+CM_ECMR_C_IMF<- function(Rdata, mort.cut = c(1, 2, 6, 12, 24, 36, 48, 60), mort.year = 5){
 
 
   Rdata$b5 <- labelled::to_factor(Rdata$b5)
