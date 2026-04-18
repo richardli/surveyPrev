@@ -142,7 +142,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                  cluster.info = cluster.info,
                                  admin = 2,
                                  aggregation = FALSE,
-                                 var.fix = var.fix)
+                                 var.fix = var.fix,
+                                 alt.strata = alt.strata, 
+                                 CI = CI)
 
         fit0$res.admin2$region<-fit0$res.admin2$admin2.name.full
         fit0$res.admin2$HT.logit.est<-fit0$res.admin2$direct.logit.est
@@ -369,7 +371,9 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                  cluster.info = cluster.info,
                                  admin = 1,
                                  aggregation = FALSE,
-                                 var.fix = var.fix)
+                                 var.fix = var.fix,
+                                 alt.strata = alt.strata, 
+                                 CI = CI)
 
         fit0$res.admin1$region<-fit0$res.admin1$admin1.name
         fit0$res.admin1$HT.logit.est<-fit0$res.admin1$direct.logit.est
