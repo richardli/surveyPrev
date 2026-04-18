@@ -163,25 +163,27 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
     raw.dat.tmp <- fp_cruse_mod(Rdata)
 
   }else if(indicator == "nmr"||indicator == "CM_ECMR_C_NNR"){
-
-    raw.dat.tmp <- NMR(Rdata, nmr.year)
+     if(indicator == "nmr"){
+       message("nmr, in the ten years preceding the survey is used")
+     }
+    raw.dat.tmp <- CM_ECMR_C_NNR(Rdata)
   }else if(indicator =="ancvisit4+"||indicator == "RH_ANCN_W_N4P"){
 
-    raw.dat.tmp <- rh_anc_4vs(Rdata)
+    raw.dat.tmp <- RH_ANCN_W_N4P(Rdata)
 
 
   }else if(indicator == "RH_DELA_C_SKP"){
 
-    raw.dat.tmp <- rh_del_pvskill(Rdata)
+    raw.dat.tmp <- RH_DELA_C_SKP(Rdata)
   }else if(indicator == "DPT3"||indicator == "CH_VACC_C_DP3"){
 
 
-    raw.dat.tmp <- ch_pent3_either(Rdata)
+    raw.dat.tmp <- CH_VACC_C_DP3(Rdata)
 
 
   }else if(indicator== "CH_VACC_C_MSL") {
 
-    raw.dat.tmp <- ch_meas_either(Rdata)
+    raw.dat.tmp <- CH_VACC_C_MSL(Rdata)
 
   }else if(indicator== "PCV3") {
 
@@ -192,59 +194,59 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
     raw.dat.tmp <- ch_rotav1_either(Rdata)
 
   } else if(indicator =="CH_VACC_C_DP1"){
-    raw.dat.tmp <- ch_pent1_either(Rdata)
+    raw.dat.tmp <- CH_VACC_C_DP1(Rdata)
   }else if(indicator =="CH_VACC_C_BAS"){
-    raw.dat.tmp <- ch_allvac_either(Rdata)
+    raw.dat.tmp <- CH_VACC_C_BAS(Rdata)
   }else if(indicator =="CH_VACC_C_NON"){
-    raw.dat.tmp <- ch_novac_either(Rdata)
+    raw.dat.tmp <- CH_VACC_C_NON(Rdata)
   }else if(indicator =="CH_DIAT_C_ORT"){
-    raw.dat.tmp <- ch_diar_ors_rhf(Rdata)
+    raw.dat.tmp <- CH_DIAT_C_ORT(Rdata)
   }else if(indicator == "wasting"||indicator=="CN_NUTS_C_WH2"){
 
-    raw.dat.tmp <- nt_ch_wast(Rdata)
+    raw.dat.tmp <- CN_NUTS_C_WH2(Rdata)
 
   } else if(indicator == "stunting"||indicator=="CN_NUTS_C_HA2") {
-      raw.dat.tmp <- nt_ch_stunt(Rdata)
+      raw.dat.tmp <- CN_NUTS_C_HA2(Rdata)
 
   }else if (indicator == "womananemia"|| indicator == "AN_ANEM_W_ANY"){
 
-  raw.dat.tmp <- nt_wm_any_anem(Rdata)
+  raw.dat.tmp <- AN_ANEM_W_ANY(Rdata)
 
   }else if(indicator=="CN_BRFS_C_EXB"){
 
-    raw.dat.tmp <- nt_ebf(Rdata)
+    raw.dat.tmp <- CN_BRFS_C_EXB(Rdata)
 
   } else if(indicator=="CN_ANMC_C_ANY") {
 
-    raw.dat.tmp <- nt_ch_any_anem(Rdata)
+    raw.dat.tmp <- CN_ANMC_C_ANY(Rdata)
 
   } else if(indicator== "AN_NUTS_W_THN") {
 
-    raw.dat.tmp <- nt_wm_thin(Rdata)
+    raw.dat.tmp <- AN_NUTS_W_THN(Rdata)
 
   }else if(indicator== "ML_NETP_H_IT2") {
 
-    raw.dat.tmp <- ml_hhaccess(Rdata)
+    raw.dat.tmp <- ML_NETP_H_IT2(Rdata)
 
   } else if(indicator== "ML_PMAL_C_RDT") {
 
-    raw.dat.tmp <- ml_test_rdtmal(Rdata)
+    raw.dat.tmp <- ML_PMAL_C_RDT(Rdata)
 
   } else if(indicator== "HA_HIVP_B_HIV") {
 
-    raw.dat.tmp <- hv_hiv_pos(Rdata)
+    raw.dat.tmp <- HA_HIVP_B_HIV(Rdata)
 
   } else if(indicator== "WS_TLET_H_IMP"||indicator== "sanitation") {
 
-    raw.dat.tmp <- ph_sani_improve(Rdata)
+    raw.dat.tmp <- WS_TLET_H_IMP(Rdata)
 
   }else if(indicator== "WS_TLET_P_BAS") {
 
-    raw.dat.tmp <- ph_sani_basic(Rdata)
+    raw.dat.tmp <- WS_TLET_P_BAS(Rdata)
 
   } else if(indicator== "WS_SRCE_P_BAS") {
 
-    raw.dat.tmp <- ph_wtr_basic(Rdata)
+    raw.dat.tmp <- WS_SRCE_P_BAS(Rdata)
 
   }else{
     stop(paste0(indicator," is not defined in the surveyPrev library right now, please check surveyPrev::indicatorList.",
