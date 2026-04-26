@@ -64,6 +64,52 @@ RH_DELP_C_PRT<- function(Rdata){
     filter(age < period)
 
 
+
+
+  if(Rdata$v000[1]=="MW8"){
+
+    # Labels:
+    #   value                            label
+    # 10                             home
+    # 11                respondent's home
+    # 12                       other home
+    # 20                    public sector
+    # 21              government hospital
+    # 22         government health center
+    # 26                     other public
+    # 30           private medical sector
+    # 31          private hospital/clinic
+    # 32          private doctor's office
+    # 36     other private medical sector
+    # 40                       ngo sector
+    # 41                         ngo: blm
+    # 42                         ngo: psi
+    # 43                        ngo: fpam
+    # 46                        other ngo
+    # 50                cham/mission/iham
+    # 51      cham/mission/iham: hospital
+    # 52 cham/mission/iham: health center
+    # 96                            other
+
+    # //Place of delivery
+    # Note: please check the categories of m15 especially for older surveys. The category values may differ.
+    BRdata <- BRdata %>%
+      mutate(rh_del_pltype =
+               case_when(
+                 m15 >=20 & m15<30  ~ 1 ,
+                 m15 >=30 & m15<60  ~ 2 ,
+                 m15 >=10 & m15<20  ~ 3,
+                 m15 >=60 & m15<99  ~ 4 ,
+                 m15 == 99 ~ 9 ,
+                 age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_pltype = c(99))) %>%
+      set_value_labels(rh_del_pltype = c("Health facility - public" = 1, "Health facility - private" = 2, "Home"=3, "Other"=4, "Missing"=9 )) %>%
+      set_variable_labels(rh_del_pltype = "Live births by type of health facility- private")
+
+
+
+  }else{
+
   # //Place of delivery
   # Note: please check the categories of m15 especially for older surveys. The category values may differ.
   BRdata <- BRdata %>%
@@ -79,7 +125,7 @@ RH_DELP_C_PRT<- function(Rdata){
     set_value_labels(rh_del_pltype = c("Health facility - public" = 1, "Health facility - private" = 2, "Home"=3, "Other"=4, "Missing"=9 )) %>%
     set_variable_labels(rh_del_pltype = "Live births by type of health facility- private")
 
-
+  }
 
 
   BRdata <- BRdata %>%

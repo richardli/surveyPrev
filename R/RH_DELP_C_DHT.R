@@ -69,13 +69,45 @@ RH_DELP_C_DHT<- function(Rdata){
   # Note: please check the categories of m15 especially for older surveys. The category values may differ.
   #
 
+  if(Rdata$v000[1]=="MW8"){
+
+    # Labels:
+    #   value                            label
+    # 10                             home
+    # 11                respondent's home
+    # 12                       other home
+    # 20                    public sector
+    # 21              government hospital
+    # 22         government health center
+    # 26                     other public
+    # 30           private medical sector
+    # 31          private hospital/clinic
+    # 32          private doctor's office
+    # 36     other private medical sector
+    # 40                       ngo sector
+    # 41                         ngo: blm
+    # 42                         ngo: psi
+    # 43                        ngo: fpam
+    # 46                        other ngo
+    # 50                cham/mission/iham
+    # 51      cham/mission/iham: hospital
+    # 52 cham/mission/iham: health center
+    # 96                            other
+
+    BRdata <- BRdata %>%
+      mutate(rh_del_place =
+               case_when(
+                 m15 >=20 & m15<60   ~ 1 ,
+                 m15 >=10 & m15<20   ~ 2,
+                 m15 >=60 & m15<99   ~ 3 ,
+                 m15 == 99 ~ 9 ,
+                 age>=period ~ 99)) %>%
+      replace_with_na(replace = list(rh_del_place = c(99))) %>%
+      set_value_labels(rh_del_place = c("Health facility" = 1, "Home"=2, "Other"=3, "Missing"=9  )) %>%
+      set_variable_labels(rh_del_place = "Live births by place of delivery")
 
 
-
-
-
-
-
+  }else{
 
    BRdata <- BRdata %>%
     mutate(rh_del_place =
@@ -90,7 +122,7 @@ RH_DELP_C_DHT<- function(Rdata){
     set_variable_labels(rh_del_place = "Live births by place of delivery")
 
 
-
+  }
 
 
   BRdata <- BRdata %>%
