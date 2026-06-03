@@ -11,7 +11,7 @@ CM_ECMR_C_IMF(Rdata, mort.cut = c(1, 2, 6, 12, 24, 36, 48, 60), mort.year = 5)
 
 \item{mort.cut}{age group cutoffs for hazard calculation. Constant hazards are assumed to be within the specified cutoffs.}
 
-\item{mort.year}{The number of years preceding survey. Set to be 10.}
+\item{mort.year}{The number of years preceding survey. Set to be 5.}
 }
 \value{
 A partially processed data.frame that will be used in surveyPrev::getDHSindicator. The whole function can be used as a parameter in surveyPrev::getDHSindicator
