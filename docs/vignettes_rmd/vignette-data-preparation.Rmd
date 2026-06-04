@@ -65,14 +65,14 @@ is_html_output = function() {
   knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
 }
 if(is_html_output()){
-  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
+  kbl(indicatorList[1:5, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
   kable_styling() %>%
   scroll_box(height = "400px")
 }else{
-  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
+  kbl(indicatorList[1:5, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  column_spec(2, width = "25em")
+  column_spec(2, width = "10em")
 }
 ```
 

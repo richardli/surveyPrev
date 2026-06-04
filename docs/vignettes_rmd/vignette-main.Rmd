@@ -28,7 +28,7 @@ In this vignette, we describe how prevalence mapping using DHS data can be carri
 2. Area-level Fay-Herriot model in Section \@ref(sec:area-level).
 3. Cluster-level model in Section \@ref(sec:cluster-level).
 
-Then in Section \@ref(sec:vis) we show several tools for visualization of different estimates, and in Section  \@ref(sec:aggregation) we discuss how to aggregate the result for a given model to produce estimates at higher admin levels.
+Then in Section \@ref(sec:vis) we show several tools for visualization of different estimates, and in Section  \@ref(sec:aggregation) we discuss how to aggregate the result for a given model to produce estimates at higher admin levels. For a more detailed discussion of the workflow of SAE analysis using the **surveyPrev** package, see [@dong2026toward].
 
 
 
@@ -103,7 +103,7 @@ Currently, the `surveyPrev` package supports `r num` indicators. The full list o
 
 ```{r, eval = FALSE}
 data(indicatorList)
-head(indicatorList)
+indicatorList[1:20, ]
 ```
 
 ```{r indic, eval = TRUE, table.width = "100%", echo = FALSE}
@@ -112,12 +112,12 @@ is_html_output = function() {
   knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
 }
 if(is_html_output()){
-  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
+  kbl(indicatorList[1:20, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
   kable_styling() %>%
   scroll_box(height = "400px")
 }else{
-  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
+  kbl(indicatorList[1:20, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
   column_spec(2, width = "20em") %>%
   column_spec(3, width = "8em")
@@ -247,9 +247,9 @@ res_ad0_rural <- directEST(data=data,
                    cluster.info= cluster.info,
                    admin=0,
                    strata="rural")
-list(all = res_ad0$res.admin0, 
-      urban = res_ad0_urban$res.admin0, 
-      rural = res_ad0_rural$res.admin0)
+list(all = res_ad0$res.natl, 
+      urban = res_ad0_urban$res.natl, 
+      rural = res_ad0_rural$res.natl)
 ```
 
 ## Admin 2 direct estimates {#sec:direct2} 
@@ -305,20 +305,17 @@ Columns 2-6 represent the posterior mean, posterior variance, posterior median a
 
 ## Admin 2 Fay-Herriot estimates {#sec:area-level2}
 
-A Fay-Herriot model at Admin 2 level can be fitted by treating areas without direct estimates as missing data, though it is usually not recommended due to data sparsity. In addition, numerical issues arise when the design-based variance of a direct estimate is close to zero and the logit precision becomes too large. A potential fix for this issue is to identify regions with too small design variance(< 1e-30), and delete the clusters in these regions, before fitting the model. However, this step creates additional bias in the results if the number of clusters deleted is large.
+Design-based variance at Admin 2 level can be unstable due to data sparsity, which sometimes creates numerical issues for Fay-Herriot model. A fix for this variance issue is described in [@wakefield2026variance] and is enabled by setting `var.fix = TRUE`.
 
 
 ```{r}
-bad_admin2 <- subset(res_ad2$res.admin2, direct.var < 1e-30)$admin2.name.full
-# identify clusters in these regions
-bad_clusters <- subset(cluster.info$data, admin2.name.full %in% bad_admin2)$cluster
-# Run FH model without these clusters
-smth_res_ad2 <- fhModel(subset(data, !cluster %in% bad_clusters),
+smth_res_ad2 <- fhModel(data,
                     cluster.info = cluster.info,
                     admin.info = admin.info2,
                     admin = 2,
                     model = "bym2",
-                    aggregation = FALSE)
+                    aggregation = FALSE, 
+                    var.fix = TRUE)
 head(smth_res_ad2$res.admin2)
 ```
 
@@ -827,21 +824,23 @@ smth_res_ad1_spatial_survey <- fhModel(data=data,
 ```
 
 
-We also re-fit the Admin 2 model with the two updated `admin.info` objects.
+We also re-fit the Admin 2 model with variance fix.
 ```{r}
 # Run FH model without problematic clusters
-smth_res_ad2_agg_pop <- fhModel(data=subset(data, !cluster %in% bad_clusters),
+smth_res_ad2_agg_pop <- fhModel(data = data,
                                 cluster.info = cluster.info,
                                 admin.info = admin.info2,
                                 admin = 2,
                                 model = "bym2",
-                                aggregation = TRUE)
-smth_res_ad2_agg_survey <- fhModel(data=subset(data, !cluster %in% bad_clusters),
+                                aggregation = TRUE, 
+                                var.fix = TRUE)
+smth_res_ad2_agg_survey <- fhModel(data = data,
                                   cluster.info = cluster.info,
                                   admin.info = admin.info2.survey,
                                   admin = 2,
                                   model = "bym2",
-                                  aggregation = TRUE)
+                                  aggregation = TRUE, 
+                                  var.fix = TRUE)
 ```
 
 And we can compare all four models when aggregating to national level, with the national direct estimate as an additional comparison.
