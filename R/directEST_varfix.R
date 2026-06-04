@@ -23,6 +23,7 @@
 
 #' @import dplyr
 #' @importFrom SUMMER smoothSurvey expit
+#' @importFrom stats qlogis
 #' @examples
 #' \dontrun{
 #'

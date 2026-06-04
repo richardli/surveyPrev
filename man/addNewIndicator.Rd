@@ -22,9 +22,21 @@ addNewIndicator(
 
 \item{dictionary}{The DHS indicator dictionary data frame, e.g.sae4health::DHS_ind_dictionary}
 
-\item{chapters}{The DHS chapters reference data frame.}
+\item{IR}{Logical flag indicating whether the IR recode file is required.}
 
-\item{...}{Boolean flags for IR, PR, KR, BR, HR, MR, AR, CR.}
+\item{PR}{Logical flag indicating whether the PR recode file is required.}
+
+\item{KR}{Logical flag indicating whether the KR recode file is required.}
+
+\item{BR}{Logical flag indicating whether the BR recode file is required.}
+
+\item{HR}{Logical flag indicating whether the HR recode file is required.}
+
+\item{MR}{Logical flag indicating whether the MR recode file is required.}
+
+\item{AR}{Logical flag indicating whether the AR recode file is required.}
+
+\item{CR}{Logical flag indicating whether the CR recode file is required.}
 }
 \value{
 The a row to rbind into indicator_df

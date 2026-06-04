@@ -116,7 +116,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
         stop(
           paste0(
             "Failed to compute indicator '", indicator, "'. ",
-            "This happens when the function isn’t appropriate for this survey or indicator.",
+            "This happens when the function isn't appropriate for this survey or indicator.",
             "or wrong DHS recode was provided (e.g., HR/MR/IR/KR mismatch).","Please contact the surveyPrev team for further help.","\n",
             "Original error: ", conditionMessage(e)
           ),
@@ -146,7 +146,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
         stop(
           paste0(
             "Failed to compute indicator '", indicator, "'. ",
-            "This happens when the function isn’t appropriate for this survey or indicator.",
+            "This happens when the function isn't appropriate for this survey or indicator.",
             "or wrong DHS recode was provided (e.g., HR/MR/IR/KR mismatch).", "Please contact the surveyPrev team for further help.","\n",
             "Original error: ", conditionMessage(e)
           ),

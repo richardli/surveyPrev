@@ -10,6 +10,7 @@
 #' @param map whether to return a map of clusters or not
 #' @return This function returns the dataset that contains admin 1 and admin 2 information and coordinates for each cluster.
 #' @importFrom sf st_as_sf st_is_valid st_join st_transform st_crs
+#' @importFrom sf "st_crs<-"
 #' @importFrom sf st_coordinates st_centroid st_as_sfc st_bbox
 #' @importFrom sf st_boundary st_distance st_drop_geometry
 #' @importFrom sf st_buffer st_intersection st_nearest_feature st_point_on_surface

@@ -168,7 +168,7 @@ getCovariate <- function(
   natl_grid_sf <- sf::st_as_sf(natl.grid[c('LONGNUM','LATNUM')], coords = c("LONGNUM", "LATNUM"),
                                crs = sf::st_crs(poly.adm))
 
-  adm_match <- sf::st_join(natl_grid_sf, poly.adm,join = st_intersects)
+  adm_match <- sf::st_join(natl_grid_sf, poly.adm,join = sf::st_intersects)
 
 
   if(!is.null(by.adm.upper)){

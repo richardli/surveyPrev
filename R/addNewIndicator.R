@@ -3,8 +3,14 @@
 ##'
 #' @param new_id The ID of the new indicator (e.g., "FE_FRTR_W_A10").
 #' @param dictionary The DHS indicator dictionary data frame, e.g.sae4health::DHS_ind_dictionary
-#' @param chapters The DHS chapters reference data frame.
-#' @param ... Boolean flags for IR, PR, KR, BR, HR, MR, AR, CR.
+#' @param IR Logical flag indicating whether the IR recode file is required.
+#' @param PR Logical flag indicating whether the PR recode file is required.
+#' @param KR Logical flag indicating whether the KR recode file is required.
+#' @param BR Logical flag indicating whether the BR recode file is required.
+#' @param HR Logical flag indicating whether the HR recode file is required.
+#' @param MR Logical flag indicating whether the MR recode file is required.
+#' @param AR Logical flag indicating whether the AR recode file is required.
+#' @param CR Logical flag indicating whether the CR recode file is required.
 #' @importFrom stringr str_split
 #' @author Qianyu Dong
 #' @examples
