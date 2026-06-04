@@ -50,7 +50,7 @@ The following pieces of data are needed to produce SAE for DHS surveys:
 The latest **surveyPrev** package can be installed from CRAN with
 
 ```{r, eval = FALSE}
-install.packages(surveyPrev)
+install.packages("surveyPrev")
 ```
 
 The development version of the **surveyPrev** package can be installed from GitHub with
@@ -632,7 +632,7 @@ pop_f_35 <- raster(f_35_name)
 pop_f_40 <- raster(f_40_name)
 pop_f_45 <- raster(f_45_name)
 
-raster <- pop_f_45 + pop_f_40 + pop_f_35 + pop_f_30 + pop_f_25 + pop_f_20 + pop_f_15
+pop_raster <- pop_f_45 + pop_f_40 + pop_f_35 + pop_f_30 + pop_f_25 + pop_f_20 + pop_f_15
 agg.pop1 <- aggPopulation(
    tiff = pop_raster,
    poly.adm  = ZambiaAdm1,
