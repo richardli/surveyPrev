@@ -24,7 +24,7 @@ adminInfo(
 
 \item{agg.pop}{data frame of aggregated poplulation from aggPopulation function. It should have two columns: "admin2.name.full" and "population".}
 
-\item{proportion}{data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, it should have three columns: "admin1.name", "admin2.name", and "urban", in order to avoid issues merging datasets with duplicated admin2 names.}
+\item{proportion}{data frame of urban/rural proportions. For admin1, is should have two columns: "admin1.name" and "urban". For admin2, in order to avoid issues merging datasets with duplicated admin2 names, either of the following two formats can be used: (a) three columns: "admin1.name", "admin2.name", and "urban"; and (b) two columns: "admin2.name.full" and "urban", where "admin2.name.full" takes both the admin1 and admin2 name and connect them with an "_", i.e., "Lusaka_Chilanga".}
 }
 \value{
 This function returns the 1. dataframe that contains admin 1 and admin 2 information and coordinates for each cluster and 2. Adjacency matrix.
