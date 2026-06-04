@@ -100,6 +100,13 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
 
 
         # dt[i,]=model[[i]]$res.admin0[,c("mean","lower","upper","model")]
+      }else if(!is.null(model[[i]]$res.natl)){# directEST(admin = 0) returns res.natl
+        colnames(model[[i]]$res.natl)[colnames(model[[i]]$res.natl) == 'direct.est'] <- 'mean'
+        colnames(model[[i]]$res.natl)[colnames(model[[i]]$res.natl) == 'direct.lower'] <- 'lower'
+        colnames(model[[i]]$res.natl)[colnames(model[[i]]$res.natl) == 'direct.upper'] <- 'upper'
+        model[[i]]$res.natl$model= names(model[i])
+        dt[i,]=model[[i]]$res.natl[,c("mean","lower","upper","model")]
+
       }else{
         model[[i]]$agg.natl$model= names(model[i])
         dt[i,]=model[[i]]$agg.natl[,c("mean","lower","upper","model")]

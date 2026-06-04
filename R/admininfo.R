@@ -105,6 +105,14 @@ adminInfo <- function(poly.adm, by.adm, admin, by.adm.upper=NULL, agg.pop = NULL
       stop("Upper level admin region membership needs to be specified in 'by.admin.upper'.")
     }
 
+    if(!is.null(proportion)){
+      if(!"admin2.name.full" %in% colnames(proportion) && 
+          "admin1.name" %in% colnames(proportion) &&
+          "admin2.name" %in% colnames(proportion)){
+        proportion$admin2.name.full <- paste0(proportion$admin1.name, "_", proportion$admin2.name)
+      }
+    }
+
 
 
     if (is.null(proportion)&is.null(agg.pop)){
