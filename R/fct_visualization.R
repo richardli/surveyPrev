@@ -248,8 +248,8 @@ prevMap.web <- function(res.obj,
   }else{
     
     ### setup hatching polygons
-    hatching.regions <- hatched.SpatialPolygons(hatching.gadm,
-                                                density = c(hatching.density), angle = c(45))
+    hatching.regions <- hatched_polygons(hatching.gadm,
+                                         density = c(hatching.density), angle = c(45))
     
     ### setup hatching legend
     warning.icon <- leaflet::awesomeIconList(
@@ -474,7 +474,7 @@ prevMap.web <- function(res.obj,
   
   if(!is.null(map.title)){
     
-    tag.map.title <- tags$style(htmltools::HTML("
+    tag.map.title <- htmltools::tags$style(htmltools::HTML("
     .leaflet-control.map-title {
     transform: translate(-50%,20%);
     position: fixed !important;
@@ -488,7 +488,7 @@ prevMap.web <- function(res.obj,
     }
     "))
     
-    title <- tags$div(
+    title <- htmltools::tags$div(
       tag.map.title, htmltools::HTML(paste0(map.title))
     )
     

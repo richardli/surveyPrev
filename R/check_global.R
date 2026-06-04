@@ -196,7 +196,6 @@ utils::globalVariables(c(
   "t_w",
   "t_w_aug",
   "t_wi",
-  "tags",
   "tw_ph",
   "upper.adm.name",
   "v013",
