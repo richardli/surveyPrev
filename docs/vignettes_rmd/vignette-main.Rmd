@@ -95,37 +95,38 @@ library(kableExtra)
 ## Built-in indicators
 
 ```{r, echo = FALSE, eval = TRUE}
-data(surveyPrevIndicators)
-num=dim((surveyPrevIndicators))[1]
+data(indicatorList)
+num <- nrow(indicatorList)
 ```
 
-Currently, the `surveyPrev` package supports `r num` indicators. The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset. The ID column correspond to the indicator IDs in the DHS API and are more standardized. The alternative ID column provides convenient and more readable indicator names for only a subset of indicators. Both can be used to retrieve the indicator in the functions described later. The full list of indicators and their IDs are summarized in the Table below.
+Currently, the `surveyPrev` package supports `r num` indicators. The full list of indicators and their IDs can be found in the `indicatorList` dataset. The `ID` column corresponds to the standardized indicator IDs used in the DHS API, while the `Description` and `Topic` columns give a short description and the DHS chapter each indicator belongs to. In previous versions of **surveyPrev**, a small set of indicators could also be referred to by shorter alternative IDs (for example, `ancvisit4+`); these alternative IDs are no longer used, and the standard DHS indicator IDs should be used instead. The full list of indicators is summarized in Table \@ref(tab:indic).
 
 ```{r, eval = FALSE}
-data(surveyPrevIndicators)
-head(surveyPrevIndicators)
+data(indicatorList)
+head(indicatorList)
 ```
 
 ```{r indic, eval = TRUE, table.width = "100%", echo = FALSE}
-data(surveyPrevIndicators)
+data(indicatorList)
 is_html_output = function() {
   knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
 }
 if(is_html_output()){
-  kbl(surveyPrevIndicators[, c("ID", "alternative.ID", "Description", "Topic")], align = 'llll', 
+  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  kable_styling()
+  kable_styling() %>%
+  scroll_box(height = "400px")
 }else{
-  kbl(surveyPrevIndicators[, c("ID", "alternative.ID", "Description", "Topic")], align = 'llll', 
+  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  column_spec(3, width = "20em") %>%
-  column_spec(4, width = "8em")
+  column_spec(2, width = "20em") %>%
+  column_spec(3, width = "8em")
 }
 ```
 
 
 
-In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator can be extracted with `indicator = "ancvisit4+"` or `indicator = "RH_ANCN_W_N4P"`. 
+In this vignette, we consider estimating the percentage of women who had a live birth in the five years before the survey who had four or more antenatal care visits. This indicator has the standard DHS ID `RH_ANCN_W_N4P`, which we use throughout this vignette.
 
 
 ## Customized indicators
@@ -151,7 +152,7 @@ rdhs::set_rdhs_config(email = "your_email",
 After setting up the DHS account information, `getDHSdata()` can be used to download the relevant survey files directly into R. If data download using the API fails, or if it is preferred to work with downloaded data files offline, you may also manually download the file from the DHS website and read into R. The `getDHSdata()` function returns a message specifying which file is used (e.g., Individual Record file for the ANC visit example). 
 
 ```{r,message=FALSE,warning=FALSE}
-indicator <- "ancvisit4+"
+indicator <- "RH_ANCN_W_N4P"
 year <- 2018
 country <- "Zambia"
 dhsData <- getDHSdata(country = country, indicator = indicator, year = year)

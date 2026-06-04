@@ -49,14 +49,14 @@ rdhs::set_rdhs_config(email = "your_email",
 # Built-in indicators
 
 ```{r, echo = FALSE, eval = TRUE}
-data(surveyPrevIndicators)
+data(indicatorList)
 ```
 
-Currently, the `surveyPrev` package supports `r dim(surveyPrevIndicators)[1]` indicators listed in Table \@ref(tab:indic). The list of indicators and their IDs can be found in the `surveyPrevIndicators` dataset.
+Currently, the `surveyPrev` package supports `r nrow(indicatorList)` indicators listed in Table \@ref(tab:indic). The full list of indicators and their IDs can be found in the `indicatorList` dataset. In previous versions of **surveyPrev**, a small set of indicators could also be referred to by shorter alternative IDs; these alternative IDs are no longer used, and the standard DHS indicator IDs should be used instead.
 
 ```{r, eval = FALSE}
-data(surveyPrevIndicators)
-head(surveyPrevIndicators)
+data(indicatorList)
+head(indicatorList)
 ```
 
 
@@ -65,23 +65,24 @@ is_html_output = function() {
   knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
 }
 if(is_html_output()){
-  kbl(surveyPrevIndicators, align = 'ccl', 
+  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  kable_styling()
+  kable_styling() %>%
+  scroll_box(height = "400px")
 }else{
-  kbl(surveyPrevIndicators, align = 'ccl', 
+  kbl(indicatorList[, c("ID", "Description", "Topic")], align = 'lll',
     caption = "List of built-in indicators in the surveyPrev package.") %>%
-  column_spec(3, width = "25em")
+  column_spec(2, width = "25em")
 }
 ```
 
 
 
 
-These indicators above can be directly processed within **surveyPrev** using `getDHSdata()` and `getDHSindicator()` functions. Both the ID and alternative ID in the `surveyPrevIndicators` dataset can be used to retrieve the indicator. `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package. For example,  
+These indicators above can be directly processed within **surveyPrev** using the `getDHSdata()` and `getDHSindicator()` functions. The indicator ID in the `indicatorList` dataset is used to retrieve the indicator. `getDHSindicator()` processes the raw survey data into a `data.frame`, where the column titled `value` is the indicator of interest. It also contains cluster ID, household ID, survey weight and strata information. This data format allows a `svydesign` object to be defined in the `survey` package. For example,  
 
 ```{r,message=FALSE,warning=FALSE}
-indicator <- "ancvisit4+"
+indicator <- "RH_ANCN_W_N4P"
 year <- 2018
 country <- "Zambia"
 dhsData1 <- getDHSdata(country = country, indicator = indicator, year = year)
