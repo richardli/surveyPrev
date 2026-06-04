@@ -21,7 +21,7 @@ BR
 }
 \examples{
 \dontrun{
-dhsData <- getDHSdata(country = "Zambia", indicator = "CM_ECMR_C_U5M", year = 2018)
+dhsData <- getDHSdata(country = "Zambia", indicator = "CM_ECMR_C_IMR", year = 2018)
 }
 
 }
