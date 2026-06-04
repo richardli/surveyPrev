@@ -4,3 +4,4 @@
 ^cran-comments\.md$
 docs/vignettes_rmd/*
 ^\.github$
+^extra_indicator\.md$

@@ -8,3 +8,4 @@ docs/vignettes_rmd/*.pdf
 docs/vignettes_rmd/vignette-main_cache
 docs/vignettes_rmd/vignette-main_files
 *.log
+surveyPrev.Rcheck
