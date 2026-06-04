@@ -5,7 +5,7 @@
 \alias{ZambiaAdm2}
 \title{Admin 2 Polygon Map for Zambia.}
 \format{
-An object of class \code{SpatialPolygonsDataFrame} with 115 rows and 13 columns.
+An object of class \code{SpatialPolygonsDataFrame} with 115 rows and 6 columns.
 }
 \usage{
 data(ZambiaAdm2)
