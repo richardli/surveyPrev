@@ -15,7 +15,7 @@
 #'                                  indicator = "FP_CUSA_W_MOD",
 #'                                  year = 2018)
 #' data <- getDHSindicator(dhsData, indicator = NULL,
-#'                          FUN = surveyPrev::fp_cruse_mod)
+#'                          FUN = surveyPrev::FP_CUSM_W_MOD)
 #' }
 #' @export
 #'

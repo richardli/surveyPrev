@@ -95,7 +95,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 # data(match_all_result)
   raw.dat.tmp <- NULL
   ## U5MR ##
-  if(!is.null(indicator) && indicator %in% c("u5mr"){
+  if(!is.null(indicator) && indicator %in% c("u5mr")){
     # convert v5 to factor using libraries already imported in surveyPrev
     Rdata$b5 <- labelled::to_factor(Rdata$b5)
     # Using the same way as surveyPrev in defining 10 year cutoff by month
@@ -159,8 +159,8 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
   }else if(indicator == "unmet_family"||indicator == "FP_NADA_W_UNT"){
 
     raw.dat.tmp <- FP_NADA_W_UNT( Rdata)
-  }else if(indicator == "FP_CUSA_W_MOD"){
-    raw.dat.tmp <- fp_cruse_mod(Rdata)
+  # }else if(indicator == "FP_CUSA_W_MOD"){
+  #   raw.dat.tmp <- FP_CUSA_W_MOD(Rdata)
 
   }else if(indicator == "nmr"||indicator == "CM_ECMR_C_NNR"){
      if(indicator == "nmr"){
@@ -185,13 +185,13 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 #
 #     raw.dat.tmp <- CH_VACC_C_MSL(Rdata)
 
-  }else if(indicator== "PCV3") {
+  }else if(indicator== "PCV3"|| indicator == "CH_VACS_C_PN3") {
 
-    raw.dat.tmp <- ch_pneumo3_either(Rdata)
+    raw.dat.tmp <- CH_VACS_C_PN3(Rdata)
 
-  } else if(indicator== "RotaC1") {
+  } else if(indicator== "RotaC1"|| indicator == "CH_VACS_C_RT1") {
 
-    raw.dat.tmp <- ch_rotav1_either(Rdata)
+    raw.dat.tmp <- CH_VACS_C_RT1(Rdata)
 
   # } else if(indicator =="CH_VACC_C_DP1"){
   #   raw.dat.tmp <- CH_VACC_C_DP1(Rdata)

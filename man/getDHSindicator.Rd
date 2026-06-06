@@ -38,9 +38,9 @@ This function processes DHS data from getDHSdata function.
 \examples{
 \dontrun{
 dhsData1 <- getDHSdata(country = "Zambia",
-                                 indicator = "ancvisit4+",
+                                 indicator = "RH_ANCN_W_N4P",
                                  year = 2018)
-data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
+data1 <- getDHSindicator(dhsData1, indicator = "RH_ANCN_W_N4P")
 
 
 #------------------------------------------------------------------#
