@@ -1532,7 +1532,7 @@ ml_hhaccess<-function(Rdata){
 hv_hiv_pos<-function(Rdata){
     IRdata <- Rdata$`Individual Recode`
     MRdata <- Rdata$`Men's Recode`
-    ARdata<- Rdata$`HIV Test Results Recode`
+    ARdata <- Rdata$`HIV Test Results Recode`
 
     # A merge of the IR and MR files with the AR file is needed to produce the Total HIV prevalence and present them by background variables present in the IR and MR files
     # The following merge sequence will produce an IRMRARmerge file for the survey of interest
