@@ -1402,9 +1402,9 @@ if(X.unit.model==FALSE){
     )
 
 
-    cm=list(res.admin2=admin2.bb.res,
-            res.admin1=admin1.bb.res,
-            res.admin0=admin0.bb.res,
+    cm=list(agg.admin2=admin2.bb.res,
+            agg.admin1=admin1.bb.res,
+            agg.admin0=admin0.bb.res,
             inla=imod,
             admin2_post=draw.all,
             urban2_post=draw.u,
