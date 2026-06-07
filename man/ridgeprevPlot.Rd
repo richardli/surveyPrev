@@ -41,10 +41,12 @@ geo <- getDHSgeo(country = "Zambia", year = 2018)
 cluster.info <- clusterInfo(geo = geo,
                             poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
+# "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#  In previous versions of the package, it is labeled "ancvisit4+".
 dhsData <- getDHSdata(country = "Zambia",
-                                 indicator = "ancvisit4+",
+                                 indicator = "RH_ANCN_W_N4P",
                                  year = 2018)
-data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
+data <- getDHSindicator(dhsData, indicator = "RH_ANCN_W_N4P")
 poly.adm1 <- sf::st_as_sf(ZambiaAdm1)
 admin.info1 <- adminInfo(poly.adm = poly.adm1, 
                          admin = 1, 

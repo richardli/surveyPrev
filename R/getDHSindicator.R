@@ -21,11 +21,12 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' # "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#' #  In previous versions of the package, it is labeled "ancvisit4+".
 #' dhsData1 <- getDHSdata(country = "Zambia",
 #'                                  indicator = "RH_ANCN_W_N4P",
 #'                                  year = 2018)
-#' data1 <- getDHSindicator(dhsData1, indicator = "RH_ANCN_W_N4P")
-#'
+#' data1 <- getDHSindicator(dhsData, indicator = "RH_ANCN_W_N4P")
 #'
 #' #------------------------------------------------------------------#
 #' # User-specified function to process the data

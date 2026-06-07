@@ -293,5 +293,9 @@ utils::globalVariables(c(
   "v_h_c_dot",
   "v_h_dot_dot",
   "v_h_dot_dot_aug",
-  "weight_times_value"
+  "weight_times_value",
+  "fp_unmet_tot",
+  "hv_hiv_pos",
+  "ml_hhaccess",
+  "ml_test_rdtmal"
 ))

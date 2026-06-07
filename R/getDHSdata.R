@@ -15,8 +15,10 @@
 #' @examples
 #' \dontrun{
 #' # When indicator is known, download only the relevant file
+#' # "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#' #  In previous versions of the package, it is labeled "ancvisit4+".
 #' dhsData <- getDHSdata(country = "Zambia",
-#'                                  indicator = "ancvisit4+",
+#'                                  indicator = "RH_ANCN_W_N4P",
 #'                                  year = 2018)
 #'
 #' # When indicator is NULL or not recognized, download all files

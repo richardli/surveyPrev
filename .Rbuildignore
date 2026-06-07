@@ -6,3 +6,4 @@ docs/vignettes_rmd/*
 ^\.github$
 ^extra_indicator\.md$
 ^data-raw$
+^archive$
