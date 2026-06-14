@@ -190,9 +190,9 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 
     raw.dat.tmp <- CH_VACS_C_PN3(Rdata)
 
-  } else if(indicator== "RotaC1"|| indicator == "CH_VACS_C_RT1") {
+  } else if(indicator== "RotaC1"|| indicator == "CH_VACC_C_RT1") {
 
-    raw.dat.tmp <- CH_VACS_C_RT1(Rdata)
+    raw.dat.tmp <- CH_VACC_C_RT1(Rdata)
 
   # } else if(indicator =="CH_VACC_C_DP1"){
   #   raw.dat.tmp <- CH_VACC_C_DP1(Rdata)

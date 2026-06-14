@@ -54,6 +54,7 @@ utils::globalVariables(c(
   "mean_to_order",
   "mean_to_reorder",
   "ml_numitnhh",
+  "ml_pmal_rdt",
   "ml_potuse",
   "outcome",
   "Pneumo1",
