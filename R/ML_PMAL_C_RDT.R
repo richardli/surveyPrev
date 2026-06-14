@@ -22,12 +22,14 @@ ML_PMAL_C_RDT<-function(Rdata){
   # Number of ITNs per household
   # Tested for Parasitemia via RDT
   PRdata <- Rdata %>%
-    mutate(ml_test_rdtmal = case_when(
-      hv103==1 & hc1>=6 & hc1<=59 & hv042==1 & !(hml35==0 | hml35==1)  ~ 0,
-      hv103==1 & hc1>=6 & hc1<=59 & hv042==1 & (hml35==0 | hml35==1)  ~ 1),
-      ml_test_rdtmal = set_label(ml_test_rdtmal, label = "Tested for Parasitemia (via RDT) in children 6-59 months"))
-
-  colnames(PRdata)[colnames(PRdata) == 'ml_test_rdtmal'] <- "value"
+    mutate(ml_pmal_rdt = case_when(
+      hv103==1 & hc1>=6 & hc1<=59 & hml35==1            ~ 1,   # positive
+      hv103==1 & hc1>=6 & hc1<=59 & hml35==0            ~ 0),  # negative
+      ml_pmal_rdt = haven::labelled(
+        ml_pmal_rdt,
+        label = "Malaria prevalence (RDT) in children 6-59 months")
+    )
+  colnames(PRdata)[colnames(PRdata) == 'ml_pmal_rdt'] <- "value"
   return(PRdata)
 
 }

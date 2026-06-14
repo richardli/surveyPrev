@@ -1,4 +1,4 @@
-#'CH_VACS_C_RT1
+#'CH_VACC_C_RT1
 #'KRdata
 #'Rotavirus 1 vaccination received
 #'
@@ -10,14 +10,14 @@
 #' @examples
 #' \dontrun{
 #' dhsData <- getDHSdata(country = "Zambia",
-#'                                  indicator = "CH_VACS_C_RT1",
+#'                                  indicator = "CH_VACC_C_RT1",
 #'                                  year = 2018)
 #' data <- getDHSindicator(dhsData, indicator = NULL,
-#'                          FUN = surveyPrev::CH_VACS_C_RT1)
+#'                          FUN = surveyPrev::CH_VACC_C_RT1)
 #' }
 #' @export
 #'
-CH_VACS_C_RT1 <- function(Rdata){
+CH_VACC_C_RT1<- function(Rdata){
   # weight variable
   KRdata <- Rdata %>%
     mutate(wt = v005/1000000)
@@ -71,7 +71,7 @@ CH_VACS_C_RT1 <- function(Rdata){
     mutate(rotav1 = case_when(h57%in%c(1,2,3) ~ 1, h57%in%c(0,8) ~ 0  )) %>%
     mutate(rotav2 = case_when(h58%in%c(1,2,3) ~ 1, h58%in%c(0,8) ~ 0  )) %>%
     mutate(rotav3 = case_when(h59%in%c(1,2,3) ~ 1, h59%in%c(0,8) ~ 0  )) %>%
-    mutate(rotavsum= rotav1+rotav2+rotav3)
+    mutate(rotavsum=  rowSums(across(c(rotav1, rotav2, rotav3)), na.rm = TRUE))
   # This step is performed for multi-dose vaccines to take care of any gaps in the vaccination history.
   # See DHS guide to statistics for further explanation
   KRvac <- KRvac %>%

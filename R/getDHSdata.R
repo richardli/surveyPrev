@@ -33,21 +33,45 @@ getDHSdata <- function(country, indicator = NULL, Recode= NULL, year, SurveyType
 
   # data(match_all_result)
 
-  if(!is.null(indicator) && indicator %in% match_all_result$indicator_ID_DHS ){
+  if(!is.null(indicator) && indicator %in% indicatorList$ID && !indicator=="HA_HIVP_B_HIV" ){
 
-  dataset=match_all_result[match_all_result$indicator_ID_DHS==indicator, "updated_recode_name"]#"IRdata"
+  # dataset=match_all_result[match_all_result$indicator_ID_DHS==indicator, "updated_recode_name"]#"IRdata"
+  #
+  # tb= data.frame(list=c("Men's Recode"     , "Household Member Recode",
+  #                          "Children's Recode", "Births Recode",
+  #                          "Couples' Recode"  , "Household Recode",
+  #                          "Individual Recode","Pregnancy and Postnatal Care Recode"
+  # ),
+  # listname= c("MRdata"     , "PRdata",
+  #               "KRdata", "BRdata",
+  #               "CRdata"  , "HRdata",
+  #               "IRdata","NRdata"))
+  #
+  # Type <- tb[tb$listname==dataset,1]
 
-  tb= data.frame(list=c("Men's Recode"     , "Household Member Recode",
-                           "Children's Recode", "Births Recode",
-                           "Couples' Recode"  , "Household Recode",
-                           "Individual Recode","Pregnancy and Postnatal Care Recode"
-  ),
-  listname= c("MRdata"     , "PRdata",
-                "KRdata", "BRdata",
-                "CRdata"  , "HRdata",
-                "IRdata","NRdata"))
+    # map indicatorList flag column -> dataset name + readable Type
+    tb <- data.frame(
+      col      = c("MR", "PR", "KR", "BR", "CR", "HR", "IR", "AR"),
+      listname = c("MRdata", "PRdata", "KRdata", "BRdata",
+                   "CRdata", "HRdata", "IRdata", "ARdata"),
+      list     = c("Men's Recode", "Household Member Recode", "Children's Recode",
+                   "Births Recode", "Couples' Recode", "Household Recode",
+                   "Individual Recode", "HIV Test Results Recode"),
+      stringsAsFactors = FALSE
+    )
 
-  Type <- tb[tb$listname==dataset,1]
+    # pull the flag columns for the matched indicator as a named logical vector
+    flags <- unlist(
+      surveyPrev::indicatorList[surveyPrev::indicatorList$ID == indicator, tb$col]
+    )
+
+    # which recode(s) are TRUE
+    codes <- tb$col[which(flags)]
+    code  <- codes[1]                      # first match (see note below)
+
+    dataset <- tb$listname[tb$col == code] # e.g. "IRdata"
+    Type    <- tb$list[tb$col == code]     # e.g. "Individual Recode"
+
 
   CountryName <- country
   #CountryName<-stringr::str_to_title(country)
