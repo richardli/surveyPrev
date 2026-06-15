@@ -3,7 +3,27 @@
 
 R package for the full workflow to map the prevalence of common DHS indicators.
 
-A Shiny App built on the surveyPrev package is available at [https://rsc.stat.washington.edu/surveyPrevRShiny/](https://rsc.stat.washington.edu/surveyPrevRShiny/)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## Installation
