@@ -4,10 +4,12 @@ Version 2.0.0
 ==========================
 
 Indicators
-+ Significantly expanded indicator support (now 182 indicators in the new
++ Significantly expanded indicator support (now 183 indicators in the new
   `indicatorList` dataset), covering mortality, antenatal/postnatal and
   delivery care, family planning, child nutrition/vaccination, malaria,
   WASH, wealth, education, and FGM chapters.
++ Indicator functions renamed to standardized DHS recode codes,  
+   with legacy exported functions removed. The `surveyPrevIndicators` dataset is replaced by `indicatorList`.
 + Added 2-year and 5-year "preceding survey" variants for many indicators,
   plus many country/survey-specific fixes.
 + `addNewIndicator()` to register a user-defined processing function.
