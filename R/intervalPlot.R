@@ -23,11 +23,12 @@
 #'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #'
+#' # "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#' #  In previous versions of the package, it is labeled "ancvisit4+".
 #' dhsData <- getDHSdata(country = "Zambia",
-#'                                  indicator = "ancvisit4+",
+#'                                  indicator = "RH_ANCN_W_N4P",
 #'                                  year = 2018)
-#'
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
+#' data <- getDHSindicator(dhsData, indicator = "RH_ANCN_W_N4P")
 #' admin.info2 <- adminInfo(poly.adm = ZambiaAdm2,
 #'                         admin = 2,
 #'                         agg.pop =ZambiaPopWomen$admin2_pop,
@@ -153,15 +154,15 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
     n.region.all <- 0
     for(i in 1:length(model)){
       n.region <- dim(model[[i]]$agg.admin1)[1]
-      if(is.null(n.region)) n.region <- dim(model[[i]]$res.admin1)[1] 
-      if(is.null(n.region)) stop(paste0("The following object in the list `model` cannot be parsed: ", i))    
-      n.region.all <- n.region.all + n.region 
+      if(is.null(n.region)) n.region <- dim(model[[i]]$res.admin1)[1]
+      if(is.null(n.region)) stop(paste0("The following object in the list `model` cannot be parsed: ", i))
+      n.region.all <- n.region.all + n.region
     }
 
     dt <- data.frame(admin1.name=rep(NA, n.region.all),
-                  mean=rep(NA, n.region.all), 
-                  lower=rep(NA, n.region.all), 
-                  upper=rep(NA, n.region.all), 
+                  mean=rep(NA, n.region.all),
+                  lower=rep(NA, n.region.all),
+                  upper=rep(NA, n.region.all),
                   model=rep(NA, n.region.all),
                   group=rep(NA, n.region.all))
     allgroup <- NULL
@@ -184,7 +185,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
 
         dt[counter : (counter + dd - 1),]= model[[i]]$res.admin1[,c("admin1.name","mean","lower","upper","model")]
         counter <- counter + dd
-       
+
       }else{
 
         if(colnames(model[[i]]$agg.admin1)[2]=="direct.est"){
@@ -220,7 +221,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
     }else{
       dt$mean_to_order <- NA
     }
-      
+
 
 
 
@@ -270,16 +271,16 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
     n.region.all <- 0
     for(i in 1:length(model)){
       n.region <- dim(model[[i]]$res.admin2)[1]
-      n.region.all <- n.region.all + n.region 
+      n.region.all <- n.region.all + n.region
     }
 
     dt <- data.frame(admin2.name.full=rep(NA, n.region.all),
-                  mean=rep(NA, n.region.all), 
-                  lower=rep(NA, n.region.all), 
-                  upper=rep(NA, n.region.all), 
+                  mean=rep(NA, n.region.all),
+                  lower=rep(NA, n.region.all),
+                  upper=rep(NA, n.region.all),
                   model=rep(NA, n.region.all),
-                  group=rep(NA, n.region.all), 
-                  admin1.name = rep(NA, n.region.all), 
+                  group=rep(NA, n.region.all),
+                  admin1.name = rep(NA, n.region.all),
                   admin2.name = rep(NA, n.region.all))
     allgroup <- NULL
     counter <- 1
@@ -300,7 +301,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
 
         dt[counter : (counter + dd - 1), c(1:5, 7, 8)]= model[[i]]$res.admin2[,c("admin2.name.full","mean","lower","upper","model", "admin1.name", "admin2.name")]
         counter <- counter + dd
-       
+
      if(group){
         if(is.null(model[[i]]$group)) stop(paste0("Input model ", i, " does not have the group information"))
         dt[(1+ (i-1)*dd):(i*dd),]$group= model[[i]]$group
@@ -334,14 +335,14 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
               legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
               axis.text.x = element_text(size=10), # Increase x axis text size
-              axis.text.y = element_text(size=10)) + 
+              axis.text.y = element_text(size=10)) +
         facet_wrap(~admin1.name, scales = "free_x")
 
 
 
 
     }else{
-    
+
       ggplot(dt, aes(x = reorder(admin2.name, mean_to_order, decreasing = decreasing), y = mean, group = model, color = model)) +
         geom_point( position = position_dodge(width = 0.8)) +
         scale_shape_manual(values = c(0:5, 15:25)) +
@@ -355,7 +356,7 @@ intervalPlot <- function(admin = 0, compare=FALSE, model=NULL, group=FALSE, sort
               legend.text = element_text(size=10), # Increase legend text size
               legend.key.size = unit(1.5, 'lines'), # Increase legend key size
               axis.text.x = element_text(size=10), # Increase x axis text size
-              axis.text.y = element_text(size=10))+ 
+              axis.text.y = element_text(size=10))+
         facet_wrap(~admin1.name, scales = "free_x")
     }
 

@@ -43,11 +43,12 @@
 #'                             poly.adm1 = ZambiaAdm1,
 #'                             poly.adm2 = ZambiaAdm2)
 #'
+#' # "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#' #  In previous versions of the package, it is labeled "ancvisit4+".
 #' dhsData <- getDHSdata(country = "Zambia",
-#'                                  indicator = "ancvisit4+",
+#'                                  indicator = "RH_ANCN_W_N4P",
 #'                                  year = 2018)
-#'
-#' data <- getDHSindicator(dhsData, indicator = "ancvisit4")
+#' data <- getDHSindicator(dhsData, indicator = "RH_ANCN_W_N4P")
 #' admin.info1 <- adminInfo(poly.adm = ZambiaAdm1,
 #'                         admin = 1,
 #'                         agg.pop =ZambiaPopWomen$admin1_pop,
@@ -101,7 +102,7 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
                                 pc.u = pc.u,
                                 pc.alpha = pc.alpha,
                                 pc.u.phi=pc.u.phi,
-                                pc.alpha.phi=pc.alpha.phi, 
+                                pc.alpha.phi=pc.alpha.phi,
                                 ...)
       return(fit)
   }
@@ -1312,7 +1313,7 @@ if(X.unit.model==FALSE){
 
     cm=list(agg.admin2=admin2.bb.res,
             agg.admin1=admin1.bb.res,
-            agg.admin0=admin0.bb.res,
+            agg.natl=admin0.bb.res,
             inla=imod,
             admin2_post=draw.all,
             urban2_post=draw.u,
@@ -1416,9 +1417,9 @@ if(X.unit.model==FALSE){
     )
 
 
-    cm=list(res.admin2=admin2.bb.res,
-            res.admin1=admin1.bb.res,
-            res.admin0=admin0.bb.res,
+    cm=list(agg.admin2=admin2.bb.res,
+            agg.admin1=admin1.bb.res,
+            agg.natl=admin0.bb.res,
             inla=imod,
             admin2_post=draw.all,
             urban2_post=draw.u,

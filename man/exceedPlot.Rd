@@ -49,11 +49,12 @@ cluster.info <- clusterInfo(geo = geo,
                             poly.adm1 = ZambiaAdm1,
                             poly.adm2 = ZambiaAdm2)
 
+# "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#  In previous versions of the package, it is labeled "ancvisit4+".
 dhsData <- getDHSdata(country = "Zambia",
-                                 indicator = "ancvisit4+",
+                                 indicator = "RH_ANCN_W_N4P",
                                  year = 2018)
-
-data <- getDHSindicator(dhsData, indicator = "ancvisit4+")
+data <- getDHSindicator(dhsData, indicator = "RH_ANCN_W_N4P")
 admin.info2 <- adminInfo(poly.adm = ZambiaAdm2,
                         admin = 2,
 						   by.adm="NAME_2",
@@ -69,11 +70,11 @@ cl_res_ad2_unstrat <- clusterModel(data = data,
 ZambiaAdm2$admin2.name.full <- paste0(ZambiaAdm2$NAME_1,
 									     "_",
 										 ZambiaAdm2$NAME_2)
-exceedPlot(cl_res_ad2_unstrat, threshold = 0.5, 
-			  exceed = TRUE, direction = -1, 
+exceedPlot(cl_res_ad2_unstrat, threshold = 0.5,
+			  exceed = TRUE, direction = -1,
 			  geo = ZambiaAdm2, by.geo = "admin2.name.full")
-exceedPlot(cl_res_ad2_unstrat, threshold = 0.5, 
-			  exceed = FALSE, direction = -1, 
+exceedPlot(cl_res_ad2_unstrat, threshold = 0.5,
+			  exceed = FALSE, direction = -1,
 			  geo = ZambiaAdm2, by.geo = "admin2.name.full")
 
 }

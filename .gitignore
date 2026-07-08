@@ -9,3 +9,4 @@ docs/vignettes_rmd/vignette-main_cache
 docs/vignettes_rmd/vignette-main_files
 *.log
 surveyPrev.Rcheck
+inst/stan/*.rds

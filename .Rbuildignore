@@ -7,3 +7,6 @@ docs/vignettes_rmd/*
 ^extra_indicator\.md$
 ^data-raw$
 ^dev$
+^archive$
+^\.claude$
+^CRAN-SUBMISSION$

@@ -21,11 +21,12 @@
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
+#' # "RH_ANCN_W_N4P" is an indicator for having more than four ANC visits.
+#' #  In previous versions of the package, it is labeled "ancvisit4+".
 #' dhsData1 <- getDHSdata(country = "Zambia",
-#'                                  indicator = "ancvisit4+",
+#'                                  indicator = "RH_ANCN_W_N4P",
 #'                                  year = 2018)
-#' data1 <- getDHSindicator(dhsData1, indicator = "ancvisit4+")
-#'
+#' data1 <- getDHSindicator(dhsData, indicator = "RH_ANCN_W_N4P")
 #'
 #' #------------------------------------------------------------------#
 #' # User-specified function to process the data
@@ -95,7 +96,7 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 # data(match_all_result)
   raw.dat.tmp <- NULL
   ## U5MR ##
-  if(!is.null(indicator) && indicator == "u5mr"){
+  if(!is.null(indicator) && indicator %in% c("u5mr")){
     # convert v5 to factor using libraries already imported in surveyPrev
     Rdata$b5 <- labelled::to_factor(Rdata$b5)
     # Using the same way as surveyPrev in defining 10 year cutoff by month
@@ -158,9 +159,9 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 
   }else if(indicator == "unmet_family"||indicator == "FP_NADA_W_UNT"){
 
-    raw.dat.tmp <- fp_unmet_tot( Rdata)
-  }else if(indicator == "FP_CUSA_W_MOD"){
-    raw.dat.tmp <- fp_cruse_mod(Rdata)
+    raw.dat.tmp <- FP_NADA_W_UNT( Rdata)
+  # }else if(indicator == "FP_CUSA_W_MOD"){
+  #   raw.dat.tmp <- FP_CUSA_W_MOD(Rdata)
 
   }else if(indicator == "nmr"||indicator == "CM_ECMR_C_NNR"){
      if(indicator == "nmr"){
@@ -171,36 +172,36 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 
     raw.dat.tmp <- RH_ANCN_W_N4P(Rdata)
 
-
-  }else if(indicator == "RH_DELA_C_SKP"){
-
-    raw.dat.tmp <- RH_DELA_C_SKP(Rdata)
+#
+#   }else if(indicator == "RH_DELA_C_SKP"){
+#
+#     raw.dat.tmp <- RH_DELA_C_SKP(Rdata)
   }else if(indicator == "DPT3"||indicator == "CH_VACC_C_DP3"){
 
 
     raw.dat.tmp <- CH_VACC_C_DP3(Rdata)
 
+#
+#   }else if(indicator== "CH_VACC_C_MSL") {
+#
+#     raw.dat.tmp <- CH_VACC_C_MSL(Rdata)
 
-  }else if(indicator== "CH_VACC_C_MSL") {
+  }else if(indicator== "PCV3"|| indicator == "CH_VACS_C_PN3") {
 
-    raw.dat.tmp <- CH_VACC_C_MSL(Rdata)
+    raw.dat.tmp <- CH_VACS_C_PN3(Rdata)
 
-  }else if(indicator== "PCV3") {
+  } else if(indicator== "RotaC1"|| indicator == "CH_VACC_C_RT1") {
 
-    raw.dat.tmp <- ch_pneumo3_either(Rdata)
+    raw.dat.tmp <- CH_VACC_C_RT1(Rdata)
 
-  } else if(indicator== "RotaC1") {
-
-    raw.dat.tmp <- ch_rotav1_either(Rdata)
-
-  } else if(indicator =="CH_VACC_C_DP1"){
-    raw.dat.tmp <- CH_VACC_C_DP1(Rdata)
-  }else if(indicator =="CH_VACC_C_BAS"){
-    raw.dat.tmp <- CH_VACC_C_BAS(Rdata)
-  }else if(indicator =="CH_VACC_C_NON"){
-    raw.dat.tmp <- CH_VACC_C_NON(Rdata)
-  }else if(indicator =="CH_DIAT_C_ORT"){
-    raw.dat.tmp <- CH_DIAT_C_ORT(Rdata)
+  # } else if(indicator =="CH_VACC_C_DP1"){
+  #   raw.dat.tmp <- CH_VACC_C_DP1(Rdata)
+  # }else if(indicator =="CH_VACC_C_BAS"){
+  #   raw.dat.tmp <- CH_VACC_C_BAS(Rdata)
+  # }else if(indicator =="CH_VACC_C_NON"){
+  #   raw.dat.tmp <- CH_VACC_C_NON(Rdata)
+  # }else if(indicator =="CH_DIAT_C_ORT"){
+  #   raw.dat.tmp <- CH_DIAT_C_ORT(Rdata)
   }else if(indicator == "wasting"||indicator=="CN_NUTS_C_WH2"){
 
     raw.dat.tmp <- CN_NUTS_C_WH2(Rdata)
@@ -212,47 +213,46 @@ getDHSindicator <- function(Rdata, indicator = NULL, FUN = NULL, nmr.year = 10,
 
   raw.dat.tmp <- AN_ANEM_W_ANY(Rdata)
 
-  }else if(indicator=="CN_BRFS_C_EXB"){
+  # }else if(indicator=="CN_BRFS_C_EXB"){
+  #
+  #   raw.dat.tmp <- CN_BRFS_C_EXB(Rdata)
+  #
+  # } else if(indicator=="CN_ANMC_C_ANY") {
+  #
+  #   raw.dat.tmp <- CN_ANMC_C_ANY(Rdata)
 
-    raw.dat.tmp <- CN_BRFS_C_EXB(Rdata)
+  # } else if(indicator== "AN_NUTS_W_THN") {
+  #
+  #   raw.dat.tmp <- AN_NUTS_W_THN(Rdata)
+  #
+  # }else if(indicator== "ML_NETP_H_IT2") {
+  #
+  #   raw.dat.tmp <- ML_NETP_H_IT2(Rdata)
 
-  } else if(indicator=="CN_ANMC_C_ANY") {
-
-    raw.dat.tmp <- CN_ANMC_C_ANY(Rdata)
-
-  } else if(indicator== "AN_NUTS_W_THN") {
-
-    raw.dat.tmp <- AN_NUTS_W_THN(Rdata)
-
-  }else if(indicator== "ML_NETP_H_IT2") {
-
-    raw.dat.tmp <- ML_NETP_H_IT2(Rdata)
-
-  } else if(indicator== "ML_PMAL_C_RDT") {
-
-    raw.dat.tmp <- ML_PMAL_C_RDT(Rdata)
-
-  } else if(indicator== "HA_HIVP_B_HIV") {
-
-    raw.dat.tmp <- HA_HIVP_B_HIV(Rdata)
+  # } else if(indicator== "ML_PMAL_C_RDT") {
+  #
+  #   raw.dat.tmp <- ML_PMAL_C_RDT(Rdata)
+  #
+  # } else if(indicator== "HA_HIVP_B_HIV") {
+  #
+  #   raw.dat.tmp <- HA_HIVP_B_HIV(Rdata)
 
   } else if(indicator== "WS_TLET_H_IMP"||indicator== "sanitation") {
 
     raw.dat.tmp <- WS_TLET_H_IMP(Rdata)
-
-  }else if(indicator== "WS_TLET_P_BAS") {
-
-    raw.dat.tmp <- WS_TLET_P_BAS(Rdata)
-
-  } else if(indicator== "WS_SRCE_P_BAS") {
-
-    raw.dat.tmp <- WS_SRCE_P_BAS(Rdata)
+#
+#   }else if(indicator== "WS_TLET_P_BAS") {
+#
+#     raw.dat.tmp <- WS_TLET_P_BAS(Rdata)
+#
+#   } else if(indicator== "WS_SRCE_P_BAS") {
+#
+#     raw.dat.tmp <- WS_SRCE_P_BAS(Rdata)
 
   }else{
     stop(paste0(indicator," is not defined in the surveyPrev library right now, please check surveyPrev::indicatorList.",
                 "Please contact the surveyPrev team for further help."))
   }
-
 
 
   if (is.null(raw.dat.tmp)) {

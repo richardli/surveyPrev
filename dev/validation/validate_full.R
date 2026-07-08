@@ -135,10 +135,10 @@ rE <- both("E: admin2 bym2 unstrat + X.unit/X.pixel",
            data = data, cluster.info = cluster.info, admin.info = admin.info2,
            admin = 2, model = "bym2", stratification = FALSE, aggregation = FALSE,
            X.unit = X.unit, X.pixel = pix)
-cmp(rE$inla$res.admin2, rE$stan$res.admin2, "admin2.name.full", "E res.admin2")
-cmp(rE$inla$res.admin1, rE$stan$res.admin1, "admin1.name", "E res.admin1 (agg)")
-cat(sprintf("E res.admin0: inla mean=%.4f stan mean=%.4f | inla sd=%.4f stan sd=%.4f\n",
-            rE$inla$res.admin0$mean, rE$stan$res.admin0$mean,
-            rE$inla$res.admin0$sd, rE$stan$res.admin0$sd))
+cmp(rE$inla$agg.admin2, rE$stan$agg.admin2, "admin2.name.full", "E agg.admin2")
+cmp(rE$inla$agg.admin1, rE$stan$agg.admin1, "admin1.name", "E agg.admin1")
+cat(sprintf("E agg.natl: inla mean=%.4f stan mean=%.4f | inla sd=%.4f stan sd=%.4f\n",
+            rE$inla$agg.natl$mean, rE$stan$agg.natl$mean,
+            rE$inla$agg.natl$sd, rE$stan$agg.natl$sd))
 
 cat("\nALL DONE\n")
