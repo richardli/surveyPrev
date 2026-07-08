@@ -174,7 +174,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                   )
       direct.logit=rbind(direct.logit,direct.logit_na)
       }
-       fit2 <- smoothSurvey(data=NULL,
+       fit2 <- smoothSurvey_engine(data=NULL,
                            direct.est = direct.logit,
                            Amat=Amat,
                            regionVar="region",
@@ -205,7 +205,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
 
 
     }else{
-    fit2 <- smoothSurvey(as.data.frame(modt),
+    fit2 <- smoothSurvey_engine(as.data.frame(modt),
                          responseType ="binary",
                          responseVar= "value",
                          regionVar = "admin2.name.full",
@@ -403,7 +403,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                   )
       direct.logit=rbind(direct.logit,direct.logit_na)
       }
-      fit1 <- smoothSurvey(data=NULL,
+      fit1 <- smoothSurvey_engine(data=NULL,
                            direct.est = direct.logit,
                            Amat=Amat,
                            regionVar="region",
@@ -438,7 +438,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
 
     }else{
         #model
-        fit1 <- smoothSurvey(as.data.frame(modt),
+        fit1 <- smoothSurvey_engine(as.data.frame(modt),
                              responseType ="binary",
                              responseVar= "value",
                              regionVar = "admin1.name",
