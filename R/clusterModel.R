@@ -507,17 +507,32 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
   control.family <- list(hyper = list(rho = list(param = c(overdisp.mean, overdisp.prec), initial = overdisp.mean)))
 
 
-  imod<- INLA::inla(formula,
-                    family="betabinomial",
-                    data=c.dat.tmp,
-                    Ntrials=n,
-                    control.predictor = list(compute=TRUE, link = 1),
-                    control.compute = list(config = TRUE,waic = TRUE),
-                    control.family = control.family)
-
-
   nsamp <- 1000
-  samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
+  engine <- getOption("surveyPrev.engine", "rstan")
+
+  if (identical(engine, "INLA")) {
+    imod <- INLA::inla(formula,
+                       family = "betabinomial",
+                       data = c.dat.tmp,
+                       Ntrials = n,
+                       control.predictor = list(compute = TRUE, link = 1),
+                       control.compute = list(config = TRUE, waic = TRUE),
+                       control.family = control.family)
+    samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
+  } else {
+    .fit <- stan_betabinomial(formula = formula,
+                              data = c.dat.tmp,
+                              model = model,
+                              admin.mat = admin.mat,
+                              Ntrials = "n",
+                              overdisp.mean = overdisp.mean,
+                              overdisp.prec = overdisp.prec,
+                              pc.u = pc.u, pc.alpha = pc.alpha,
+                              pc.u.phi = pc.u.phi, pc.alpha.phi = pc.alpha.phi,
+                              nsamp = nsamp)
+    imod <- .fit$imod
+    samp <- .fit$samp
+  }
 
 
 
