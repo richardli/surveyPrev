@@ -41,10 +41,30 @@ surface that the downstream code consumes:
     (`mean, sd, 0.025quant, 0.5quant, 0.975quant`) computed from
     generated-quantity draws for the appended per-area prediction rows;
   * `imod$stanfit` carries the raw `stanfit`.
-* `stan_smoothSurvey()` returns the consumed subset of SUMMER's
-  `SUMMERmodel.svy` object: `$smooth`, `$draws.est`
-  (`region`, `time`, then `sample:1..nsim` columns of linear-predictor
-  draws), `$HT`, `$direct`, `$fit`; class set to `"SUMMERmodel.svy"`.
+* `surveyPrev::smoothSurvey()` is a **full clone of
+  `SUMMER::smoothSurvey()`** with one added argument,
+  `engine = c("rstan", "INLA")`. All data preparation, HT (direct)
+  estimation, covariate handling and output assembly are shared verbatim
+  between the engines (identical `SUMMERmodel.svy` output: `$smooth`,
+  `$smooth.overall`, `$draws.est` with `region`/`time`/`sample:j` columns
+  of linear-predictor draws, `$HT`, `$direct`, `$draws`, `$fit`). Only
+  three points are engine-specific:
+  1. the model fit (`.stan_smoothSurvey_fit()` maps the smoothSurvey
+     branches onto the two package Stan models);
+  2. linear-predictor draws (`.linpred_draws()`: `inla.rmarginal` vs the
+     `eta` draw matrix);
+  3. posterior samples (`.posterior_sample_engine()`, which emits
+     `inla.posterior.sample()`-shaped `$latent` — Predictor rows first,
+     then `region.struct:k` and `<fixed>:1` — so even SUMMER's
+     `weight.strata` aggregation block runs unchanged for both engines).
+
+  rstan coverage: area-level FH (binary/gaussian, matched and unmatched
+  link, `direct.est` input), unit-level binary beta-binomial (incl.
+  within-area strata and `weight.strata` aggregation), unit-level
+  gaussian nested-error models. Temporal models (`timeVar`), SAR, and
+  custom `formula` additions raise an informative error under rstan.
+  `smooth = FALSE` no longer requires INLA to be installed at all. The
+  function is designed to be portable upstream to SUMMER.
 
 Result: **zero changes** to the aggregation/stratification/pixel code, and
 the saved posterior-draw matrices (`admin1_post`, `urban_post`, …) are
@@ -53,9 +73,10 @@ structurally identical between engines.
 ### 2.2 Engine switch
 
 `options(surveyPrev.engine = "rstan" | "INLA")`, default `"rstan"`.
-One `if` at the fit call site in `clusterModel()`; a one-line dispatcher
-`smoothSurvey_engine()` at the four `fhModel` call sites. This is what makes
-every validation below an A/B test on identical inputs.
+One `if` at the fit call site in `clusterModel()`; everywhere else the
+engine flows through `smoothSurvey(engine = ...)`, whose default is the
+same option. This is what makes every validation below an A/B test on
+identical inputs.
 
 ### 2.3 The `inla=` output slot
 
@@ -100,7 +121,7 @@ betabinomial.pdf`) and the SUMMER/INLA sources:
 
 `SUMMER::smoothSurvey` (≤ 1.4.0) fills `smooth$logit.upper` with the
 **lower** quantile for binary responses (source: `quantile(tmp, (1−CI)/2)`
-for both bounds). `stan_smoothSurvey()` computes the upper quantile
+for both bounds). `surveyPrev::smoothSurvey()` computes the upper quantile
 correctly. Every other quirk is replicated faithfully, including the row
 re-sort (alphabetical by region) that `merge(dat, X, by="region")`
 introduces when covariates are supplied, and the exact survey-package HT
@@ -114,9 +135,9 @@ computation (`svydesign(ids=~cluster+householdID, strata=~strata.full)` →
 | `inst/stan/betabinom.stan` | new — beta-binomial cluster model (iid/BYM2) |
 | `inst/stan/fh_gaussian.stan` | new — gaussian FH smoothing model (iid/BYM2) |
 | `R/stan_shim.R` | new — `stan_betabinomial()`, BYM2 scaling factor, φ PC-prior grid, model cache |
-| `R/stan_smoothsurvey.R` | new — `stan_smoothSurvey()`, `smoothSurvey_engine()` |
+| `R/smoothSurvey.R` | new — full `SUMMER::smoothSurvey()` clone with `engine` argument (supersedes the interim `stan_smoothsurvey.R`) |
 | `R/clusterModel.R` | fit call site swapped behind the engine option |
-| `R/smthdirectEST.R` | 4 call sites → `smoothSurvey_engine()` |
+| `R/smthdirectEST.R`, `R/directEST.R`, `R/directEST_varfix.R` | all `smoothSurvey` call sites resolve to the package-local function (SUMMER import dropped) |
 | `DESCRIPTION` | `rstan` added to Imports |
 | `dev/validation/*.R` | 7 validation scripts (below); `dev/` is build-ignored |
 
@@ -218,8 +239,9 @@ in the pixel branch) — all scenarios still pass against the merged code.
 
 * `imod$waic` is `NA` under the rstan engine (INLA's WAIC is not consumed
   anywhere in the package; could be added via `loo` if wanted).
-* `stan_smoothSurvey()` implements only the area-level `svy=TRUE` modes
-  `fhModel` uses — not SUMMER's unit-level / temporal / SAR modes.
+* `smoothSurvey(engine = "rstan")` covers all modes surveyPrev uses plus
+  unit-level and unmatched-link models — but not the temporal / SAR /
+  custom-formula modes (informative error; use `engine = "INLA"`).
 * Stan models compile on first use (~40 s once per session). Packaging with
   `rstantools` (pre-compiled `src/`) is the natural next step if the branch
   graduates from experiment to release.
