@@ -1,16 +1,20 @@
-// Gaussian Fay-Herriot smoothing model: rstan replacement for the INLA fit
-// inside SUMMER::smoothSurvey() as used by surveyPrev::fhModel().
+// Gaussian smoothing model: rstan replacement for the INLA gaussian-family
+// fits inside smoothSurvey(). Generalised to cover all gaussian branches:
 //
-// Model (matches INLA exactly):
-//   y_i    ~ Normal(eta_i, sd_i)        observation sd fixed and known
-//                                       (INLA: gaussian family with precision
-//                                        fixed at 1 and scale = 1/var_i)
-//   eta    = X beta + re[region]
-//   re     = iid or BYM2 with PC priors, identical to betabinom.stan.
+//   * area-level Fay-Herriot, matched link (INLA: precision fixed at 1,
+//     scale = 1/var_i):        y_i ~ N(eta_i, sd_i), sd_i known
+//   * area-level unmatched link (control.family link="logit"):
+//                              y_i ~ N(inv_logit(eta_i), sd_i), sd_i known
+//   * unit-level nested error model (free observation variance with INLA's
+//     default loggamma(1, 5e-5) prior on the precision)
 //
-// One eta per data row (a row per region, in the caller's row order);
-// rows with missing y contribute nothing to the likelihood but their
-// linear predictor is still drawn (INLA's NA-response prediction).
+//   eta = X beta + re[region],  re = iid or BYM2 with PC priors
+//   (identical to betabinom.stan).
+//
+// Rows (data) and effects (regions) are decoupled: Nrow data rows index into
+// R region effects; rows with missing response contribute nothing to the
+// likelihood but their linear predictor is still produced (INLA's
+// NA-response prediction).
 
 functions {
   real grid_lpdf(real x, vector gx, vector glp) {
@@ -29,15 +33,20 @@ functions {
 }
 
 data {
-  int<lower=1> R;                       // number of data rows (= regions)
+  int<lower=1> Nrow;                    // data rows
+  int<lower=1> R;                       // region effects (nrow(Amat))
   int<lower=1> P;                       // fixed-effect columns
-  matrix[R, P] Xall;                    // design matrix, one row per region
-  array[R] int<lower=1, upper=R> region;// region index (structured effect id)
+  matrix[Nrow, P] Xall;                 // design matrix, one row per data row
+  array[Nrow] int<lower=1, upper=R> region;
 
-  int<lower=0> N;                       // rows with observed y
-  array[N] int<lower=1, upper=R> obs_idx;
-  vector[N] y;                          // logit-scale direct estimates
-  vector<lower=0>[N] sdv;               // known sd = sqrt(HT.logit.var)
+  int<lower=0> N;                       // rows entering the likelihood
+  array[N] int<lower=1, upper=Nrow> obs_idx;
+  vector[N] y;
+  vector<lower=0>[N] sdv;               // known sd (ignored if free_prec)
+
+  int<lower=0, upper=1> link_logit;     // mean = inv_logit(eta) instead of eta
+  int<lower=0, upper=1> free_prec;      // estimate common obs precision
+                                        // (INLA default loggamma(1, 5e-5))
 
   vector<lower=0>[P] beta_prec;         // 0 => flat prior (intercept)
   real<lower=0> lambda;                 // PC prec prior: sigma ~ Exp(lambda)
@@ -58,6 +67,7 @@ parameters {
   vector[R] v;
   vector[use_bym2 ? R : 0] u;
   array[use_bym2 ? 1 : 0] real<lower=0, upper=1> phi;
+  array[free_prec ? 1 : 0] real<lower=0> tau_obs;
 }
 
 transformed parameters {
@@ -82,12 +92,20 @@ model {
     sum(u) ~ normal(0, 0.001 * R);
     target += grid_lpdf(phi[1] | phi_grid, phi_logp);
   }
+  if (free_prec == 1) {
+    target += gamma_lpdf(tau_obs[1] | 1, 5e-5);   // INLA default family prec
+  }
   {
-    vector[R] eta = Xall * beta + re[region];
-    y ~ normal(eta[obs_idx], sdv);
+    vector[Nrow] eta = Xall * beta + re[region];
+    vector[N] mu = link_logit == 1 ? inv_logit(eta[obs_idx]) : eta[obs_idx];
+    if (free_prec == 1) {
+      y ~ normal(mu, inv_sqrt(tau_obs[1]));
+    } else {
+      y ~ normal(mu, sdv);
+    }
   }
 }
 
 generated quantities {
-  vector[R] eta = Xall * beta + re[region];
+  vector[Nrow] eta = Xall * beta + re[region];
 }

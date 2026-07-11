@@ -19,7 +19,7 @@
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
 #' @import dplyr
-#' @importFrom SUMMER smoothSurvey expit
+#' @importFrom SUMMER expit
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
@@ -124,7 +124,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     if("age" %in% colnames(modt)){
       smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin2.name.full")
     }else{
-      smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
+      smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
                                    regionVar = "admin2.name.full",

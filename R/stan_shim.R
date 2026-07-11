@@ -232,3 +232,22 @@ stan_betabinomial <- function(formula, data, model = c("bym2", "iid"),
 
   list(imod = imod, samp = samp)
 }
+
+#' Compiled-model getter for the gaussian smoothing model
+#' @keywords internal
+get_fh_stanmodel <- function() {
+  if (!is.null(.surveyPrev_stan_cache$fh_gaussian)) {
+    return(.surveyPrev_stan_cache$fh_gaussian)
+  }
+  f <- system.file("stan", "fh_gaussian.stan", package = "surveyPrev")
+  if (identical(f, "") || !file.exists(f)) {
+    cand <- file.path("inst", "stan", "fh_gaussian.stan")
+    if (file.exists(cand)) f <- cand
+  }
+  if (identical(f, "") || !file.exists(f)) {
+    stop("Could not locate inst/stan/fh_gaussian.stan")
+  }
+  mod <- rstan::stan_model(f)
+  .surveyPrev_stan_cache$fh_gaussian <- mod
+  mod
+}

@@ -22,7 +22,7 @@
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
 #' @import dplyr
-#' @importFrom SUMMER smoothSurvey expit
+#' @importFrom SUMMER expit
 #' @importFrom stats qlogis
 #' @examples
 #' \dontrun{

@@ -31,7 +31,7 @@
 #' @importFrom stats sd quantile rnorm
 #' @importFrom matrixStats colMedians
 #' @importFrom stats median na.omit
-#' @importFrom SUMMER smoothSurvey
+#' @importFrom SUMMER expit
 #' @author Qianyu Dong
 #' @examples
 #' \dontrun{
