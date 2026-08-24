@@ -15,6 +15,8 @@ stan_betabinomial <- function(formula, data, model = c("bym2", "iid"),
   model <- match.arg(model)
   bym2.phi.prior <- match.arg(bym2.phi.prior)
 
+  # clusterModel builds an INLA-style formula containing f(sID, ...). Stan
+  # receives only its ordinary fixed-effect terms; sID is handled separately.
   tt <- stats::terms(formula)
   labs <- attr(tt, "term.labels")
   keep <- labs[!grepl("^f\\(", labs)]
@@ -31,6 +33,7 @@ stan_betabinomial <- function(formula, data, model = c("bym2", "iid"),
   ntr <- data[[Ntrials]]
   sID <- data[["sID"]]
   obs <- which(!is.na(yval) & !is.na(ntr))
+  # Appended rows with missing outcomes request predictions for every region.
   pred <- which(is.na(yval))
   R <- max(sID, na.rm = TRUE)
 
@@ -48,6 +51,8 @@ stan_betabinomial <- function(formula, data, model = c("bym2", "iid"),
     space_model <- 0L
   }
 
+  # Encode the cluster likelihood and the common spatial/temporal schema used
+  # by betabinom.stan. This entry point has no temporal effect or interaction.
   stan_data <- list(
     N = length(obs), P = ncol(mm), X = mm[obs, , drop = FALSE],
     y = as.array(as.integer(yval[obs])),
@@ -80,12 +85,15 @@ stan_betabinomial <- function(formula, data, model = c("bym2", "iid"),
     chains = stan.chains, iter = stan.iter, warmup = stan.warmup,
     seed = stan.seed, cores = stan.cores, ...
   )
+  # Compile/cache the model, then pass user sampling controls to rstan.
   fit <- do.call(
     rstan::sampling,
     c(list(object = get_betabinom_stanmodel(), data = stan_data),
       sampling_args)
   )
 
+  # Repackage draws with INLA latent names so the existing clusterModel
+  # aggregation code can be shared by the INLA and Stan engines.
   post <- rstan::extract(
     fit, pars = c("beta", "re_space", "fitted"), permuted = TRUE
   )
@@ -99,6 +107,7 @@ stan_betabinomial <- function(formula, data, model = c("bym2", "iid"),
     list(latent = latent)
   })
 
+  # Summary rows are filled only for the appended regional prediction rows.
   fitted <- post$fitted
   quantiles <- t(apply(fitted, 2, stats::quantile,
                        probs = c(0.025, 0.5, 0.975)))

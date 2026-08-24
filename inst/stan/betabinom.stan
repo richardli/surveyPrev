@@ -1,4 +1,5 @@
 functions {
+  // Linear interpolation of a log prior tabulated on the phi scale in R.
   real interpolate_lpdf(real x, vector gx, vector glp) {
     int K = num_elements(gx);
     int lo = 1;
@@ -14,6 +15,8 @@ functions {
       (glp[hi] - glp[lo]);
   }
 
+  // Analytic BYM2 PC prior: pi(phi) = lambda exp(-lambda d(phi)) |d'(phi)|.
+  // gamma and f summarize the scaled graph spectrum used to compute d(phi).
   real pc_bym2_phi_lpdf(real phi, vector gamma, real f, real lambda) {
     int n = num_elements(gamma);
     real base = n * f - sum(gamma);
@@ -30,6 +33,7 @@ functions {
 }
 
 data {
+  // Observed cluster totals and their fixed-effect design matrix.
   int<lower=0> N;
   int<lower=1> P;
   matrix[N, P] X;
@@ -39,16 +43,19 @@ data {
   array[N] int<lower=1, upper=R> region;
   array[N] int<lower=1> time;
 
+  // Prediction rows include appended rows for areas without observations.
   int<lower=0> Npred;
   matrix[Npred, P] Xpred;
   array[Npred] int<lower=1, upper=R> region_pred;
   array[Npred] int<lower=1> time_pred;
 
+  // Fixed-effect, overdispersion, and PC standard-deviation prior inputs.
   vector<lower=0>[P] beta_prec;
   real od_mean;
   real<lower=0> od_sd;
   real<lower=0> lambda;
 
+  // Spatial encoding: 0 IID, 1 BYM2/ICAR, 2 SAR.
   int<lower=0, upper=2> space_model;
   int<lower=0> N_edges;
   array[N_edges] int<lower=1, upper=R> node1;
@@ -62,6 +69,7 @@ data {
   vector<lower=0>[R] node_scale;
   matrix[R, R] W_sar;
 
+  // BYM2 phi prior: 1 interpolates an INLA table; 2 uses the spectrum above.
   int<lower=1, upper=2> phi_prior_type;
   int<lower=2> Kphi;
   vector[Kphi] phi_grid;
@@ -70,6 +78,7 @@ data {
   real phi_f;
   real<lower=0> phi_lambda;
 
+  // Temporal main effects and Knorr-Held interaction type.
   int<lower=0, upper=1> has_time;
   int<lower=1> T;
   int<lower=1, upper=2> time_model;
@@ -79,6 +88,7 @@ data {
 }
 
 parameters {
+  // v_space is IID; u_space is the structured ICAR part used only by BYM2.
   vector[P] beta;
   real logit_rho;
   real<lower=0> sigma_space;
@@ -87,6 +97,7 @@ parameters {
   array[space_model == 1 ? 1 : 0] real<lower=0, upper=1> phi;
   array[space_model == 2 ? 1 : 0] real rho_raw;
 
+  // Zero-length declarations switch unused temporal/interaction terms off.
   array[has_time ? 1 : 0] real<lower=0> sigma_time_unstruct;
   array[has_time ? 1 : 0] real<lower=0> sigma_time_struct;
   vector[has_time ? T : 0] z_time_unstruct;
@@ -108,9 +119,11 @@ transformed parameters {
   vector[R * T] re_st = rep_vector(0, R * T);
 
   if (space_model == 1) {
+    // BYM2: b = sigma [sqrt(1-phi) v + sqrt(phi) u*].
     re_space = sigma_space * (sqrt(1 - phi[1]) * v_space +
       sqrt(phi[1]) * (u_space ./ sqrt(node_scale)));
   } else if (space_model == 2) {
+    // SAR: b = sigma (I - rho W)^(-1) v, with -1 < rho < 1.
     real rho = -1 + 2 * inv_logit(rho_raw[1]);
     matrix[R, R] A = diag_matrix(rep_vector(1.0, R)) - rho * W_sar;
     re_space = sigma_space * mdivide_left(A, v_space);
@@ -118,6 +131,7 @@ transformed parameters {
     re_space = sigma_space * v_space;
   }
   if (has_time == 1) {
+    // Time main effect = IID noise + scaled RW1/RW2 effect.
     re_time_unstruct = sigma_time_unstruct[1] * z_time_unstruct;
     re_time_struct = sigma_time_struct[1] * u_time / sqrt(time_scale);
     if (time_model == 2 && constr == 1) {
@@ -126,6 +140,7 @@ transformed parameters {
     }
   }
   if (st_type > 0) {
+    // Interactions are stored time-major: k = (t - 1) R + r.
     for (t in 1:T) {
       for (r in 1:R) {
         int k = (t - 1) * R + r;
@@ -142,6 +157,7 @@ transformed parameters {
 }
 
 model {
+  // A zero beta precision denotes the flat intercept prior used by INLA.
   for (p in 1:P) {
     if (beta_prec[p] > 0)
       target += normal_lpdf(beta[p] | 0, inv_sqrt(beta_prec[p]));
@@ -151,9 +167,11 @@ model {
   v_space ~ normal(0, 1);
 
   if (space_model == 1) {
+    // ICAR kernel: log pi(u) = -1/2 sum_(r~s) (u_r - u_s)^2.
     target += -0.5 * dot_self(u_space[node1] - u_space[node2]);
     if (N_singletons > 0) u_space[singleton] ~ normal(0, 1);
     if (constr == 1) {
+      // One soft sum-to-zero constraint identifies each connected component.
       for (cc in 1:N_components) {
         if (component_size[cc] > 1) {
           real component_sum = 0;
@@ -177,6 +195,7 @@ model {
     sigma_time_struct[1] ~ exponential(lambda);
     z_time_unstruct ~ normal(0, 1);
     if (time_model == 1) {
+      // RW1 penalizes first differences; RW2 penalizes second differences.
       for (t in 2:T) target += normal_lpdf(u_time[t] - u_time[t - 1] | 0, 1);
     } else {
       for (t in 3:T)
@@ -196,8 +215,10 @@ model {
   if (st_type > 0) {
     sigma_st[1] ~ exponential(lambda);
     if (st_type == 1) {
+      // Type I: IID space x IID time.
       u_st ~ normal(0, 1);
     } else if (st_type == 3) {
+      // Type III: Besag space x IID time (one ICAR field per time).
       for (t in 1:T) {
         int offset = (t - 1) * R;
         for (e in 1:N_edges)
@@ -218,6 +239,7 @@ model {
         }
       }
     } else if (st_type == 2) {
+      // Type II: IID space x RW time (one RW trajectory per region).
       for (r in 1:R) {
         if (time_model == 1) {
           for (t in 2:T)
@@ -241,6 +263,8 @@ model {
         }
       }
     } else {
+      // Type IV: Besag space x RW time. Penalize spatial contrasts of the
+      // temporal first/second differences, i.e. (Delta^q_t u_r - Delta^q_t u_s).
       if (time_model == 1) {
         for (t in 2:T) {
           for (e in 1:N_edges) {
@@ -313,6 +337,8 @@ model {
   }
 
   {
+    // p_i = logit^-1(eta_i), kappa = (1-rho)/rho, and
+    // y_i ~ BetaBinomial(n_i, p_i kappa, (1-p_i) kappa).
     real rho = inv_logit(logit_rho);
     real concentration = (1 - rho) / rho;
     for (i in 1:N) {
@@ -328,6 +354,7 @@ model {
 }
 
 generated quantities {
+  // Return linear predictors and prevalence for every requested output row.
   vector[Npred] fitted;
   vector[Npred] eta;
   for (i in 1:Npred) {

@@ -1,11 +1,13 @@
 .diag_stan <- function(fit, rhat.threshold, ess.ratio.threshold,
                        ebfmi.threshold) {
+  # Sampler diagnostics are computed per retained chain; warmup is excluded.
   sampler <- rstan::get_sampler_params(fit, inc_warmup = FALSE)
   divergences <- sum(vapply(sampler, function(x) sum(x[, "divergent__"]),
                             numeric(1)))
   total <- sum(vapply(sampler, nrow, integer(1)))
 
   stan.args <- tryCatch(fit@stan_args, error = function(e) NULL)
+  # Compare treedepth against the value actually used by rstan when available.
   max.depth <- 10L
   if (length(stan.args) && !is.null(stan.args[[1]]$control$max_treedepth)) {
     max.depth <- stan.args[[1]]$control$max_treedepth
@@ -19,6 +21,7 @@
   }, numeric(1))
 
   smry <- rstan::summary(fit, probs = c(0.05, 0.5, 0.95))$summary
+  # Flag parameter-level convergence/mixing, while reporting aggregate counts.
   rhat <- smry[, "Rhat"]
   neff <- smry[, "n_eff"]
   rhat.bad <- sum(is.finite(rhat) & rhat > rhat.threshold)

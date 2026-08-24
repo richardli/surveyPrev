@@ -1,6 +1,8 @@
 .smoothsurvey_spatial_data_stan <- function(Amat, is.iid.space, space.model,
                                             type.st, bym2.phi.prior,
                                             pc.u.phi, pc.alpha.phi) {
+  # Decide which graph representation is needed by the spatial main effect
+  # and by Type III/IV interactions, even when the main effect itself is IID.
   R <- nrow(Amat)
   needs_besag <- !is.iid.space && (space.model == "bym2" ||
     type.st %in% c(3L, 4L))
@@ -15,6 +17,7 @@
   }
 
   W.sar <- matrix(0, R, R)
+  # Stan code: 0 = IID, 1 = BYM2, 2 = row-standardized SAR.
   if (is.iid.space) {
     space.code <- 0L
   } else if (space.model == "bym2") {
@@ -49,6 +52,8 @@
                                    stan.warmup = 2000, stan.seed = 1,
                                    stan.cores = getOption("mc.cores", 1L),
                                    stan.control = NULL) {
+  # SUMMER has already standardized variable names and indices in dat. Here we
+  # translate its fixed formula and model flags into the fixed Stan data schema.
   rhs <- sub("^[^~]*~", "", formulatext)
   fixed_formula <- stats::as.formula(paste("~", rhs))
   mf <- stats::model.frame(fixed_formula, data = dat,
@@ -61,6 +66,8 @@
   region <- as.integer(dat$region.struct)
 
   has.time <- !is.null(dat$time.struct)
+  # RW order is encoded as 1/2; scaling makes its marginal variance comparable
+  # across different numbers of periods.
   T <- if (has.time) max(dat$time.struct) else 1L
   time <- if (has.time) as.integer(dat$time.struct) else rep.int(1L, Nrow)
   time.code <- if (tolower(time.model) == "rw1") 1L else 2L
@@ -79,8 +86,10 @@
   )
   graph <- spatial$graph
   beta.prec <- as.array(ifelse(colnms == "(Intercept)", 0, 0.001))
+  # PC prior P(sigma > pc.u) = pc.alpha implies lambda = -log(alpha) / u.
   lambda <- -log(pc.alpha) / pc.u
 
+  # Both Stan likelihoods consume this common latent-effect specification.
   shared <- list(
     R = R,
     beta_prec = beta.prec,
@@ -107,6 +116,7 @@
   )
 
   if (is.unit.level && response.type == "binary") {
+    # Aggregated cluster counts use a beta-binomial likelihood.
     yresp <- dat$y
     ntot <- dat$total
     obs <- which(!is.na(yresp) & !is.na(ntot) & ntot > 0)
@@ -132,6 +142,8 @@
     )
     eta.draws <- post$eta
   } else {
+    # All Gaussian branches share fh_gaussian.stan. free.prec estimates an
+    # observation variance; otherwise sdv contains known sampling errors.
     if (is.unit.level && response.type == "gaussian") {
       yresp <- dat$y
       vknown <- NULL
@@ -196,6 +208,8 @@
   }
 
   ndraw <- nrow(eta.draws)
+  # SUMMER post-processing expects INLA-like posterior samples named by latent
+  # predictor, spatial, temporal, interaction, and fixed-effect components.
   samples <- lapply(seq_len(ndraw), function(i) {
     values <- c(eta.draws[i, ], post$re_space[i, ])
     names <- c(paste0("Predictor:", seq_len(Nrow)),
@@ -233,6 +247,8 @@
     stan.seed = 1, stan.cores = getOption("mc.cores", 1L),
     stan.control = NULL) {
   bym2.phi.prior <- match.arg(bym2.phi.prior)
+  # This adapter implements the small backend contract consumed by SUMMER:
+  # fit the model, return linear-predictor draws, and expose latent samples.
   list(
     name = "rstan",
     fit = function(input) {
@@ -280,6 +296,8 @@ smoothSurveyStan <- function(...,
     stan.chains = 3, stan.iter = 4000, stan.warmup = 2000,
     stan.seed = 1, stan.cores = getOption("mc.cores", 1L),
     stan.control = NULL) {
+  # Keep validation here at the public boundary, before SUMMER performs its
+  # engine-independent data preparation and output assembly.
   dots <- list(...)
   if (".backend" %in% names(dots)) {
     stop(".backend is reserved for surveyPrev internals.", call. = FALSE)
@@ -336,6 +354,7 @@ smoothSurveyStan <- function(...,
     stan.cores = stan.cores, stan.control = stan.control
   )
   dots$constr <- constr
+  # SUMMER calls the injected backend after preparing the survey/model data.
   do.call(SUMMER::smoothSurvey, dots)
 }
 
@@ -346,6 +365,8 @@ smoothSurveyStan <- function(...,
     stan.seed = 1, stan.cores = getOption("mc.cores", 1L),
     stan.control = NULL) {
   engine <- match.arg(engine, c("rstan", "INLA"))
+  # Internal compatibility bridge used by fhModel(); users call either
+  # SUMMER::smoothSurvey() or surveyPrev::smoothSurveyStan() directly.
   if (engine == "INLA") {
     SUMMER::smoothSurvey(..., constr = constr)
   } else {

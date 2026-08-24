@@ -1,4 +1,5 @@
 .diag_row <- function(check, status, value, threshold, message) {
+  # Normalize engine-specific checks into one printable table.
   data.frame(
     check = check, status = status, value = as.character(value),
     threshold = as.character(threshold), message = message,
@@ -47,6 +48,8 @@
 }
 
 .diag_inla <- function(fit, cpo.failure.threshold, pit.p.threshold) {
+  # These checks describe the fitted INLA object itself, not transformed or
+  # aggregated estimates produced later by surveyPrev/SUMMER.
   mode.status <- if (!is.null(fit$mode$status)) fit$mode$status else NA
   mode.ok <- is.na(mode.status) || identical(as.integer(mode.status), 0L)
 
@@ -149,6 +152,8 @@ diagModel <- function(object, rhat.threshold = 1.01,
                       ebfmi.threshold = 0.3,
                       cpo.failure.threshold = 0,
                       pit.p.threshold = 0.01) {
+  # Resolve nested package wrappers once, then delegate to the engine-specific
+  # diagnostic implementation.
   resolved <- .find_model_fit(object)
   result <- if (resolved$engine == "rstan") {
     .diag_stan(resolved$fit, rhat.threshold, ess.ratio.threshold,
@@ -164,6 +169,7 @@ diagModel <- function(object, rhat.threshold = 1.01,
 
 #' @export
 print.diagModel <- function(x, ...) {
+  # Printing is intentionally compact; full vectors remain in x$details.
   cat("Model diagnostics (", x$engine, ")\n", sep = "")
   print(x$summary, row.names = FALSE)
   invisible(x)

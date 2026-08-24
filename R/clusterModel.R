@@ -90,6 +90,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
                        stan.warmup = 2000, stan.seed = 1,
                        stan.cores = getOption("mc.cores", 1L), ...){
 
+  # Data preparation, formula construction, and posterior aggregation are
+  # shared across engines. Only the fitting block below switches INLA/Stan.
   engine <- match.arg(engine, c("rstan", "INLA"))
   model <- match.arg(model)
   bym2.phi.prior <- match.arg(bym2.phi.prior)
@@ -286,7 +288,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
   nregion <- dim(admin_name_table)[1]
   admin_name_table$sID <- 1: dim(admin_name_table)[1] #sID is sorted by admin1.name then admin2.name alphabetically.
 
-  # add new rows corresponding to each region
+  # Add one missing-response row per region. Both engines treat these rows as
+  # prediction locations, which guarantees output for unsampled regions.
 
  if(admin==1){
    c.dat.tmp[(dim(c.dat.tmp)[1]+1):(dim(c.dat.tmp)[1]+nregion),paste0("admin",admin,".name")] <- admin_name_table[,which(colnames(admin_name_table)== paste0("admin",admin,".name"))]
@@ -330,6 +333,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
 
 
   ## MODEL setup
+  # Build one INLA-style formula. stan_betabinomial() later removes f(sID, ...)
+  # and sends the remaining fixed-effect design matrix to Stan.
   if(stratification==F){
     if(model=="iid"){
       # pc.u = 1
@@ -542,6 +547,8 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
                        control.family = control.family)
     samp <- INLA::inla.posterior.sample(n = nsamp, result = imod, intern = TRUE)
   } else {
+    # The Stan adapter returns an INLA-shaped fit/sample pair so all code after
+    # this branch can use the same latent names and aggregation logic.
     .fit <- stan_betabinomial(formula = formula,
                               data = c.dat.tmp,
                               model = model,

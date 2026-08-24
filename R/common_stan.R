@@ -4,6 +4,8 @@
 .surveyPrev_stan_cache <- new.env(parent = emptyenv())
 
 .get_stanmodel <- function(name) {
+  # Resolve an installed Stan source (or the development copy), compile it
+  # once, and reuse the stanmodel for subsequent fits in this R session.
   cached <- .surveyPrev_stan_cache[[name]]
   if (!is.null(cached)) return(cached)
 
@@ -22,10 +24,13 @@
   model
 }
 
+# Small accessors keep callers independent of Stan source filenames.
 get_betabinom_stanmodel <- function() .get_stanmodel("betabinom")
 get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
 
 .validate_adjacency_stan <- function(W) {
+  # Stan uses a binary, undirected edge list. Numerical row-standardized
+  # weights are therefore reduced to their nonzero neighbour structure.
   W <- as.matrix(W)
   if (length(dim(W)) != 2L || nrow(W) != ncol(W) || nrow(W) < 1L) {
     stop("Amat must be a non-empty square adjacency matrix.", call. = FALSE)
@@ -52,6 +57,8 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
 }
 
 .graph_components_stan <- function(W) {
+  # Breadth-first traversal labels connected components for componentwise
+  # ICAR scaling and sum-to-zero constraints.
   n <- nrow(W)
   component <- integer(n)
   current <- 0L
@@ -75,6 +82,8 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
 }
 
 .rw_scaling_factor_stan <- function(n, order = 1L) {
+  # Scale RW1/RW2 effects by the geometric mean marginal variance of Q^+,
+  # giving sigma the same generalized-variance interpretation across T.
   if (order == 1L && n < 2L) return(1)
   if (order == 2L && n < 3L) return(1)
   D <- diff(diag(n), differences = order)
@@ -97,6 +106,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
   W <- .validate_adjacency_stan(W)
   R <- nrow(W)
   graph <- .graph_components_stan(W)
+  # Q = D - W is singular within each non-singleton component.
   Q <- diag(rowSums(W)) - W
   Q.scaled <- matrix(0, R, R)
   marginal.var <- numeric(R)
@@ -109,6 +119,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
       marginal.var[idx] <- 1
       next
     }
+    # Use Q^+ to scale each component to generalized marginal variance one.
     Qc <- Q[idx, idx, drop = FALSE]
     ee <- eigen(Qc, symmetric = TRUE)
     keep <- ee$values > max(ee$values) * 1e-10
@@ -120,6 +131,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
     Q.scaled[idx, idx] <- scale * Qc
   }
 
+  # Store every undirected edge once; Stan evaluates squared edge differences.
   edges <- which(upper.tri(W) & W != 0, arr.ind = TRUE)
   node1 <- if (nrow(edges)) as.integer(edges[, 1L]) else integer()
   node2 <- if (nrow(edges)) as.integer(edges[, 2L]) else integer()
@@ -131,6 +143,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
   }
   rankdef <- sum(graph$size > 1L)
 
+  # The eigenvalue summaries parameterize the analytic PC prior for phi.
   eigenvalues <- sort(eigen(Q.scaled, symmetric = TRUE,
                             only.values = TRUE)$values, decreasing = TRUE)
   eigenvalues[abs(eigenvalues) < max(abs(eigenvalues), 1) * 1e-10] <- 0
@@ -164,6 +177,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
         call. = FALSE
       )
     }
+    # Tabulate INLA's log-density once in R; Stan linearly interpolates it.
     prior.fun <- getFromNamespace("inla.pc.bym.phi", "INLA")(
       eigenvalues = eigenvalues,
       marginal.variances = marginal.var,
@@ -207,6 +221,8 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
 }
 
 .empty_spatial_data_stan <- function(R) {
+  # Supply dimensionally valid placeholders when no Besag field is fitted.
+  # This keeps one stable Stan data schema for IID and SAR models.
   list(
     N_edges = 0L,
     node1 = as.array(integer()),
@@ -231,6 +247,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
 .stan_sampling_args <- function(chains = 3, iter = 4000, warmup = 2000,
                                 seed = 1, cores = getOption("mc.cores", 1L),
                                 control = NULL, ...) {
+  # Centralize defaults so every public Stan interface samples consistently.
   if (is.null(control)) {
     control <- list(max_treedepth = 12, adapt_delta = 0.95)
   }
@@ -239,6 +256,7 @@ get_fh_stanmodel <- function() .get_stanmodel("fh_gaussian")
 }
 
 .stan_retained_draw_count <- function(chains, iter, warmup) {
+  # SUMMER's nsim must equal chains * (iter - warmup) for the Stan backend.
   values <- c(chains = chains, iter = iter, warmup = warmup)
   if (length(chains) != 1L || length(iter) != 1L || length(warmup) != 1L ||
       anyNA(values) || any(!is.finite(values)) ||

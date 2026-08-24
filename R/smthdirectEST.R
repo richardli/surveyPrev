@@ -58,6 +58,10 @@
 
 fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE,admin, CI = 0.95,  model = c("bym2", "iid"), aggregation = FALSE, alt.strata = NULL,var.fix=FALSE, ...){
 
+  # fhModel prepares direct or unit-level inputs, then .smoothSurvey_dispatch()
+  # selects SUMMER/INLA or the surveyPrev Stan backend from engine in `...`.
+  # The returned draws use a common shape, so transformations and aggregation
+  # below remain engine-independent.
 
   cvf <- function(p, sd) {
     pmax(sd / p, sd / (1 - p))
@@ -175,6 +179,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                   )
       direct.logit=rbind(direct.logit,direct.logit_na)
       }
+       # Variance-fixed/mortality inputs enter the Gaussian FH Stan program as
+       # direct logit estimates with known sampling variances.
        fit2 <- .smoothSurvey_dispatch(data=NULL,
                            direct.est = direct.logit,
                            Amat=Amat,
@@ -206,6 +212,8 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
 
 
     }else{
+    # Otherwise SUMMER prepares cluster survey estimates before dispatching to
+    # the requested smoothing engine.
     fit2 <- .smoothSurvey_dispatch(as.data.frame(modt),
                          responseType ="binary",
                          responseVar= "value",
@@ -404,6 +412,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                   )
       direct.logit=rbind(direct.logit,direct.logit_na)
       }
+      # Admin-1 mortality inputs follow the same Gaussian direct-estimate path.
       fit1 <- .smoothSurvey_dispatch(data=NULL,
                            direct.est = direct.logit,
                            Amat=Amat,
@@ -439,6 +448,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
 
     }else{
         #model
+        # Standard admin-1 inputs use SUMMER's shared survey-data preparation.
         fit1 <- .smoothSurvey_dispatch(as.data.frame(modt),
                              responseType ="binary",
                              responseVar= "value",
