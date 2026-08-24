@@ -1,4 +1,4 @@
-## Validate the full surveyPrev::smoothSurvey() clone (engine = INLA vs rstan)
+## Validate SUMMER::smoothSurvey() (INLA) against the surveyPrev Stan backend.
 ## on the SUMMER modes NOT exercised by fhModel():
 ##   J: unit-level binary (beta-binomial), stratified, weight.strata aggregation
 ##   K: unit-level gaussian nested-error model
@@ -36,8 +36,8 @@ wstrata$rural <- 1 - wstrata$urban
 
 both <- function(label, ...) {
   cat("\n=============", label, "=============\n")
-  fi <- smoothSurvey(engine = "INLA", ...)
-  fs <- smoothSurvey(engine = "rstan", ...)
+  fi <- SUMMER::smoothSurvey(...)
+  fs <- surveyPrev::smoothSurveyStan(...)
   list(i = fi, s = fs)
 }
 cmp <- function(si, ss, label, cols = c("mean", "var", "lower", "upper")) {
@@ -79,12 +79,12 @@ rL <- both("L: area-level binary, unmatched.link",
 cmp(rL$i$smooth, rL$s$smooth, "L smooth")
 
 ## ---------- M: smooth = FALSE parity ----------
-mi <- smoothSurvey(engine = "INLA", data = udat, Amat = W,
+mi <- SUMMER::smoothSurvey(data = udat, Amat = W,
                    response.type = "binary", responseVar = "yvar",
                    regionVar = "region", strataVar = "strata.ur",
                    weightVar = "weights", clusterVar = "~clusterid+hh",
                    CI = 0.95, smooth = FALSE)
-ms <- smoothSurvey(engine = "rstan", data = udat, Amat = W,
+ms <- surveyPrev::smoothSurveyStan(data = udat, Amat = W,
                    response.type = "binary", responseVar = "yvar",
                    regionVar = "region", strataVar = "strata.ur",
                    weightVar = "weights", clusterVar = "~clusterid+hh",
@@ -92,14 +92,5 @@ ms <- smoothSurvey(engine = "rstan", data = udat, Amat = W,
 cat("\n============= M: smooth = FALSE =============\n")
 cat(sprintf("M HT identical: %s\n",
             isTRUE(all.equal(mi$HT, ms$HT, tolerance = 1e-12))))
-
-## ---------- unsupported-mode errors ----------
-eh <- tryCatch(smoothSurvey(engine = "rstan", data = udat, Amat = W,
-                            response.type = "binary", responseVar = "yvar",
-                            regionVar = "region", strataVar = "strata.ur",
-                            weightVar = "weights", clusterVar = "~clusterid+hh",
-                            timeVar = "hh"),
-               error = function(e) conditionMessage(e))
-cat("\ntimeVar under rstan errors as expected:", grepl("temporal", eh), "\n")
 
 cat("\nALL DONE\n")

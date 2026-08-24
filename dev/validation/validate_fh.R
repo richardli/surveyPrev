@@ -107,12 +107,12 @@ dl <- data.frame(region = adm1,
                  HT.logit.est = alpha1[match(adm1, adm2_tab$admin1.name)] + rnorm(A1, 0, 0.15),
                  HT.logit.var = runif(A1, 0.02, 0.08))
 dl$HT.logit.est[2] <- NA; dl$HT.logit.var[2] <- NA   # one missing region
-hi <- smoothSurvey(engine = "INLA", data = NULL, direct.est = dl, Amat = W1,
+hi <- SUMMER::smoothSurvey(data = NULL, direct.est = dl, Amat = W1,
                            regionVar = "region", responseVar = "HT.logit.est",
                            direct.est.var = "HT.logit.var",
                            response.type = "gaussian", CI = 0.95,
                            smooth = TRUE, save.draws = TRUE)
-hs <- smoothSurvey(engine = "rstan", data = NULL, direct.est = dl, Amat = W1,
+hs <- surveyPrev::smoothSurveyStan(data = NULL, direct.est = dl, Amat = W1,
                         regionVar = "region", responseVar = "HT.logit.est",
                         direct.est.var = "HT.logit.var",
                         response.type = "gaussian", CI = 0.95,
