@@ -47,7 +47,7 @@ test_that("smoothSurveyStan reports and overwrites a supplied nsim", {
       smooth = FALSE, nsim = 17,
       stan.chains = 2, stan.iter = 20, stan.warmup = 5
     ),
-    "ignoring user-supplied nsim = 17; using all 30 retained Stan draws"
+    "overwriting supplied nsim = 17; using all 30 retained Stan draws"
   )
 })
 
@@ -122,7 +122,7 @@ test_that("all interaction formula types are generated", {
       type.st = type, smooth = FALSE
     )
     formula.text <- paste(deparse(fit$formula), collapse = " ")
-    if (type == 4) {
+    if (type %in% c(2, 4)) {
       expect_true(grepl("time.area", formula.text))
       expect_true(grepl("generic0", formula.text))
     } else {

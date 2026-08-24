@@ -105,8 +105,9 @@ parameters {
 
   array[st_type > 0 ? 1 : 0] real<lower=0> sigma_st;
   vector[st_type > 0 ? R * T : 0] u_st;
-  // Type IV RW2 slope contrasts left free by the smoothDirect constraints.
-  vector[st_type == 4 && time_model == 2 && constr == 1 ? R : 0] st_slope;
+  // Type II/IV RW2 slope contrasts left free by smoothDirect constraints.
+  vector[(st_type == 2 || st_type == 4) && time_model == 2 &&
+    constr == 1 ? R : 0] st_slope;
   // Unit-level Gaussian models estimate tau_obs; FH models supply known sdv.
   array[free_prec ? 1 : 0] real<lower=0> tau_obs;
 }
@@ -149,7 +150,7 @@ transformed parameters {
         if (st_type == 3) scale = node_scale[r];
         if (st_type == 4) scale = node_scale[r] * time_scale;
         re_st[k] = sigma_st[1] * u_st[k] / sqrt(scale);
-        if (st_type == 4 && time_model == 2 && constr == 1)
+        if ((st_type == 2 || st_type == 4) && time_model == 2 && constr == 1)
           re_st[k] += st_slope[r] * (t - 0.5 * (T + 1));
       }
     }
@@ -249,17 +250,32 @@ model {
             target += normal_lpdf(u_st[(t - 1) * R + r] -
               2 * u_st[(t - 2) * R + r] + u_st[(t - 3) * R + r] | 0, 1);
         }
-        if (constr == 1) {
-          real temporal_sum = 0;
-          real temporal_slope = 0;
-          for (t in 1:T) {
-            temporal_sum += u_st[(t - 1) * R + r];
-            temporal_slope += (t - 0.5 * (T + 1)) * u_st[(t - 1) * R + r];
-          }
-          target += normal_lpdf(temporal_sum | 0, 0.001 * T);
-          if (time_model == 2)
-            target += normal_lpdf(temporal_slope | 0, 0.001 * T * T);
+      }
+      if (constr == 1) {
+        // Match smoothDirect: spatial sums at every time and temporal sums for
+        // all but one reference region remove main-effect confounding.
+        for (t in 1:T) {
+          real spatial_sum = 0;
+          for (r in 1:R) spatial_sum += u_st[(t - 1) * R + r];
+          target += normal_lpdf(spatial_sum | 0, 0.001 * R);
         }
+        if (R > 1) {
+          for (r in 2:R) {
+            real temporal_sum = 0;
+            real temporal_slope = 0;
+            for (t in 1:T) {
+              temporal_sum += u_st[(t - 1) * R + r];
+              temporal_slope += (t - 0.5 * (T + 1)) *
+                u_st[(t - 1) * R + r];
+            }
+            target += normal_lpdf(temporal_sum | 0, 0.001 * T);
+            if (time_model == 2)
+              target += normal_lpdf(temporal_slope | 0, 0.001 * T * T);
+          }
+        }
+        // Restore the RW2 slope contrasts omitted from the constrained field.
+        if (time_model == 2)
+          target += normal_lpdf(sum(st_slope) | 0, 0.001 * R);
       }
     } else {
       // Type IV: Besag space x RW time. Penalize spatial contrasts of the
