@@ -13,7 +13,8 @@
 #' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
 #' @param var.fix Whether to use fix variance admin 2 direct estimate as input for the model.
 #' @param nested whether or not to fit a nested model.
-#' @param ... Additional arguments passed on to the `smoothSurvey` function
+#' @param ... Additional arguments passed to \code{SUMMER::smoothSurvey()} or
+#' \code{smoothSurveyStan()}, including \code{engine} and sampler controls.
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
 
 #' @import dplyr
@@ -174,7 +175,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                   )
       direct.logit=rbind(direct.logit,direct.logit_na)
       }
-       fit2 <- smoothSurvey(data=NULL,
+       fit2 <- .smoothSurvey_dispatch(data=NULL,
                            direct.est = direct.logit,
                            Amat=Amat,
                            regionVar="region",
@@ -205,7 +206,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
 
 
     }else{
-    fit2 <- smoothSurvey(as.data.frame(modt),
+    fit2 <- .smoothSurvey_dispatch(as.data.frame(modt),
                          responseType ="binary",
                          responseVar= "value",
                          regionVar = "admin2.name.full",
@@ -403,7 +404,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
                                   )
       direct.logit=rbind(direct.logit,direct.logit_na)
       }
-      fit1 <- smoothSurvey(data=NULL,
+      fit1 <- .smoothSurvey_dispatch(data=NULL,
                            direct.est = direct.logit,
                            Amat=Amat,
                            regionVar="region",
@@ -438,7 +439,7 @@ fhModel <- function(data, cluster.info, admin.info = NULL, X= NULL, nested=FALSE
 
     }else{
         #model
-        fit1 <- smoothSurvey(as.data.frame(modt),
+        fit1 <- .smoothSurvey_dispatch(as.data.frame(modt),
                              responseType ="binary",
                              responseVar= "value",
                              regionVar = "admin1.name",

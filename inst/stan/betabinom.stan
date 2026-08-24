@@ -1,135 +1,342 @@
-// Beta-binomial area/cluster model: rstan replacement for the INLA fit used in
-// surveyPrev::clusterModel(). Supports IID or BYM2 area random effects, an
-// arbitrary fixed-effects design matrix (intercept / strata / nested admin1
-// intercepts / interactions / covariates), PC priors on the precision and the
-// BYM2 mixing parameter, and the INLA beta-binomial overdispersion (ICC).
-//
-// Parameterisation matches INLA exactly:
-//   p_i      = inv_logit(eta_i),  eta_i = X beta + re[region_i]
-//   rho      = inv_logit(logit_rho)            (overdispersion = ICC)
-//   a_i      = p_i (1 - rho) / rho
-//   b_i      = (1 - p_i)(1 - rho) / rho
-//   y_i ~ BetaBinomial(Ntrials_i, a_i, b_i)
-//
-// IID:  re = sigma * v
-// BYM2: re = sigma * ( sqrt(1 - phi) * v + sqrt(phi / scaling_factor) * u )
-//       u = scaled ICAR structured effect, v = iid.
-
 functions {
-  // Linear interpolation of a log-density supplied on an equally spaced,
-  // ascending grid. Used to pass INLA's KLD-based PC prior for the BYM2
-  // mixing parameter phi into Stan (unnormalised log-density is sufficient).
-  real grid_lpdf(real x, vector gx, vector glp) {
+  real interpolate_lpdf(real x, vector gx, vector glp) {
     int K = num_elements(gx);
-    real lo = gx[1];
-    real hi = gx[K];
-    real step = (hi - lo) / (K - 1);
-    real pos = (x - lo) / step + 1;     // fractional index, 1-based
-    if (pos <= 1) return glp[1];
-    if (pos >= K) return glp[K];
-    int j = 1;
-    while (j + 1 <= K && pos >= j + 1) j += 1;
-    real w = pos - j;                   // in [0, 1)
-    return (1 - w) * glp[j] + w * glp[j + 1];
+    int lo = 1;
+    int hi = K;
+    if (x <= gx[1]) return glp[1];
+    if (x >= gx[K]) return glp[K];
+    while (hi - lo > 1) {
+      int mid = (lo + hi) / 2;
+      if (x >= gx[mid]) lo = mid;
+      else hi = mid;
+    }
+    return glp[lo] + (x - gx[lo]) / (gx[hi] - gx[lo]) *
+      (glp[hi] - glp[lo]);
+  }
+
+  real pc_bym2_phi_lpdf(real phi, vector gamma, real f, real lambda) {
+    int n = num_elements(gamma);
+    real base = n * f - sum(gamma);
+    real d2 = phi * base;
+    real numerator = base;
+    for (i in 1:n) {
+      d2 -= log1p(phi * gamma[i]) - phi * gamma[i];
+      numerator += phi * square(gamma[i]) / (1 + phi * gamma[i]);
+    }
+    if (d2 <= 0 || numerator <= 0) return negative_infinity();
+    return log(lambda) - lambda * sqrt(d2) + log(numerator) -
+      log(2) - 0.5 * log(d2);
   }
 }
 
 data {
-  // --- likelihood rows (observed cluster aggregates) ---
-  int<lower=0> N;                       // number of observed rows
-  int<lower=1> P;                       // number of fixed-effect columns
-  matrix[N, P] X;                       // fixed-effects design (observed rows)
-  array[N] int<lower=0> y;              // successes
-  array[N] int<lower=0> Ntrials;        // trials
-  int<lower=1> R;                       // number of areas/regions
+  int<lower=0> N;
+  int<lower=1> P;
+  matrix[N, P] X;
+  array[N] int<lower=0> y;
+  array[N] int<lower=0> Ntrials;
+  int<lower=1> R;
   array[N] int<lower=1, upper=R> region;
+  array[N] int<lower=1> time;
 
-  // --- prediction rows (one per area; for summary.fitted.values) ---
   int<lower=0> Npred;
   matrix[Npred, P] Xpred;
   array[Npred] int<lower=1, upper=R> region_pred;
+  array[Npred] int<lower=1> time_pred;
 
-  // --- fixed-effect priors (INLA: intercept flat, others prec 0.001) ---
-  vector<lower=0>[P] beta_prec;         // 0 => improper flat prior
-
-  // --- overdispersion prior: logit(rho) ~ Normal(od_mean, od_sd) ---
+  vector<lower=0>[P] beta_prec;
   real od_mean;
   real<lower=0> od_sd;
-
-  // --- precision PC prior: sigma ~ Exponential(lambda) ---
   real<lower=0> lambda;
 
-  // --- model selector ---
-  int<lower=0, upper=1> use_bym2;
-
-  // --- BYM2 structure (ignored when use_bym2 == 0) ---
+  int<lower=0, upper=2> space_model;
   int<lower=0> N_edges;
   array[N_edges] int<lower=1, upper=R> node1;
   array[N_edges] int<lower=1, upper=R> node2;
-  real<lower=0> scaling_factor;
+  int<lower=1> N_components;
+  array[R] int<lower=1, upper=N_components> component;
+  array[N_components] int<lower=1> component_size;
+  array[R] int<lower=0, upper=1> component_reference;
+  int<lower=0> N_singletons;
+  array[N_singletons] int<lower=1, upper=R> singleton;
+  vector<lower=0>[R] node_scale;
+  matrix[R, R] W_sar;
 
-  // --- BYM2 phi PC prior grid (ignored when use_bym2 == 0) ---
+  int<lower=1, upper=2> phi_prior_type;
   int<lower=2> Kphi;
   vector[Kphi] phi_grid;
   vector[Kphi] phi_logp;
+  vector[R] phi_gamma;
+  real phi_f;
+  real<lower=0> phi_lambda;
+
+  int<lower=0, upper=1> has_time;
+  int<lower=1> T;
+  int<lower=1, upper=2> time_model;
+  real<lower=0> time_scale;
+  int<lower=0, upper=4> st_type; // 1 IIDxIID, 2 IIDxRW, 3 BesagxIID, 4 BesagxRW
+  int<lower=0, upper=1> constr;
 }
 
 parameters {
   vector[P] beta;
   real logit_rho;
-  real<lower=0> sigma;                  // total sd of the area effect
-  vector[R] v;                          // iid (or unstructured part of bym2)
-  vector[use_bym2 ? R : 0] u;           // structured ICAR part (bym2 only)
-  array[use_bym2 ? 1 : 0] real<lower=0, upper=1> phi;
+  real<lower=0> sigma_space;
+  vector[R] v_space;
+  vector[space_model == 1 ? R : 0] u_space;
+  array[space_model == 1 ? 1 : 0] real<lower=0, upper=1> phi;
+  array[space_model == 2 ? 1 : 0] real rho_raw;
+
+  array[has_time ? 1 : 0] real<lower=0> sigma_time_unstruct;
+  array[has_time ? 1 : 0] real<lower=0> sigma_time_struct;
+  vector[has_time ? T : 0] z_time_unstruct;
+  vector[has_time ? T : 0] u_time;
+  // The constrained field carries RW2 curvature. The separate flat slope
+  // retains smoothDirect()'s unpenalized linear-trend null direction without
+  // multiplying that direction by sigma_time_struct.
+  array[has_time && time_model == 2 && constr == 1 ? 1 : 0] real time_slope;
+  array[st_type > 0 ? 1 : 0] real<lower=0> sigma_st;
+  vector[st_type > 0 ? R * T : 0] u_st;
+  // Type IV RW2 slope contrasts left free by the smoothDirect constraints.
+  vector[st_type == 4 && time_model == 2 && constr == 1 ? R : 0] st_slope;
 }
 
 transformed parameters {
-  vector[R] re;
-  if (use_bym2 == 1) {
-    re = sigma * (sqrt(1 - phi[1]) * v + sqrt(phi[1] / scaling_factor) * u);
+  vector[R] re_space;
+  vector[T] re_time_unstruct = rep_vector(0, T);
+  vector[T] re_time_struct = rep_vector(0, T);
+  vector[R * T] re_st = rep_vector(0, R * T);
+
+  if (space_model == 1) {
+    re_space = sigma_space * (sqrt(1 - phi[1]) * v_space +
+      sqrt(phi[1]) * (u_space ./ sqrt(node_scale)));
+  } else if (space_model == 2) {
+    real rho = -1 + 2 * inv_logit(rho_raw[1]);
+    matrix[R, R] A = diag_matrix(rep_vector(1.0, R)) - rho * W_sar;
+    re_space = sigma_space * mdivide_left(A, v_space);
   } else {
-    re = sigma * v;
+    re_space = sigma_space * v_space;
+  }
+  if (has_time == 1) {
+    re_time_unstruct = sigma_time_unstruct[1] * z_time_unstruct;
+    re_time_struct = sigma_time_struct[1] * u_time / sqrt(time_scale);
+    if (time_model == 2 && constr == 1) {
+      for (t in 1:T)
+        re_time_struct[t] += time_slope[1] * (t - 0.5 * (T + 1));
+    }
+  }
+  if (st_type > 0) {
+    for (t in 1:T) {
+      for (r in 1:R) {
+        int k = (t - 1) * R + r;
+        real scale = 1;
+        if (st_type == 2) scale = time_scale;
+        if (st_type == 3) scale = node_scale[r];
+        if (st_type == 4) scale = node_scale[r] * time_scale;
+        re_st[k] = sigma_st[1] * u_st[k] / sqrt(scale);
+        if (st_type == 4 && time_model == 2 && constr == 1)
+          re_st[k] += st_slope[r] * (t - 0.5 * (T + 1));
+      }
+    }
   }
 }
 
 model {
-  // fixed-effect priors (flat where beta_prec == 0)
   for (p in 1:P) {
-    if (beta_prec[p] > 0) {
+    if (beta_prec[p] > 0)
       target += normal_lpdf(beta[p] | 0, inv_sqrt(beta_prec[p]));
+  }
+  logit_rho ~ normal(od_mean, od_sd);
+  sigma_space ~ exponential(lambda);
+  v_space ~ normal(0, 1);
+
+  if (space_model == 1) {
+    target += -0.5 * dot_self(u_space[node1] - u_space[node2]);
+    if (N_singletons > 0) u_space[singleton] ~ normal(0, 1);
+    if (constr == 1) {
+      for (cc in 1:N_components) {
+        if (component_size[cc] > 1) {
+          real component_sum = 0;
+          for (r in 1:R)
+            if (component[r] == cc) component_sum += u_space[r];
+          target += normal_lpdf(component_sum | 0,
+            0.001 * component_size[cc]);
+        }
+      }
+    }
+    if (phi_prior_type == 1)
+      target += interpolate_lpdf(phi[1] | phi_grid, phi_logp);
+    else
+      target += pc_bym2_phi_lpdf(phi[1] | phi_gamma, phi_f, phi_lambda);
+  } else if (space_model == 2) {
+    rho_raw[1] ~ normal(0, inv_sqrt(10.0));
+  }
+
+  if (has_time == 1) {
+    sigma_time_unstruct[1] ~ exponential(lambda);
+    sigma_time_struct[1] ~ exponential(lambda);
+    z_time_unstruct ~ normal(0, 1);
+    if (time_model == 1) {
+      for (t in 2:T) target += normal_lpdf(u_time[t] - u_time[t - 1] | 0, 1);
+    } else {
+      for (t in 3:T)
+        target += normal_lpdf(u_time[t] - 2 * u_time[t - 1] + u_time[t - 2] | 0, 1);
+    }
+    if (constr == 1) {
+      target += normal_lpdf(sum(u_time) | 0, 0.001 * T);
+      if (time_model == 2) {
+        vector[T] tt;
+        for (t in 1:T) tt[t] = t - 0.5 * (T + 1);
+        target += normal_lpdf(dot_product(tt, u_time) | 0,
+          0.001 * dot_self(tt));
+      }
     }
   }
 
-  // overdispersion + precision priors
-  logit_rho ~ normal(od_mean, od_sd);
-  target += exponential_lpdf(sigma | lambda);
-
-  // random-effect structure
-  v ~ normal(0, 1);
-  if (use_bym2 == 1) {
-    // scaled ICAR (improper); soft sum-to-zero constraint
-    target += -0.5 * dot_self(u[node1] - u[node2]);
-    sum(u) ~ normal(0, 0.001 * R);
-    target += grid_lpdf(phi[1] | phi_grid, phi_logp);
+  if (st_type > 0) {
+    sigma_st[1] ~ exponential(lambda);
+    if (st_type == 1) {
+      u_st ~ normal(0, 1);
+    } else if (st_type == 3) {
+      for (t in 1:T) {
+        int offset = (t - 1) * R;
+        for (e in 1:N_edges)
+          target += normal_lpdf(u_st[offset + node1[e]] -
+            u_st[offset + node2[e]] | 0, 1);
+        for (s in 1:N_singletons)
+          target += normal_lpdf(u_st[offset + singleton[s]] | 0, 1);
+        if (constr == 1) {
+          for (cc in 1:N_components) {
+            if (component_size[cc] > 1) {
+              real component_sum = 0;
+              for (r in 1:R)
+                if (component[r] == cc) component_sum += u_st[offset + r];
+              target += normal_lpdf(component_sum | 0,
+                0.001 * component_size[cc]);
+            }
+          }
+        }
+      }
+    } else if (st_type == 2) {
+      for (r in 1:R) {
+        if (time_model == 1) {
+          for (t in 2:T)
+            target += normal_lpdf(u_st[(t - 1) * R + r] -
+              u_st[(t - 2) * R + r] | 0, 1);
+        } else {
+          for (t in 3:T)
+            target += normal_lpdf(u_st[(t - 1) * R + r] -
+              2 * u_st[(t - 2) * R + r] + u_st[(t - 3) * R + r] | 0, 1);
+        }
+        if (constr == 1) {
+          real temporal_sum = 0;
+          real temporal_slope = 0;
+          for (t in 1:T) {
+            temporal_sum += u_st[(t - 1) * R + r];
+            temporal_slope += (t - 0.5 * (T + 1)) * u_st[(t - 1) * R + r];
+          }
+          target += normal_lpdf(temporal_sum | 0, 0.001 * T);
+          if (time_model == 2)
+            target += normal_lpdf(temporal_slope | 0, 0.001 * T * T);
+        }
+      }
+    } else {
+      if (time_model == 1) {
+        for (t in 2:T) {
+          for (e in 1:N_edges) {
+            real d1 = u_st[(t - 1) * R + node1[e]] - u_st[(t - 2) * R + node1[e]];
+            real d2 = u_st[(t - 1) * R + node2[e]] - u_st[(t - 2) * R + node2[e]];
+            target += normal_lpdf(d1 - d2 | 0, 1);
+          }
+          for (s in 1:N_singletons)
+            target += normal_lpdf(u_st[(t - 1) * R + singleton[s]] -
+              u_st[(t - 2) * R + singleton[s]] | 0, 1);
+        }
+      } else {
+        for (t in 3:T) {
+          for (e in 1:N_edges) {
+            real d1 = u_st[(t - 1) * R + node1[e]] - 2 * u_st[(t - 2) * R + node1[e]] + u_st[(t - 3) * R + node1[e]];
+            real d2 = u_st[(t - 1) * R + node2[e]] - 2 * u_st[(t - 2) * R + node2[e]] + u_st[(t - 3) * R + node2[e]];
+            target += normal_lpdf(d1 - d2 | 0, 1);
+          }
+          for (s in 1:N_singletons)
+            target += normal_lpdf(u_st[(t - 1) * R + singleton[s]] -
+              2 * u_st[(t - 2) * R + singleton[s]] +
+              u_st[(t - 3) * R + singleton[s]] | 0, 1);
+        }
+      }
+      if (constr == 1) {
+        for (t in 1:T) {
+          int offset = (t - 1) * R;
+          for (cc in 1:N_components) {
+            if (component_size[cc] > 1) {
+              real component_sum = 0;
+              for (r in 1:R)
+                if (component[r] == cc) component_sum += u_st[offset + r];
+              target += normal_lpdf(component_sum | 0,
+                0.001 * component_size[cc]);
+            }
+          }
+        }
+        // Skip one temporal constraint per non-singleton spatial component;
+        // its redundant constraint is supplied by the componentwise spatial
+        // sums above. Singleton regions are not skipped.
+        for (r in 1:R) {
+          real temporal_sum = 0;
+          real temporal_slope = 0;
+          for (t in 1:T) {
+            temporal_sum += u_st[(t - 1) * R + r];
+            temporal_slope += (t - 0.5 * (T + 1)) * u_st[(t - 1) * R + r];
+          }
+          if (component_reference[r] == 0) {
+            target += normal_lpdf(temporal_sum | 0, 0.001 * T);
+            if (time_model == 2)
+              target += normal_lpdf(temporal_slope | 0, 0.001 * T * T);
+          }
+        }
+        // The explicit slopes have one componentwise sum constraint, leaving
+        // exactly R - C slope contrasts free when there are C non-singleton
+        // components, as in smoothDirect().
+        if (time_model == 2) {
+          for (cc in 1:N_components) {
+            if (component_size[cc] > 1) {
+              real slope_sum = 0;
+              for (r in 1:R)
+                if (component[r] == cc) slope_sum += st_slope[r];
+              target += normal_lpdf(slope_sum | 0,
+                0.001 * component_size[cc]);
+            }
+          }
+        }
+      }
+    }
   }
 
-  // beta-binomial likelihood (INLA parameterisation)
   {
     real rho = inv_logit(logit_rho);
-    real s = (1 - rho) / rho;
-    vector[N] eta = X * beta + re[region];
-    for (n in 1:N) {
-      real pp = inv_logit(eta[n]);
-      y[n] ~ beta_binomial(Ntrials[n], pp * s, (1 - pp) * s);
+    real concentration = (1 - rho) / rho;
+    for (i in 1:N) {
+      real eta = dot_product(X[i], beta) + re_space[region[i]];
+      if (has_time == 1) {
+        eta += re_time_unstruct[time[i]] + re_time_struct[time[i]];
+        if (st_type > 0) eta += re_st[(time[i] - 1) * R + region[i]];
+      }
+      y[i] ~ beta_binomial(Ntrials[i], inv_logit(eta) * concentration,
+        (1 - inv_logit(eta)) * concentration);
     }
   }
 }
 
 generated quantities {
-  // fitted probability for each prediction row (-> summary.fitted.values)
   vector[Npred] fitted;
-  {
-    vector[Npred] etap = Xpred * beta + re[region_pred];
-    for (m in 1:Npred) fitted[m] = inv_logit(etap[m]);
+  vector[Npred] eta;
+  for (i in 1:Npred) {
+    eta[i] = dot_product(Xpred[i], beta) + re_space[region_pred[i]];
+    if (has_time == 1) {
+      eta[i] += re_time_unstruct[time_pred[i]] + re_time_struct[time_pred[i]];
+      if (st_type > 0)
+        eta[i] += re_st[(time_pred[i] - 1) * R + region_pred[i]];
+    }
+    fitted[i] = inv_logit(eta[i]);
   }
 }

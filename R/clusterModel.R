@@ -21,6 +21,13 @@
 #' @param pc.alpha pc prior alpha for iid or bym2 precision.
 #' @param pc.u.phi pc prior u for bym2 mixing paramete.
 #' @param pc.alpha.phi pc prior u for bym2 mixing paramete.
+#' @param engine inference engine, \code{"rstan"} or \code{"INLA"}. U5MR
+#'   models retain their existing INLA implementation.
+#' @param bym2.phi.prior BYM2 phi prior for Stan: INLA's tabulated density or
+#'   the analytic spectral form.
+#' @param constr apply the default soft component constraints in Stan.
+#' @param stan.chains,stan.iter,stan.warmup,stan.seed,stan.cores Stan sampling
+#'   controls.
 #' @param ... additional arguments for internal functions.
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -76,7 +83,16 @@
 
 clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel=NULL,admin, CI = 0.95, model = c("bym2", "iid"),
                        stratification = FALSE, aggregation = FALSE,nested=FALSE,interact=FALSE,
-                       overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3, ...){
+                       overdisp.mean=0, overdisp.prec=0.4 , pc.u = 1,  pc.alpha = 0.01, pc.u.phi=0.5,pc.alpha.phi=2/3,
+                       engine = getOption("surveyPrev.engine", "rstan"),
+                       bym2.phi.prior = c("inla.table", "spectral"),
+                       constr = TRUE, stan.chains = 3, stan.iter = 4000,
+                       stan.warmup = 2000, stan.seed = 1,
+                       stan.cores = getOption("mc.cores", 1L), ...){
+
+  engine <- match.arg(engine, c("rstan", "INLA"))
+  model <- match.arg(model)
+  bym2.phi.prior <- match.arg(bym2.phi.prior)
 
 
   cvf <- function(p, sd) {
@@ -84,6 +100,13 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
   }
   ## U5MR fix
   if ("age" %in% colnames(data)) {
+      if (!identical(engine, "INLA")) {
+          warning(
+              "The U5MR cluster model currently uses its existing INLA ",
+              "implementation; the engine argument is ignored.",
+              call. = FALSE
+          )
+      }
       fit <- clusterModel_u5mr(data = data,
                                 cluster.info = cluster.info,
                                 admin.info = admin.info,
@@ -509,8 +532,6 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
 
 
   nsamp <- 1000
-  engine <- getOption("surveyPrev.engine", "rstan")
-
   if (identical(engine, "INLA")) {
     imod <- INLA::inla(formula,
                        family = "betabinomial",
@@ -530,7 +551,13 @@ clusterModel<-function(data,cluster.info, admin.info, X=NULL,X.unit=NULL,X.pixel
                               overdisp.prec = overdisp.prec,
                               pc.u = pc.u, pc.alpha = pc.alpha,
                               pc.u.phi = pc.u.phi, pc.alpha.phi = pc.alpha.phi,
-                              nsamp = nsamp)
+                              bym2.phi.prior = bym2.phi.prior,
+                              constr = constr, nsamp = nsamp,
+                              stan.chains = stan.chains,
+                              stan.iter = stan.iter,
+                              stan.warmup = stan.warmup,
+                              stan.seed = stan.seed,
+                              stan.cores = stan.cores)
     imod <- .fit$imod
     samp <- .fit$samp
   }

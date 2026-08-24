@@ -16,7 +16,12 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=TRUE, cache = FALSE, out.width = "100%")
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE,
+  eval = TRUE, cache = FALSE,
+  fig.width = 11, fig.height = 5,
+  out.width = "100%", fig.align = "center"
+)
 ```
 
 \clearpage
@@ -67,7 +72,10 @@ library(surveyPrev)
 ```
 
 
-One of the key required packages, `INLA` is not available on CRAN or GitHub, and needs to be installed with the following code [@rue2009inla]. 
+Stan is the default inference engine for the prevalence models in
+**surveyPrev**. `INLA` is an optional alternative and is not available on
+CRAN or GitHub. Install it only when fitting models with `engine = "INLA"`
+[@rue2009inla].
 
 ```{r pkg, eval = FALSE, tidy = FALSE}
 install.packages("INLA", repos=c(getOption("repos"), 
@@ -279,7 +287,7 @@ Here $\text{expit}(\lambda_{i})$ is the latent true prevalence, and $e_i$ and $S
 As of now the package allows only an overall intercept $\alpha$, but future versions of the package will allow area level covariates to be included. The default prior for the intercept is $N(0, 1000)$. The structured and non-structured random effects are implemented using the Besag-York-Mollié (BYM) model via the BYM2 parameterization, with default PC priors such that the marginal standard deviation has a prior such that $Prob(\sigma > 1) = 0.01$ and the proportion of variation explained by the spatial effect, $\phi$ has a prior such that $Prob(\phi > 0.5) = 2/3$ [@riebler2016bym2; @simpson2017pc]. 
 
 
-The `fhModel()` calculates spatial Fay-Herriot estimates at different administrative levels using `SUMMER::smoothSurvey()`. Users can specify either only i.i.d. random effects (i.e., no $S_i$ term) or the BYM2 model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregated to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more details in Section \@ref(sec:aggregation). 
+The `fhModel()` calculates spatial Fay-Herriot estimates at different administrative levels. SUMMER owns the shared `smoothSurvey()` data preparation and output assembly; surveyPrev supplies its Stan backend through `smoothSurveyStan()`. Use `engine = "rstan"` (the default) or `engine = "INLA"`. Users can specify either only i.i.d. random effects (i.e., no $S_i$ term) or the BYM2 model by setting `model = "iid"` or `model = "bym2"`. The function returns model results at the specified admin level with `aggregation = FALSE`. Aggregation to higher admin levels is possible with `aggregation = TRUE` when additional population information is provided. The aggregation steps are described in more detail in Section \@ref(sec:aggregation).
 
 
 ```{r}
@@ -288,6 +296,7 @@ smth_res_ad1_bym2 <- fhModel(data,
                         admin.info = admin.info1,
                         admin = 1,
                         model = "bym2",
+                        engine = "rstan",
                         aggregation =FALSE)
 
 smth_res_ad1_iid <- fhModel(data, 
@@ -295,6 +304,7 @@ smth_res_ad1_iid <- fhModel(data,
                         admin.info = admin.info1,
                         admin = 1, 
                         model = "iid",
+                        engine = "rstan",
                         aggregation =FALSE)
 head(smth_res_ad1_bym2$res.admin1) 
 ```
@@ -334,7 +344,13 @@ where $\alpha$ is the intercept, and $i[s_c]$ indexes the area within which the 
 <!-- , corr($z_k,z_{k'}$), where $z_k$ is the binary response in $y_c$, $y_c=\sum_{k=1}^{n_c}z_k$). -->
 The default prior for $d$ is $\text{logit}(d) \sim \text{Normal}(0,0.4)$.  
 
-The `clusterModel()` function fits the cluster-level model above. Unstratified model can be specified by setting `stratification = FALSE`, and either i.i.d. or the BYM2 model by setting `model = "bym2"` or `model = "iid"`. For the the overdispersion parameter $d$, users can change the prior mean and precision through `overdisp.mean` and `overdisp.prec`. 
+The `clusterModel()` function fits the cluster-level model above with either
+`engine = "rstan"` (the default) or `engine = "INLA"`. An unstratified model
+can be specified by setting `stratification = FALSE`, and either i.i.d. or the
+BYM2 model by setting `model = "bym2"` or `model = "iid"`. For the
+overdispersion parameter $d$, users can change the prior mean and precision
+through `overdisp.mean` and `overdisp.prec`. Specialized U5MR cluster models
+retain their existing INLA implementation.
 
 We fit the unstratified model in both Admin 1 and Admin 2 below. These models differ only in the admin level at which the spatial random effects enter, with the cluster-level model being the same in each case.
 
@@ -345,6 +361,7 @@ cl_res_ad1 <- clusterModel(data=data,
                    admin.info  = admin.info1,
                    stratification = FALSE,
                    model = "bym2",
+                   engine = "rstan",
                    admin = 1,
                    aggregation =FALSE,
                    CI = 0.95)
@@ -957,5 +974,3 @@ intervalPlot(admin = 1, group = TRUE, compare = TRUE, model = list(
 We thank Ben Mayala and Trevor Croft from the Demographic and Health Surveys (DHS) program for useful discussions in creating this R package.
 
 # References
-
-

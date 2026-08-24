@@ -17,6 +17,20 @@ Indicators
 Models
 + Child mortality support (U5MR, IMR, NMR) for direct, Fay-Herriot, and
   cluster-level models, using person-month formatting via `getBirths()`.
++ Added Stan implementations for the major Fay-Herriot and non-mortality
+  cluster-level model classes. `smoothSurveyStan()` extends
+  `SUMMER::smoothSurvey()` through
+  a backend interface, so SUMMER remains the single owner of the shared data
+  preparation and post-processing code and there is no second
+  `smoothSurvey()` exported by surveyPrev.
++ Stan model interfaces default to 3 chains and 4,000 iterations per chain,
+  including 2,000 warmup iterations.
++ RW2 and Type IV Stan constraints now match `SUMMER::smoothDirect()`: linear
+  trend directions remain data-identified, and disconnected spatial components
+  receive separate identifying constraints.
++ Space-time interaction labels now follow `SUMMER::smoothDirect()`: Type II
+  is IID space by structured time, and Type III is Besag space by IID time.
++ Added `diagModel()` diagnostics for INLA and Stan fits.
 + Variance adjustment for direct estimates with sparse data.
 + Area-level covariates via `getCovariate()`, unit-level covariates and
   nested models in `clusterModel()`, and Admin1 × urban/rural stratification.
@@ -48,4 +62,3 @@ Version 1.0.0
 + New indicators included.
 + New plotting functions included. 
 + Two new vignettes. 
-

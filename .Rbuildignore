@@ -10,3 +10,4 @@ docs/vignettes_rmd/*
 ^archive$
 ^\.claude$
 ^CRAN-SUBMISSION$
+^inst/stan/.*\.rds$
