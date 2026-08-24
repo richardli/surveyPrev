@@ -13,7 +13,7 @@
 #' @param alt.strata the variable name in the data frame that correspond to the stratification variable. Most of the DHS surveys are stratified by admin 1 area crossed with urban/rural, which is the default stratification variable created by the function (when \code{alt.strata = NULL}). When a different set of strata is used. The stratification variable should be included in the data and \code{alt.strata} should be set to the column name.
 #' @param var.fix Whether to add phantom cluster to fix admin 2 direct estimate with variance close to 0.
 #' @param threshold the threshold of variance to implement the variance fix method.
-#' @param ... Additional arguments passed on to the `smoothSurvey` function
+#' @param ... Additional arguments passed to \code{SUMMER::smoothSurvey()}.
 #'
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -124,7 +124,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     if("age" %in% colnames(modt)){
       smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin2.name.full")
     }else{
-      smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+      smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
                                    regionVar = "admin2.name.full",
@@ -631,7 +631,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     if("age" %in% colnames(modt)){
       smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin1.name")
     }else{
-       smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+       smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                  responseType ="binary",
                  responseVar= "value",
                  regionVar = "admin1.name",
@@ -802,7 +802,7 @@ directEST <- function(data, cluster.info, admin, strata="all", CI = 0.95, weight
     if("age" %in% colnames(modt)){
       smoothSurvey_res <- directEST_u5mr(as.data.frame(modt), regionVar = "admin0.name")
     }else{
-      smoothSurvey_res<-smoothSurvey(as.data.frame(modt),
+      smoothSurvey_res<-SUMMER::smoothSurvey(as.data.frame(modt),
                                    responseType ="binary",
                                    responseVar= "value",
                                    regionVar = "admin0.name",

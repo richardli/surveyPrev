@@ -16,7 +16,7 @@
 #' @param tol the threshold of variance to implement the variance fix method.
 #' @param floor_var the threshold of variance to implement the variance fix method.
 #' @param all.fix Whether to add phantom cluster to all areas
-#' @param ... Additional arguments passed on to the `smoothSurvey` function
+#' @param ... Additional arguments passed to \code{SUMMER::smoothSurvey()}.
 #'
 #'
 #' @return This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
@@ -1214,7 +1214,7 @@ directEST_varfix = function (data, cluster.info, admin, strata = "all", CI = 0.9
     else if (strata == "rural") {
       modt <- modt %>% filter(., strata == "rural")
     }
-    smoothSurvey_res <- smoothSurvey(as.data.frame(modt),
+    smoothSurvey_res <- SUMMER::smoothSurvey(as.data.frame(modt),
                                      responseType = "binary", responseVar = "value",
                                      regionVar = "admin0.name", clusterVar = "~cluster+householdID",
                                      weightVar = "weight", strataVar = "strata.full",
@@ -1244,5 +1244,3 @@ directEST_varfix = function (data, cluster.info, admin, strata = "all", CI = 0.9
     return(res.natl)
   }
 }
-
-

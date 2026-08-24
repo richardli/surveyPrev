@@ -42,7 +42,7 @@ directEST(
 
 \item{threshold}{the threshold of variance to implement the variance fix method.}
 
-\item{...}{Additional arguments passed on to the `smoothSurvey` function}
+\item{...}{Additional arguments passed to \code{SUMMER::smoothSurvey()}.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

@@ -42,7 +42,8 @@ fhModel(
 
 \item{var.fix}{Whether to use fix variance admin 2 direct estimate as input for the model.}
 
-\item{...}{Additional arguments passed on to the `smoothSurvey` function}
+\item{...}{Additional arguments passed to \code{SUMMER::smoothSurvey()} or
+\code{smoothSurveyStan()}, including \code{engine} and sampler controls.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,

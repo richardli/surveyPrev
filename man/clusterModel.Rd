@@ -24,6 +24,14 @@ clusterModel(
   pc.alpha = 0.01,
   pc.u.phi = 0.5,
   pc.alpha.phi = 2/3,
+  engine = getOption("surveyPrev.engine", "rstan"),
+  bym2.phi.prior = c("inla.table", "spectral"),
+  constr = TRUE,
+  stan.chains = 3,
+  stan.iter = 4000,
+  stan.warmup = 2000,
+  stan.seed = 1,
+  stan.cores = getOption("mc.cores", 1L),
   ...
 )
 }
@@ -65,6 +73,17 @@ clusterModel(
 \item{pc.u.phi}{pc prior u for bym2 mixing paramete.}
 
 \item{pc.alpha.phi}{pc prior u for bym2 mixing paramete.}
+
+\item{engine}{inference engine, \code{"rstan"} or \code{"INLA"}. U5MR
+models retain their existing INLA implementation.}
+
+\item{bym2.phi.prior}{BYM2 phi prior for Stan: INLA's tabulated density or
+the analytic spectral form.}
+
+\item{constr}{apply the default soft component constraints in Stan.}
+
+\item{stan.chains, stan.iter, stan.warmup, stan.seed, stan.cores}{Stan sampling
+controls.}
 
 \item{...}{additional arguments for internal functions.}
 }

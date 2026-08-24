@@ -51,7 +51,7 @@ directEST_varfix(
 
 \item{all.fix}{Whether to add phantom cluster to all areas}
 
-\item{...}{Additional arguments passed on to the `smoothSurvey` function}
+\item{...}{Additional arguments passed to \code{SUMMER::smoothSurvey()}.}
 }
 \value{
 This function returns the dataset that contain district name and population for given  tiff files and polygons of admin level,
