@@ -1,0 +1,210 @@
+---
+title: "Comparing INLA and Stan model implementations"
+author: "Zehang Richard Li, Qianyu Dong"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing INLA and Stan model implementations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+run_models <- identical(Sys.getenv("SURVEYPREV_RUN_VIGNETTES"), "true")
+knitr::opts_chunk$set(
+  eval = TRUE, collapse = TRUE, comment = "#>",
+  message = FALSE, warning = FALSE,
+  fig.width = 11, fig.height = 5,
+  out.width = "100%", fig.align = "center", cache = TRUE
+)
+library(surveyPrev)
+library(ggplot2)
+library(rdhs)
+```
+
+In this vignette, we compare the main model classes using INLA and Stan. We download the Zambia 2024 DHS data directly from the DHS website using the **rdhs** package. This step requires users to
+
+1. register with DHS to gain data access,
+2. set up the DHS account login details in R with `rdhs::set_rdhs_config()`.
+
+```{r data}
+dhs_raw <- getDHSdata(
+  country = "Zambia", year = 2024, indicator = "RH_ANCN_W_N4P"
+)
+anc <- getDHSindicator(dhs_raw, indicator = "RH_ANCN_W_N4P")
+gps <- getDHSgeo(country = "Zambia", year = 2024)
+
+data(ZambiaAdm1)
+data(ZambiaAdm2)
+data(ZambiaPopWomen)
+cluster_info <- clusterInfo(gps, ZambiaAdm1, ZambiaAdm2)
+admin1_info <- adminInfo(
+  ZambiaAdm1, admin = 1, by.adm = "NAME_1",
+  agg.pop = ZambiaPopWomen$admin1_pop,
+  proportion = ZambiaPopWomen$admin1_urban
+)
+admin2_info <- adminInfo(
+  ZambiaAdm2, admin = 2, by.adm = "NAME_2", by.adm.upper = "NAME_1",
+  agg.pop = ZambiaPopWomen$admin2_pop,
+  proportion = ZambiaPopWomen$admin2_urban
+)
+```
+
+Each Stan fit uses three chains, 2,000 warmup iterations, and 2,000 retained
+posterior draws per chain. The sampler arguments are shown explicitly below so
+they can be changed in one place.
+
+We start with a few helper functions that simplify the comparison scripts later.
+
+```{r helpers}
+fit_both <- function(fun, args) {
+  list(
+    INLA = do.call(fun, c(args, list(engine = "INLA"))),
+    Stan = do.call(fun, c(args, list(
+      engine = "rstan",
+      stan.chains = 3,
+      stan.iter = 4000,
+      stan.warmup = 2000,
+      stan.seed = 12345
+    )))
+  )
+}
+
+model_table <- function(x) {
+  candidates <- c("res.admin1", "res.admin2", "agg.admin1", "smooth")
+  for (name in candidates) if (!is.null(x[[name]])) return(x[[name]])
+  stop("No model estimate table found.")
+}
+
+compare_scatter <- function(pair, title) {
+  x <- model_table(pair$INLA)
+  y <- model_table(pair$Stan)
+  keys <- intersect(
+    c("admin1.name", "admin2.name.full", "region", "strata"),
+    intersect(names(x), names(y))
+  )
+  if (length(keys)) {
+    x <- x[do.call(order, x[keys]), ]
+    y <- y[do.call(order, y[keys]), ]
+  }
+  n <- min(nrow(x), nrow(y))
+  x <- x[seq_len(n), ]
+  y <- y[seq_len(n), ]
+  sx <- if ("sd" %in% names(x)) x$sd else sqrt(x$var)
+  sy <- if ("sd" %in% names(y)) y$sd else sqrt(y$var)
+  plot_data <- rbind(
+    data.frame(metric = "estimate", INLA = x$mean, Stan = y$mean),
+    data.frame(metric = "standard error", INLA = sx, Stan = sy)
+  )
+  axis_bounds <- do.call(rbind, lapply(split(plot_data, plot_data$metric),
+    function(z) {
+      values <- c(z$INLA, z$Stan)
+      values <- values[is.finite(values)]
+      limits <- if (length(values)) range(values) else c(0, 1)
+      if (diff(limits) == 0) limits <- limits + c(-0.5, 0.5)
+      data.frame(metric = z$metric[1], INLA = limits, Stan = limits)
+    }
+  ))
+  ggplot(plot_data, aes(INLA, Stan)) +
+    geom_blank(data = axis_bounds) +
+    geom_abline(slope = 1, intercept = 0, colour = "grey60",
+                linetype = "dashed") +
+    geom_point() +
+    facet_wrap(~metric, scales = "free") +
+    labs(title = title) +
+    theme_bw() +
+    theme(aspect.ratio = 1)
+}
+```
+
+
+## Fay--Herriot IID random effect, admin 1
+
+```{r fh-iid}
+fh_iid <- fit_both(fhModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "iid", aggregation = FALSE
+))
+compare_scatter(fh_iid, "Fay-Herriot IID, admin 1")
+```
+
+Some computational checks are available using the `diagModel` function.
+
+```{r fh-iid-diagnostics}
+diagModel(fh_iid$INLA)
+diagModel(fh_iid$Stan)
+```
+
+## Fay--Herriot BYM2 random effect, admin 1
+
+```{r fh-bym2}
+fh_bym2 <- fit_both(fhModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "bym2", aggregation = TRUE
+))
+compare_scatter(fh_bym2, "Fay-Herriot BYM2, admin 1")
+```
+
+ 
+
+## Fay--Herriot nested BYM2 random effect, admin 2, with variance fix
+
+The sparse admin-2 direct estimates require the explicit variance-fix estimator.
+
+```{r fh-nested}
+fh_nested <- fit_both(fhModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin2_info,
+  admin = 2, model = "bym2", nested = TRUE, aggregation = FALSE,
+  var.fix = TRUE
+))
+compare_scatter(fh_nested, "Fay-Herriot nested BYM2 with variance fix")
+```
+
+ 
+
+## Cluster-level IID random effect, admin 1
+
+```{r cluster-iid}
+cluster_iid <- fit_both(clusterModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "iid", aggregation = FALSE
+))
+compare_scatter(cluster_iid, "Cluster IID, admin 1")
+```
+
+ 
+
+## Cluster-level BYM2 random effect, admin 1
+
+```{r cluster-bym2}
+cluster_bym2 <- fit_both(clusterModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "bym2", aggregation = FALSE
+))
+compare_scatter(cluster_bym2, "Cluster BYM2, admin 1")
+```
+
+ 
+## Cluster-level stratified BYM2 random effect
+
+```{r cluster-stratified}
+cluster_stratified <- fit_both(clusterModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "bym2", stratification = TRUE,
+  aggregation = TRUE
+))
+compare_scatter(cluster_stratified, "Cluster stratified BYM2")
+```
+
+ 
+
+## Cluster-level nested BYM2 random effect, admin 2
+
+```{r cluster-nested}
+cluster_nested <- fit_both(clusterModel, list(
+  data = anc, cluster.info = cluster_info, admin.info = admin2_info,
+  admin = 2, model = "bym2", nested = TRUE, aggregation = FALSE
+))
+compare_scatter(cluster_nested, "Cluster nested BYM2, admin 2")
+```
+
+ 

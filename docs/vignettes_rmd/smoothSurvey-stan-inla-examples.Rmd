@@ -1,0 +1,629 @@
+---
+title: "smoothSurvey examples with INLA and Stan"
+author: "Zehang Richard Li, Qianyu Dong"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{smoothSurvey examples with INLA and Stan}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+In this vignette, we compare `SUMMER::smoothSurvey()` for INLA implementation with
+`surveyPrev::smoothSurveyStan()` for Stan implementation. A detailed description of the backend design is included at the end of this vignette.
+
+```{r setup, include=FALSE}
+run_models <- identical(Sys.getenv("SURVEYPREV_RUN_VIGNETTES"), "true")
+knitr::opts_chunk$set(
+  eval = TRUE, collapse = TRUE, comment = "#>",
+  message = FALSE, warning = FALSE,
+  fig.width = 11, fig.height = 5,
+  out.width = "100%", fig.align = "center", cache = TRUE
+)
+library(surveyPrev)
+library(SUMMER)
+library(ggplot2)
+INLA::inla.setOption(num.threads = "1:1")
+```
+
+Each Stan fit uses three chains, 1,000 warmup iterations, and 1,000 retained
+posterior draws per chain. All 3,000 retained draws are used in SUMMER's
+post-processing. If supplied, `nsim` is overwritten by the retained draw count.
+The sampler arguments are shown explicitly below so they can be changed in one
+place.
+
+We start with some helper functions to simplify the function calls later.
+```{r helpers}
+fit_both <- function(args) {
+  list(
+    INLA = do.call(SUMMER::smoothSurvey, c(args, list(nsim = 1000))),
+    Stan = do.call(surveyPrev::smoothSurveyStan, c(args, list(
+      stan.chains = 3,
+      stan.iter = 2000,
+      stan.warmup = 1000,
+      stan.seed = 1,
+      stan.cores = 3
+    )))
+  )
+}
+
+comparison_scatter <- function(pair, title, table = "smooth") {
+  a <- pair$INLA[[table]]
+  b <- pair$Stan[[table]]
+  keys <- intersect(c("region", "time", "strata"),
+                    intersect(names(a), names(b)))
+  if (!length(keys)) {
+    stop("No common model-output keys were found.")
+  }
+  a[keys] <- lapply(a[keys], as.character)
+  b[keys] <- lapply(b[keys], as.character)
+  a <- a[, c(keys, "mean", "var")]
+  b <- b[, c(keys, "mean", "var")]
+  names(a)[names(a) %in% c("mean", "var")] <- c("INLA_mean", "INLA_var")
+  names(b)[names(b) %in% c("mean", "var")] <- c("Stan_mean", "Stan_var")
+  matched <- merge(a, b, by = keys, all = TRUE, sort = TRUE)
+  if (anyNA(matched[c("INLA_mean", "INLA_var", "Stan_mean", "Stan_var")])) {
+    stop("INLA and Stan outputs do not have the same prediction keys.")
+  }
+  points <- rbind(
+    data.frame(metric = "estimate", INLA = matched$INLA_mean,
+               Stan = matched$Stan_mean),
+    data.frame(metric = "standard error", INLA = sqrt(matched$INLA_var),
+               Stan = sqrt(matched$Stan_var))
+  )
+  axis_bounds <- do.call(rbind, lapply(split(points, points$metric),
+    function(z) {
+      values <- c(z$INLA, z$Stan)
+      values <- values[is.finite(values)]
+      limits <- if (length(values)) range(values) else c(0, 1)
+      if (diff(limits) == 0) limits <- limits + c(-0.5, 0.5)
+      data.frame(metric = z$metric[1], INLA = limits, Stan = limits)
+    }
+  ))
+  ggplot(points, aes(INLA, Stan)) +
+    geom_blank(data = axis_bounds) +
+    geom_abline(slope = 1, intercept = 0, colour = "grey60",
+                linetype = "dashed") +
+    geom_point() +
+    facet_wrap(~metric, scales = "free") +
+    labs(title = title) +
+    theme_bw() +
+    theme(aspect.ratio = 1)
+}
+```
+
+We will go through major use cases for the `smoothSurvey` function using the examples with the demo datasets.
+
+```{r demo-data}
+data(DemoData2, package = "SUMMER")
+data(DemoMap2, package = "SUMMER")
+Xmat <- aggregate(age ~ region, DemoData2, mean)
+base_binary <- list(
+  data = DemoData2, Amat = DemoMap2$Amat, response.type = "binary",
+  responseVar = "tobacco.use", strataVar = "strata",
+  weightVar = "weights", regionVar = "region",
+  clusterVar = "~clustid+id", CI = 0.95
+)
+```
+
+## Area-level FH model with binary outcome, BYM2 prior
+
+```{r area-binary-bym2}
+area_binary <- fit_both(base_binary)
+comparison_scatter(area_binary, "Area-level binary BYM2")
+```
+
+## Area-level FH model with binary outcome, SAR prior
+
+```{r area-binary-sar}
+area_sar <- fit_both(c(base_binary, list(space.model = "sar")))
+comparison_scatter(area_sar, "Area-level binary SAR")
+```
+
+## Area-level FH model with binary outcome, unmatched link function
+
+```{r area-unmatched}
+area_unmatched <- fit_both(c(base_binary, list(unmatched.link = TRUE)))
+comparison_scatter(area_unmatched, "Area-level unmatched link")
+```
+
+## Area-level FH model with covariate
+
+```{r area-covariate}
+area_covariate <- fit_both(c(base_binary, list(X = Xmat)))
+comparison_scatter(area_covariate, "Area-level covariate")
+```
+
+## Area-level FH model with direct estimates of prevalence
+
+```{r direct-binary}
+direct_binary <- area_binary$INLA$direct[, c("region", "direct.est", "direct.var")]
+direct_binary_fit <- fit_both(list(
+  data = NULL, direct.est = direct_binary, Amat = DemoMap2$Amat,
+  regionVar = "region", responseVar = "direct.est",
+  direct.est.var = "direct.var", response.type = "binary"
+))
+comparison_scatter(direct_binary_fit, "Binary direct-estimate input")
+```
+
+## Area-level FH model with direct estimates of a Gaussian outcome
+
+```{r direct-logit}
+direct_logit <- area_binary$INLA$direct[
+  , c("region", "direct.logit.est", "direct.logit.var")
+]
+direct_logit_fit <- fit_both(list(
+  data = NULL, direct.est = direct_logit, Amat = DemoMap2$Amat,
+  regionVar = "region", responseVar = "direct.logit.est",
+  direct.est.var = "direct.logit.var", response.type = "gaussian"
+))
+comparison_scatter(direct_logit_fit, "Gaussian logit direct-estimate input")
+```
+
+
+## Unit-level model with binary outcome
+
+```{r unit-binary}
+unit_data <- DemoData2
+unit_data$urbanicity <- ifelse(grepl("urban", unit_data$strata),
+                               "urban", "rural")
+unit_binary <- fit_both(list(
+  data = unit_data, Amat = DemoMap2$Amat, response.type = "binary",
+  X = Xmat, is.unit.level = TRUE, responseVar = "tobacco.use",
+  strataVar.within = "urbanicity", regionVar = "region",
+  clusterVar = "clustid", CI = 0.95
+))
+comparison_scatter(unit_binary, "Unit-level beta-binomial")
+```
+
+## Unit-level model with aggregated cluster counts
+
+```{r unit-binary-aggregated}
+counts <- aggregate(tobacco.use ~ region + urbanicity + clustid,
+                    unit_data, sum)
+totals <- aggregate(tobacco.use ~ region + urbanicity + clustid,
+                    unit_data, length)
+names(totals)[4] <- "total"
+counts <- merge(counts, totals)
+unit_counts <- fit_both(list(
+  data = counts, Amat = DemoMap2$Amat, response.type = "binary",
+  X = Xmat, is.unit.level = TRUE, is.agg = TRUE,
+  responseVar = "tobacco.use", strataVar.within = "urbanicity",
+  totalVar = "total", regionVar = "region", clusterVar = "clustid"
+))
+comparison_scatter(unit_counts, "Aggregated beta-binomial")
+```
+
+## Area-level model with Gaussian outcome
+
+```{r area-gaussian}
+area_gaussian <- fit_both(list(
+  data = DemoData2, Amat = DemoMap2$Amat, response.type = "gaussian",
+  responseVar = "age", strataVar = "strata", weightVar = "weights",
+  regionVar = "region", clusterVar = "~clustid+id"
+))
+comparison_scatter(area_gaussian, "Area-level Gaussian")
+```
+
+## Unit-level nested-error model
+
+The sample response and satellite covariates are from 12 Iowa counties. The
+county-level covariate means are supplied in `X` for prediction.
+
+```{r corn-soybean, cache.lazy=FALSE}
+data(cornsoybean, package = "sae")
+data(cornsoybeanmeans, package = "sae")
+cornsoybean <- cornsoybean[-33, , drop = FALSE] # remove outlier
+cornsoybean_X <- data.frame(cornsoybeanmeans[
+  , c("CountyIndex", "MeanCornPixPerSeg", "MeanSoyBeansPixPerSeg")
+])
+names(cornsoybean_X) <- c("County", "CornPix", "SoyBeansPix")
+
+cornsoybean_pair <- fit_both(list(
+  data = cornsoybean, X.unit = c("CornPix", "SoyBeansPix"),
+  X = cornsoybean_X, Amat = NULL,
+  response.type = "gaussian", is.unit.level = TRUE,
+  responseVar = "CornHec", regionVar = "County", clusterVar = NULL,
+  pc.u = 1000, pc.alpha = 0.01, CI = 0.95
+))
+comparison_scatter(cornsoybean_pair,
+                   "Corn and soybean nested-error model")
+```
+
+## Neonatal mortality with RW2 and Type I--IV interactions
+
+```{r nmr-data}
+data(DemoData, package = "SUMMER")
+data(DemoMap, package = "SUMMER")
+nmr_births <- lapply(DemoData, function(x) {
+  x[as.character(x$age) == "0", , drop = FALSE]
+})
+names(nmr_births) <- names(DemoData)
+periods <- levels(DemoData[[1]]$time)
+nmr_multi <- SUMMER::getDirectList(
+  births = nmr_births, years = periods, regionVar = "region",
+  timeVar = "time", clusterVar = "~clustid+id", ageVar = "age",
+  weightsVar = "weights"
+)
+nmr_direct <- SUMMER::aggregateSurvey(nmr_multi)
+nmr_direct <- subset(nmr_direct, region != "All")
+nmr_direct$time_index <- match(nmr_direct$years, periods)
+nmr_direct$variance <- nmr_direct$var.est *
+  (nmr_direct$mean * (1 - nmr_direct$mean))^2
+```
+
+```{r nmr-fits, cache.lazy=FALSE}
+nmr_type_labels <- paste("Type", c("I", "II", "III", "IV"))
+nmr_pairs <- setNames(vector("list", 4), nmr_type_labels)
+for (interaction in 1:4) {
+  label <- nmr_type_labels[interaction]
+  nmr_pairs[[label]] <- fit_both(list(
+    data = NULL, direct.est = nmr_direct, Amat = DemoMap$Amat,
+    regionVar = "region", timeVar = "time_index",
+    responseVar = "mean", direct.est.var = "variance",
+    response.type = "binary", time.model = "rw2",
+    type.st = interaction
+  ))
+}
+```
+We compare the estimates and standard errors for all four fits below. 
+
+```{r nmr-probability-comparison}
+for (label in nmr_type_labels) {
+  print(comparison_scatter(
+    nmr_pairs[[label]],
+    paste("Neonatal mortality probability: RW2 +", label)
+  ))
+}
+```
+
+For the four NMR models, we also compare posterior means and 95% credible intervals
+for the intercept, variance and mixing parameters, main spatial and temporal
+effects, and every region-by-period interaction. INLA precision
+parameters are transformed to standard deviations so that they have the same
+interpretation as the corresponding Stan parameters. The BYM2 spatial effect
+shown below is the combined structured and unstructured effect used in the
+linear predictor. Thus, every latent random effect entering the predictor is
+compared on the model's logit scale. Each point is a posterior mean, each line
+is a central 95% credible interval, and color identifies INLA or rstan. Within
+each panel, the x-axis groups the four interaction types so that each type has
+one INLA--rstan pair.
+
+```{r nmr-parameter-comparison, fig.width=16, fig.height=7.5, cache=FALSE}
+nmr_fits <- lapply(nmr_pairs, function(pair) {
+  list(
+    inla = pair$INLA$fit,
+    stan = pair$Stan$fit$stanfit,
+    draws = rstan::extract(pair$Stan$fit$stanfit, permuted = TRUE)
+  )
+})
+nmr_regions <- colnames(DemoMap$Amat)
+nmr_times <- sort(unique(nmr_direct$time_index))
+nmr_time_labels <- periods[nmr_times]
+
+inla_interval <- function(marginal, transform = identity) {
+  clean_marginal <- function(x) {
+    x <- as.matrix(x)
+    x <- x[is.finite(x[, 1]) & is.finite(x[, 2]), , drop = FALSE]
+    x <- x[order(x[, 1]), , drop = FALSE]
+    if (anyDuplicated(x[, 1])) {
+      x <- stats::aggregate(x[, 2], list(x[, 1]), mean)
+    }
+    if (nrow(x) < 2L) stop("The INLA marginal has too few finite points.")
+    as.matrix(x)
+  }
+  marginal <- clean_marginal(marginal)
+  marginal <- INLA::inla.tmarginal(transform, marginal)
+  marginal <- clean_marginal(marginal)
+  c(
+    mean = unname(INLA::inla.emarginal(identity, marginal)),
+    lower = unname(INLA::inla.qmarginal(0.025, marginal)),
+    upper = unname(INLA::inla.qmarginal(0.975, marginal))
+  )
+}
+
+stan_intervals <- function(draws, parameter, component, interaction_type) {
+  if (length(dim(draws)) < 2L) draws <- matrix(draws, ncol = 1)
+  if (ncol(draws) != length(parameter)) {
+    stop("The number of rstan parameters does not match its labels.")
+  }
+  intervals <- t(apply(draws, 2, function(x) {
+    c(mean = mean(x), quantile(x, c(0.025, 0.975), names = FALSE))
+  }))
+  data.frame(
+    component = component, parameter = parameter,
+    mean = intervals[, 1], lower = intervals[, 2], upper = intervals[, 3],
+    method = "rstan", interaction_type = interaction_type, row.names = NULL
+  )
+}
+
+inla_random_intervals <- function(fit, name, n, parameter, component,
+                                  interaction_type, index = seq_len(n)) {
+  x <- fit$summary.random[[name]]
+  if (is.null(x) || nrow(x) < n || length(parameter) != n ||
+      length(index) != n || any(index < 1L | index > nrow(x))) {
+    stop("The INLA random-effect dimensions do not match their labels.")
+  }
+  x <- x[index, ]
+  data.frame(
+    component = component, parameter = parameter,
+    mean = x$mean, lower = x$`0.025quant`, upper = x$`0.975quant`,
+    method = "INLA", interaction_type = interaction_type, row.names = NULL
+  )
+}
+
+inla_hyper_intervals <- function(fit, name, parameter, interaction_type,
+                                 transform = identity,
+                                 component = "Scale parameters") {
+  marginal <- fit$internal.marginals.hyperpar[[name]]
+  if (is.null(marginal)) {
+    stop("The INLA hyperparameter marginal was not found: ", name)
+  }
+  z <- inla_interval(marginal, transform)
+  data.frame(
+    component = component, parameter = parameter,
+    mean = z["mean"], lower = z["lower"], upper = z["upper"],
+    method = "INLA", interaction_type = interaction_type, row.names = NULL
+  )
+}
+
+comparison_axis <- function(data, parameter_levels) {
+  data$interaction_type <- factor(data$interaction_type, nmr_type_labels)
+  axis_levels <- as.vector(t(outer(
+    parameter_levels, nmr_type_labels, paste, sep = "\n"
+  )))
+  data$parameter_type <- factor(
+    paste(data$parameter, data$interaction_type, sep = "\n"), axis_levels
+  )
+  data
+}
+
+interval_plot <- function(data, x) {
+  dodge <- position_dodge(width = 0.55)
+  ggplot(data, aes(x = {{ x }}, y = mean, colour = method, group = method)) +
+    geom_linerange(aes(ymin = lower, ymax = upper),
+                   position = dodge, linewidth = 0.45) +
+    geom_point(position = dodge, size = 1.5) +
+    scale_colour_manual(values = c(INLA = "#0072B2", rstan = "#D55E00")) +
+    labs(x = NULL, y = "Posterior value", colour = NULL) +
+    theme_bw() +
+    theme(
+      legend.position = "top", panel.grid.minor = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+}
+
+nmr_global <- do.call(rbind, lapply(nmr_type_labels, function(type) {
+  inla_fit <- nmr_fits[[type]]$inla
+  draws <- nmr_fits[[type]]$draws
+  inla_fixed <- inla_fit$summary.fixed
+  interaction_name <- if (type %in% c("Type II", "Type IV")) {
+    "time.area"
+  } else {
+    "region.int"
+  }
+  rbind(
+    data.frame(
+      component = "Fixed effect", parameter = rownames(inla_fixed),
+      mean = inla_fixed$mean, lower = inla_fixed$`0.025quant`,
+      upper = inla_fixed$`0.975quant`, method = "INLA",
+      interaction_type = type, row.names = NULL
+    ),
+    stan_intervals(
+      draws$beta, rownames(inla_fixed), "Fixed effect", type
+    ),
+    inla_hyper_intervals(
+      inla_fit, "Log precision for region.struct", "Spatial SD", type,
+      function(x) exp(-x / 2)
+    ),
+    inla_hyper_intervals(
+      inla_fit, "Logit phi for region.struct", "BYM2 phi", type, plogis,
+      component = "Mixing parameter"
+    ),
+    inla_hyper_intervals(
+      inla_fit, "Log precision for time.unstruct", "Temporal IID SD", type,
+      function(x) exp(-x / 2)
+    ),
+    inla_hyper_intervals(
+      inla_fit, "Log precision for time.struct", "Temporal RW2 SD", type,
+      function(x) exp(-x / 2)
+    ),
+    inla_hyper_intervals(
+      inla_fit, paste("Log precision for", interaction_name),
+      "Interaction SD", type,
+      function(x) exp(-x / 2)
+    ),
+    stan_intervals(
+      draws$sigma_space, "Spatial SD", "Scale parameters", type
+    ),
+    stan_intervals(draws$phi, "BYM2 phi", "Mixing parameter", type),
+    stan_intervals(
+      draws$sigma_time_unstruct, "Temporal IID SD", "Scale parameters", type
+    ),
+    stan_intervals(
+      draws$sigma_time_struct, "Temporal RW2 SD", "Scale parameters", type
+    ),
+    stan_intervals(
+      draws$sigma_st, "Interaction SD", "Scale parameters", type
+    )
+  )
+}))
+nmr_global$method <- factor(nmr_global$method, c("INLA", "rstan"))
+nmr_global <- comparison_axis(
+  nmr_global,
+  c("(Intercept)", "Spatial SD", "BYM2 phi", "Temporal IID SD",
+    "Temporal RW2 SD", "Interaction SD")
+)
+
+interval_plot(nmr_global, parameter_type) +
+  facet_wrap(~component, scales = "free")
+```
+
+```{r nmr-main-random-effects, fig.width=18, fig.height=7.5}
+nmr_main_random <- do.call(rbind, lapply(nmr_type_labels, function(type) {
+  inla_fit <- nmr_fits[[type]]$inla
+  draws <- nmr_fits[[type]]$draws
+  rbind(
+    inla_random_intervals(
+      inla_fit, "region.struct", length(nmr_regions), nmr_regions,
+      "Spatial", type
+    ),
+    stan_intervals(draws$re_space, nmr_regions, "Spatial", type),
+    inla_random_intervals(
+      inla_fit, "time.unstruct", length(nmr_times), nmr_time_labels,
+      "Temporal IID", type
+    ),
+    stan_intervals(
+      draws$re_time_unstruct, nmr_time_labels, "Temporal IID", type
+    ),
+    inla_random_intervals(
+      inla_fit, "time.struct", length(nmr_times), nmr_time_labels,
+      "Temporal RW2", type
+    ),
+    stan_intervals(
+      draws$re_time_struct, nmr_time_labels, "Temporal RW2", type
+    )
+  )
+}))
+nmr_main_random$method <- factor(nmr_main_random$method, c("INLA", "rstan"))
+nmr_main_random <- comparison_axis(
+  nmr_main_random, c(nmr_regions, nmr_time_labels)
+)
+
+interval_plot(nmr_main_random, parameter_type) +
+  facet_wrap(~component, nrow = 1, scales = "free_x")
+```
+
+```{r nmr-interaction-effects, fig.width=16, fig.height=7.5}
+nmr_interaction_index <- expand.grid(
+  region = nmr_regions, time = nmr_time_labels,
+  KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+)
+nmr_interaction <- do.call(rbind, lapply(nmr_type_labels, function(type) {
+  inla_name <- if (type %in% c("Type II", "Type IV")) {
+    "time.area"
+  } else {
+    "region.int"
+  }
+  # INLA's Type II/IV generic0 fields are region-major; the other fields and
+  # Stan are time-major, matching nmr_interaction_index.
+  inla_index <- if (type %in% c("Type II", "Type IV")) {
+    (match(nmr_interaction_index$region, nmr_regions) - 1L) *
+      length(nmr_time_labels) +
+      match(nmr_interaction_index$time, nmr_time_labels)
+  } else {
+    seq_len(nrow(nmr_interaction_index))
+  }
+  block <- rbind(
+    inla_random_intervals(
+      nmr_fits[[type]]$inla, inla_name, nrow(nmr_interaction_index),
+      nmr_interaction_index$region, "Space-time interaction", type,
+      index = inla_index
+    ),
+    stan_intervals(
+      nmr_fits[[type]]$draws$re_st, nmr_interaction_index$region,
+      "Space-time interaction", type
+    )
+  )
+  block$time <- rep(nmr_interaction_index$time, times = 2)
+  block
+}))
+nmr_interaction$method <- factor(nmr_interaction$method, c("INLA", "rstan"))
+nmr_interaction$time <- factor(nmr_interaction$time, nmr_time_labels)
+nmr_interaction <- comparison_axis(nmr_interaction, nmr_regions)
+
+interval_plot(nmr_interaction, parameter_type) +
+  facet_wrap(~time, nrow = 2)
+```
+
+## Guide to the Stan backend
+
+The call path is
+
+```text
+smoothSurveyStan()
+  -> SUMMER::smoothSurvey(.backend = ...)
+       -> .stan_smoothSurvey_fit()
+            -> fh_gaussian.stan or betabinom.stan
+            -> posterior draws in the form expected by SUMMER
+```
+
+`SUMMER::smoothSurvey()` continues to perform the common survey-data
+preparation and assemble the returned estimates. The functions in
+`surveyPrev` translate that prepared model input to Stan and translate the
+draws back to the small posterior interface used by SUMMER.
+
+### Interface, data preparation, and other infrastructure
+
+| Function | File | Role |
+|---|---|---|
+| `smoothSurveyStan()` | `R/smoothSurvey_stan.R` | Public entry point. Checks Stan-supported arguments, constructs the backend, and calls `SUMMER::smoothSurvey()`. Add or expose a new user-facing Stan option here. |
+| `.stan_smoothSurvey_backend()` | `R/smoothSurvey_stan.R` | Creates the `fit`, linear-predictor, and posterior-sampling callbacks required by the SUMMER backend interface. Change this when the internal data structures change. |
+| `.stan_smoothSurvey_fit()` | `R/smoothSurvey_stan.R` | Builds design matrices and Stan data, chooses the Gaussian or beta-binomial program, runs rstan, and renames posterior draws to match SUMMER's latent-field convention. Change this when the Stan input/output changes. |
+| `.smoothSurvey_dispatch()` | `R/smoothSurvey_stan.R` | Internal INLA/rstan switch used by higher-level surveyPrev workflows. It is not the public model implementation. |
+| `.get_stanmodel()` | `R/common_stan.R` | Locates, compiles, and caches a Stan program once per R session. |
+| `get_fh_stanmodel()` and `get_betabinom_stanmodel()` | `R/common_stan.R` | Small model-specific loaders that identify the corresponding file under `inst/stan`. |
+| `.validate_adjacency_stan()` | `R/common_stan.R` | Validates an adjacency matrix and converts row-standardized weights to an undirected binary edge matrix. |
+| `.graph_components_stan()` | `R/common_stan.R` | Finds connected components and their sizes without requiring an additional graph package. |
+| `.empty_spatial_data_stan()` | `R/common_stan.R` | Supplies shape-compatible placeholder graph data when a Besag graph is not used. |
+| `.stan_sampling_args()` | `R/common_stan.R` | Centralizes chain, iteration, seed, core, and HMC-control arguments passed to `rstan::sampling()`. |
+| `.type4_inla_components()` | `SUMMER/R/type4-inla.R` | Builds the scaled Kronecker precision and connected-component constraints for the INLA `smoothSurvey()` Type IV implementation, mirroring `smoothDirect()`. Its constraint subspace is also mirrored in Stan. |
+| `diagModel()` and `.find_model_fit()` | `R/diagModel.R` | Find an INLA or rstan fit inside the supported result wrappers and provide the common diagnostics interface. |
+| `.diag_stan()` | `R/diagModel_stan.R` | Computes rstan-specific divergence, treedepth, R-hat, effective-sample-size, and E-BFMI checks. |
+
+The `.backend` argument in `SUMMER::smoothSurvey()` is the boundary between
+the two packages. Changes to survey design processing, direct-estimate
+construction, or final aggregation normally belong in SUMMER. Changes to
+Stan data construction, sampling, or draw extraction belong in
+`.stan_smoothSurvey_fit()`.
+
+### Model-specific preparation and prior specification
+
+| Function | File | Responsibility |
+|---|---|---|
+| `.smoothsurvey_spatial_data_stan()` | `R/smoothSurvey_stan.R` | Converts `space.model` and `type.st` into Stan model codes, prepares BYM2/Besag graph data, and constructs the row-standardized matrix used by SAR. |
+| `.rw_scaling_factor_stan()` | `R/common_stan.R` | Computes the generalized-variance scaling used for RW1 and RW2 effects so their scale parameters have a stable interpretation. |
+| `.prepare_bym2_graph_stan()` | `R/common_stan.R` | Scales every connected ICAR component, handles singleton regions, creates edge and constraint indices, and prepares either the INLA-tabulated or analytic spectral BYM2 `phi` prior. This is the main R function to inspect when revising BYM2 behavior. |
+| `stan_betabinomial()` | `R/clusterModel_stan.R` | Builds and fits the non-temporal beta-binomial model used by `clusterModel()`, then creates its INLA-compatible prediction and latent-draw objects. It shares `betabinom.stan` and the graph helpers with `smoothSurveyStan()`, but is not called by `smoothSurveyStan()`. |
+
+The general PC scale-prior rate is computed in R as
+`lambda = -log(pc.alpha) / pc.u`. Fixed-effect precisions, beta-binomial
+overdispersion hyperparameters, graph scaling constants, and BYM2 `phi` prior
+inputs are also created in R. Their actual contribution to the posterior is
+defined in the Stan `model` blocks.
+
+### Stan model specification
+
+| Program or block | Responsibility |
+|---|---|
+| `inst/stan/fh_gaussian.stan` | Gaussian Fay--Herriot likelihoods with known sampling variance, unmatched-link models, and unit-level Gaussian models with estimated residual precision. |
+| `inst/stan/betabinom.stan` | Beta-binomial likelihood and overdispersion model used for unit-level binary `smoothSurveyStan()` fits and `clusterModel()` fits. |
+| `interpolate_lpdf()` in the `functions` block | Linearly interpolates the tabulated INLA BYM2 log-density supplied by R. |
+| `pc_bym2_phi_lpdf()` in the `functions` block | Evaluates the alternative analytic spectral BYM2 `phi` density. |
+| `data` | Declares the interface produced by `.stan_smoothSurvey_fit()` or `stan_betabinomial()`. Any declaration change must be matched in the corresponding R data list. |
+| `parameters` | Declares fixed effects, scale and mixing parameters, unscaled spatial, temporal, and interaction effects, and the unpenalized RW2 slope directions retained by `smoothDirect()`. |
+| `transformed parameters` | Constructs the BYM2, SAR, temporal, and Type I--IV effects that enter the linear predictor, including their scaling and separate RW2 linear trends. |
+| `model` | Defines fixed-effect and PC priors, BYM2/Besag penalties, constraints, RW1/RW2 penalties, Type I--IV interaction structures, and the observation likelihood. |
+| `generated quantities` | Returns linear predictors and, for the beta-binomial model, predicted probabilities consumed by the R adapters. |
+
+The two Stan programs intentionally use the same spatial, temporal,
+interaction, constraint, and BYM2-prior formulation. A revision to any of
+those shared model components should therefore be made in both programs and
+tested for both likelihoods.
+
+### Where to make a change
+
+| Intended revision | Start here | Also check |
+|---|---|---|
+| Change a likelihood or add an observation-level parameter | The relevant file in `inst/stan` | The Stan data and extraction code in `.stan_smoothSurvey_fit()`; for cluster models, `stan_betabinomial()` |
+| Change a prior already implemented in Stan | The `model` block in both Stan programs | The R construction of its hyperparameters in `.stan_smoothSurvey_fit()` or `.prepare_bym2_graph_stan()` |
+| Change the BYM2 `phi` prior | `.prepare_bym2_graph_stan()` and the Stan `functions`/`model` blocks | Both Stan programs and graph-prior tests |
+| Change disconnected-graph or ICAR scaling behavior | `.validate_adjacency_stan()`, `.graph_components_stan()`, and `.prepare_bym2_graph_stan()` | BYM2 and Type III/IV code in both Stan programs |
+| Change RW1, RW2, or Type I--IV interactions | `transformed parameters` and `model` in both Stan programs | `.rw_scaling_factor_stan()`, model codes in `.stan_smoothSurvey_fit()`, and linear-predictor indexing |
+| Change identifiability constraints | The `constr` sections of both Stan `model` blocks | Graph-component metadata and `constr` propagation from `smoothSurveyStan()` |
+| Add a public model or sampler argument | `smoothSurveyStan()` | `.stan_smoothSurvey_backend()`, `.stan_smoothSurvey_fit()`, and documentation |
+| Change returned latent effects or predictions | Generated quantities in Stan and extraction in `.stan_smoothSurvey_fit()` | The backend callbacks and SUMMER's expected latent names |
+| Change diagnostic thresholds or checks | `diagModel()` or `.diag_stan()` | Tests in `tests/testthat/test-diagModel.R` |
+
+After changing either Stan program, first run `rstan::stanc()` on the modified
+file to check its syntax. Then test the affected likelihood, spatial model,
+temporal model, and interaction type; changes to shared random-effect code
+should be tested against both Stan programs.

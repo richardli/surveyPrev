@@ -10,3 +10,7 @@ docs/vignettes_rmd/vignette-main_files
 *.log
 surveyPrev.Rcheck
 inst/stan/*.rds
+docs/vignettes_rmd/stan-inla-zambia-anc_cache
+docs/vignettes_rmd/smoothSurvey-stan-inla-examples_cache
+docs/vignettes_rmd/smoothSurvey-stan-inla-examples_files
+docs/vignettes_rmd/stan-inla-zambia-anc_files
