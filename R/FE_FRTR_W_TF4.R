@@ -32,15 +32,22 @@ FE_FRTR_W_TF4 <- function(IRdata) {
   }
   
   # Reshape to long format for births
-  birth_data <- IRdata %>%
-    select(caseid, v001, v002, v005, v022, v023, v024, v025, 
-           v008, v011, all_of(birth_cols)) %>%
-    tidyr::pivot_longer(
-      cols = all_of(birth_cols),
-      names_to = "birth_order",
-      values_to = "birth_cmc",
-      values_drop_na = TRUE
-    ) %>%
+  id_cols <- c(
+    "caseid", "v001", "v002", "v005", "v022",
+    "v023", "v024", "v025", "v008", "v011"
+  )
+  birth_data <- data.table::melt(
+    data.table::as.data.table(
+      IRdata[, c(id_cols, birth_cols), drop = FALSE]
+    ),
+    id.vars = id_cols,
+    measure.vars = birth_cols,
+    variable.name = "birth_order",
+    value.name = "birth_cmc",
+    variable.factor = FALSE,
+    na.rm = TRUE
+  ) %>%
+    as.data.frame() %>%
     filter(birth_cmc > 0)  # Valid births only
   
   # Filter births in the 3-year reference period

@@ -3,9 +3,21 @@
 # Compiled models are cached once per R session.
 .surveyPrev_stan_cache <- new.env(parent = emptyenv())
 
+.require_rstan <- function() {
+  if (!requireNamespace("rstan", quietly = TRUE)) {
+    stop(
+      "The optional package 'rstan' is required for the Stan backend. ",
+      "Install it with install.packages('rstan').",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 .get_stanmodel <- function(name) {
   # Resolve an installed Stan source (or the development copy), compile it
   # once, and reuse the stanmodel for subsequent fits in this R session.
+  .require_rstan()
   cached <- .surveyPrev_stan_cache[[name]]
   if (!is.null(cached)) return(cached)
 

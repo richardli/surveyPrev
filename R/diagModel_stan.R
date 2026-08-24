@@ -1,6 +1,7 @@
 .diag_stan <- function(fit, rhat.threshold, ess.ratio.threshold,
                        ebfmi.threshold) {
   # Sampler diagnostics are computed per retained chain; warmup is excluded.
+  .require_rstan()
   sampler <- rstan::get_sampler_params(fit, inc_warmup = FALSE)
   divergences <- sum(vapply(sampler, function(x) sum(x[, "divergent__"]),
                             numeric(1)))
