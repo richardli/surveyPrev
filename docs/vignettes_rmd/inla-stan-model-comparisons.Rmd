@@ -1,73 +1,148 @@
 ---
-title: "smoothSurvey examples with INLA and Stan"
+title: "Comparing INLA and Stan Implementations in surveyPrev and SUMMER"
 author: "Zehang Richard Li, Qianyu Dong"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{smoothSurvey examples with INLA and Stan}
+  %\VignetteIndexEntry{Comparing INLA and Stan Implementations}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-In this vignette, we compare `SUMMER::smoothSurvey()` for INLA implementation with
-`surveyPrev::smoothSurveyStan()` for Stan implementation. A detailed description of the backend design is included at the end of this vignette.
 
 ```{r setup, include=FALSE}
-run_models <- identical(Sys.getenv("SURVEYPREV_RUN_VIGNETTES"), "true")
 knitr::opts_chunk$set(
   eval = TRUE, collapse = TRUE, comment = "#>",
   message = FALSE, warning = FALSE,
   fig.width = 11, fig.height = 5,
-  out.width = "100%", fig.align = "center", cache = TRUE
+  out.width = "100%", fig.align = "center", cache = TRUE,
+  cache.path = "inla-stan-model-comparisons_cache/html/"
 )
 library(surveyPrev)
 library(SUMMER)
 library(ggplot2)
+library(rdhs)
 INLA::inla.setOption(num.threads = "1:1")
 ```
 
-Each Stan fit uses three chains, 1,000 warmup iterations, and 1,000 retained
-posterior draws per chain. All 3,000 retained draws are used in SUMMER's
-post-processing. If supplied, `nsim` is overwritten by the retained draw count.
-The sampler arguments are shown explicitly below so they can be changed in one
-place.
+This vignette compares the INLA and Stan implementations available through
+`surveyPrev` and `SUMMER`, and then describes the internal organization of the
+Stan backend.
 
-We start with some helper functions to simplify the function calls later.
-```{r helpers}
-fit_both <- function(args) {
+# Comparing surveyPrev Model Classes with INLA and Stan
+
+This section compares the main `surveyPrev` model classes using the 2024 Zambia
+DHS indicator for four or more antenatal care visits. The data are downloaded
+directly from the DHS website using **rdhs**. This step requires users to
+
+1. register with DHS to gain data access, and
+2. set up their DHS account login details with `rdhs::set_rdhs_config()`.
+
+```{r surveyPrev-data}
+dhs_raw <- getDHSdata(
+  country = "Zambia", year = 2024, indicator = "RH_ANCN_W_N4P"
+)
+anc <- getDHSindicator(dhs_raw, indicator = "RH_ANCN_W_N4P")
+gps <- getDHSgeo(country = "Zambia", year = 2024)
+
+data(ZambiaAdm1)
+data(ZambiaAdm2)
+data(ZambiaPopWomen)
+cluster_info <- clusterInfo(gps, ZambiaAdm1, ZambiaAdm2)
+admin1_info <- adminInfo(
+  ZambiaAdm1, admin = 1, by.adm = "NAME_1",
+  agg.pop = ZambiaPopWomen$admin1_pop,
+  proportion = ZambiaPopWomen$admin1_urban
+)
+admin2_info <- adminInfo(
+  ZambiaAdm2, admin = 2, by.adm = "NAME_2", by.adm.upper = "NAME_1",
+  agg.pop = ZambiaPopWomen$admin2_pop,
+  proportion = ZambiaPopWomen$admin2_urban
+)
+```
+
+Every Stan fit in this vignette uses three chains, 2,000 iterations per chain,
+and 1,000 warmup iterations per chain. This leaves 1,000 retained draws per
+chain and 3,000 retained draws in total. The common sampler arguments and
+comparison plot are defined once below.
+
+```{r comparison-helpers}
+stan_args <- list(
+  stan.chains = 3,
+  stan.iter = 2000,
+  stan.warmup = 1000,
+  stan.seed = 1,
+  stan.cores = 3
+)
+
+fit_both <- function(args, model_fun = NULL) {
+  if (is.null(model_fun)) {
+    return(list(
+      INLA = do.call(SUMMER::smoothSurvey, c(args, list(nsim = 1000))),
+      Stan = do.call(surveyPrev::smoothSurveyStan, c(args, stan_args))
+    ))
+  }
+
   list(
-    INLA = do.call(SUMMER::smoothSurvey, c(args, list(nsim = 1000))),
-    Stan = do.call(surveyPrev::smoothSurveyStan, c(args, list(
-      stan.chains = 3,
-      stan.iter = 2000,
-      stan.warmup = 1000,
-      stan.seed = 1,
-      stan.cores = 3
-    )))
+    INLA = do.call(model_fun, c(args, list(engine = "INLA"))),
+    Stan = do.call(model_fun, c(args, list(engine = "rstan"), stan_args))
   )
 }
 
-comparison_scatter <- function(pair, title, table = "smooth") {
-  a <- pair$INLA[[table]]
-  b <- pair$Stan[[table]]
-  keys <- intersect(c("region", "time", "strata"),
-                    intersect(names(a), names(b)))
-  if (!length(keys)) {
-    stop("No common model-output keys were found.")
+model_table <- function(x, table = NULL) {
+  if (!is.null(table)) {
+    if (is.null(x[[table]])) stop("Model output has no table named '", table, "'.")
+    return(x[[table]])
   }
-  a[keys] <- lapply(a[keys], as.character)
-  b[keys] <- lapply(b[keys], as.character)
-  a <- a[, c(keys, "mean", "var")]
-  b <- b[, c(keys, "mean", "var")]
-  names(a)[names(a) %in% c("mean", "var")] <- c("INLA_mean", "INLA_var")
-  names(b)[names(b) %in% c("mean", "var")] <- c("Stan_mean", "Stan_var")
-  matched <- merge(a, b, by = keys, all = TRUE, sort = TRUE)
-  if (anyNA(matched[c("INLA_mean", "INLA_var", "Stan_mean", "Stan_var")])) {
+  candidates <- c("res.admin1", "res.admin2", "agg.admin1", "smooth")
+  for (name in candidates) if (!is.null(x[[name]])) return(x[[name]])
+  stop("No model estimate table found.")
+}
+
+comparison_scatter <- function(pair, title, table = NULL) {
+  x <- model_table(pair$INLA, table)
+  y <- model_table(pair$Stan, table)
+  keys <- intersect(
+    c("admin1.name", "admin2.name.full", "region", "time", "strata", "type"),
+    intersect(names(x), names(y))
+  )
+
+  x$.se <- if ("sd" %in% names(x)) x$sd else sqrt(x$var)
+  y$.se <- if ("sd" %in% names(y)) y$sd else sqrt(y$var)
+  if (length(keys)) {
+    x[keys] <- lapply(x[keys], as.character)
+    y[keys] <- lapply(y[keys], as.character)
+    if (anyDuplicated(x[keys]) || anyDuplicated(y[keys])) {
+      stop(
+        "The available comparison keys do not uniquely identify model estimates: ",
+        paste(keys, collapse = ", "), "."
+      )
+    }
+    x <- x[, c(keys, "mean", ".se")]
+    y <- y[, c(keys, "mean", ".se")]
+    names(x)[names(x) %in% c("mean", ".se")] <- c("INLA_mean", "INLA_se")
+    names(y)[names(y) %in% c("mean", ".se")] <- c("Stan_mean", "Stan_se")
+    matched <- merge(x, y, by = keys, all = TRUE, sort = TRUE)
+  } else {
+    if (nrow(x) != nrow(y)) {
+      stop("INLA and Stan outputs have different numbers of estimates.")
+    }
+    matched <- data.frame(
+      INLA_mean = x$mean, INLA_se = x$.se,
+      Stan_mean = y$mean, Stan_se = y$.se
+    )
+  }
+
+  values <- c("INLA_mean", "INLA_se", "Stan_mean", "Stan_se")
+  if (anyNA(matched[values])) {
     stop("INLA and Stan outputs do not have the same prediction keys.")
   }
   points <- rbind(
     data.frame(metric = "estimate", INLA = matched$INLA_mean,
                Stan = matched$Stan_mean),
-    data.frame(metric = "standard error", INLA = sqrt(matched$INLA_var),
-               Stan = sqrt(matched$Stan_var))
+    data.frame(metric = "standard error", INLA = matched$INLA_se,
+               Stan = matched$Stan_se)
   )
   axis_bounds <- do.call(rbind, lapply(split(points, points$metric),
     function(z) {
@@ -89,6 +164,97 @@ comparison_scatter <- function(pair, title, table = "smooth") {
     theme(aspect.ratio = 1)
 }
 ```
+
+## Fay--Herriot Model with an IID Area Effect at Admin 1
+
+```{r fh-iid}
+fh_iid <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "iid", aggregation = FALSE
+), model_fun = fhModel)
+comparison_scatter(fh_iid, "Fay-Herriot IID, admin 1")
+```
+
+Some computational checks are available using `diagModel()`.
+
+```{r fh-iid-diagnostics}
+diagModel(fh_iid$INLA)
+diagModel(fh_iid$Stan)
+```
+
+## Fay--Herriot Model with a BYM2 Area Effect at Admin 1
+
+```{r fh-bym2}
+fh_bym2 <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "bym2", aggregation = TRUE
+), model_fun = fhModel)
+comparison_scatter(fh_bym2, "Fay-Herriot BYM2, admin 1")
+```
+
+## Fay--Herriot Model with Nested BYM2 Effects at Admin 2
+
+The sparse admin-2 direct estimates require the explicit variance-fix estimator.
+
+```{r fh-nested}
+fh_nested <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin2_info,
+  admin = 2, model = "bym2", nested = TRUE, aggregation = FALSE,
+  var.fix = TRUE
+), model_fun = fhModel)
+comparison_scatter(fh_nested, "Fay-Herriot nested BYM2 with variance fix")
+```
+
+## Cluster-Level Model with an IID Area Effect at Admin 1
+
+```{r cluster-iid}
+cluster_iid <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "iid", aggregation = FALSE
+), model_fun = clusterModel)
+comparison_scatter(cluster_iid, "Cluster IID, admin 1")
+```
+
+## Cluster-Level Model with a BYM2 Area Effect at Admin 1
+
+```{r cluster-bym2}
+cluster_bym2 <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "bym2", aggregation = FALSE
+), model_fun = clusterModel)
+comparison_scatter(cluster_bym2, "Cluster BYM2, admin 1")
+```
+
+## Cluster-Level Model with Stratified BYM2 Effects
+
+```{r cluster-stratified}
+cluster_stratified <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin1_info,
+  admin = 1, model = "bym2", stratification = TRUE,
+  aggregation = TRUE
+), model_fun = clusterModel)
+comparison_scatter(cluster_stratified, "Cluster stratified BYM2")
+```
+
+## Cluster-Level Model with Nested BYM2 Effects at Admin 2
+
+```{r cluster-nested}
+cluster_nested <- fit_both(list(
+  data = anc, cluster.info = cluster_info, admin.info = admin2_info,
+  admin = 2, model = "bym2", nested = TRUE, aggregation = FALSE
+), model_fun = clusterModel)
+comparison_scatter(cluster_nested, "Cluster nested BYM2, admin 2")
+```
+
+# Comparing Models from SUMMER::smoothSurvey with INLA and Stan
+
+This section compares the INLA implementation in `SUMMER::smoothSurvey()` with
+the Stan implementation in `surveyPrev::smoothSurveyStan()`.
+
+The `smoothSurvey` examples use the same sampler settings, `fit_both()` helper,
+and `comparison_scatter()` function defined above. All 3,000 retained Stan
+draws are used in SUMMER's post-processing; if supplied, `nsim` is overwritten
+by this retained draw count for the Stan fit.
 
 We will go through major use cases for the `smoothSurvey` function using the examples with the demo datasets.
 
@@ -534,7 +700,7 @@ interval_plot(nmr_interaction, parameter_type) +
   facet_wrap(~time, nrow = 2)
 ```
 
-## Guide to the Stan backend
+# Understanding the Internal Design of the Stan Backend
 
 The call path is
 
@@ -551,7 +717,7 @@ preparation and assemble the returned estimates. The functions in
 `surveyPrev` translate that prepared model input to Stan and translate the
 draws back to the small posterior interface used by SUMMER.
 
-### Interface, data preparation, and other infrastructure
+## Interface, Data Preparation, and Supporting Infrastructure
 
 | Function | File | Role |
 |---|---|---|
@@ -575,7 +741,7 @@ construction, or final aggregation normally belong in SUMMER. Changes to
 Stan data construction, sampling, or draw extraction belong in
 `.stan_smoothSurvey_fit()`.
 
-### Model-specific preparation and prior specification
+## Model-Specific Preparation and Prior Specification
 
 | Function | File | Responsibility |
 |---|---|---|
@@ -590,7 +756,7 @@ overdispersion hyperparameters, graph scaling constants, and BYM2 `phi` prior
 inputs are also created in R. Their actual contribution to the posterior is
 defined in the Stan `model` blocks.
 
-### Stan model specification
+## Stan Model Specification
 
 | Program or block | Responsibility |
 |---|---|
@@ -609,7 +775,7 @@ interaction, constraint, and BYM2-prior formulation. A revision to any of
 those shared model components should therefore be made in both programs and
 tested for both likelihoods.
 
-### Where to make a change
+## Where to Modify the Stan Backend
 
 | Intended revision | Start here | Also check |
 |---|---|---|
