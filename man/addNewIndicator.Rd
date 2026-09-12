@@ -14,7 +14,8 @@ addNewIndicator(
   HR = FALSE,
   MR = FALSE,
   AR = FALSE,
-  CR = FALSE
+  CR = FALSE,
+  chapter_map = NULL
 )
 }
 \arguments{
@@ -37,12 +38,31 @@ addNewIndicator(
 \item{AR}{Logical flag indicating whether the AR recode file is required.}
 
 \item{CR}{Logical flag indicating whether the CR recode file is required.}
+
+\item{chapter_map}{Optional data.frame giving the report chapter per ID,
+e.g. \code{read.csv("sideproject/results/passing_current/_chapter_map.csv")}
+from the DHS-indicator-factory repo. Must have columns \code{dhs_id} and
+\code{chap_abbrev}; an optional \code{recode} column ("IR", "PR", ...)
+fills the recode flag when all eight flags are left FALSE. When
+\code{new_id} is found in the map, its \code{chap_abbrev} is used and the
+built-in prefix/topic crosswalk is bypassed.}
 }
 \value{
 The a row to rbind into indicator_df
 }
 \description{
 Create new row to add in indicatorList.
+}
+\details{
+The chapter comes from \code{chapter_map} when it holds \code{new_id};
+otherwise the ID prefix (the token before the first underscore) must itself
+be a DHS report-chapter acronym (e.g. \code{FP}, \code{RH}, \code{CH}).
+StatCompiler chapter codes that are not report acronyms (\code{AH},
+\code{ED}, \code{CO}, \code{HA}, \code{HC}, \code{WS}, \code{MA},
+\code{CN}, \code{FI}, ...) therefore require a \code{chapter_map} row.
+Chapter numbers and titles follow the package's existing
+\code{indicatorList} (DHS-7 report numbering: WASH sits in Chapter 02,
+Fistula is Chapter 19).
 }
 \examples{
 \dontrun{

@@ -8,7 +8,7 @@
 #'
 #' @usage data(indicatorList)
 #'
-#' @format A data frame with 182 rows and 15 columns:
+#' @format A data frame with 434 rows and 15 columns:
 #' \describe{
 #'   \item{Chap_abbrev}{Chapter acronym.}
 #'   \item{ID}{DHS standard indicator ID.}

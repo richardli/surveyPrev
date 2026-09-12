@@ -11,6 +11,23 @@
 #' @param MR Logical flag indicating whether the MR recode file is required.
 #' @param AR Logical flag indicating whether the AR recode file is required.
 #' @param CR Logical flag indicating whether the CR recode file is required.
+#' @param chapter_map Optional data.frame giving the report chapter per ID,
+#'   e.g. \code{read.csv("sideproject/results/passing_current/_chapter_map.csv")}
+#'   from the DHS-indicator-factory repo. Must have columns \code{dhs_id} and
+#'   \code{chap_abbrev}; an optional \code{recode} column ("IR", "PR", ...)
+#'   fills the recode flag when all eight flags are left FALSE. When
+#'   \code{new_id} is found in the map, its \code{chap_abbrev} is used and the
+#'   built-in prefix/topic crosswalk is bypassed.
+#' @details
+#' The chapter comes from \code{chapter_map} when it holds \code{new_id};
+#' otherwise the ID prefix (the token before the first underscore) must itself
+#' be a DHS report-chapter acronym (e.g. \code{FP}, \code{RH}, \code{CH}).
+#' StatCompiler chapter codes that are not report acronyms (\code{AH},
+#' \code{ED}, \code{CO}, \code{HA}, \code{HC}, \code{WS}, \code{MA},
+#' \code{CN}, \code{FI}, ...) therefore require a \code{chapter_map} row.
+#' Chapter numbers and titles follow the package's existing
+#' \code{indicatorList} (DHS-7 report numbering: WASH sits in Chapter 02,
+#' Fistula is Chapter 19).
 #' @importFrom stringr str_split
 #' @author Qianyu Dong
 #' @examples
@@ -27,7 +44,8 @@
 #' @return The a row to rbind into indicator_df
 addNewIndicator <- function(new_id, dictionary,
                               IR=FALSE, PR=FALSE, KR=FALSE, BR=FALSE,
-                              HR=FALSE, MR=FALSE, AR=FALSE, CR=FALSE) {
+                              HR=FALSE, MR=FALSE, AR=FALSE, CR=FALSE,
+                              chapter_map = NULL) {
 
   # --- Step A: Extract information based on the new ID ---
 
@@ -59,10 +77,38 @@ addNewIndicator <- function(new_id, dictionary,
 
 
 
+  # Chapter map (e.g. DHS-indicator-factory
+  # sideproject/results/passing_current/_chapter_map.csv) supplies the report
+  # chapter; without a hit, the ID prefix must be a report-chapter acronym.
+  map_hit <- NULL
+  if (!is.null(chapter_map)) {
+    if (!all(c("dhs_id", "chap_abbrev") %in% names(chapter_map))) {
+      stop("`chapter_map` must have columns `dhs_id` and `chap_abbrev`.")
+    }
+    map_hit <- chapter_map[chapter_map$dhs_id == new_id, , drop = FALSE]
+    if (nrow(map_hit) == 0) map_hit <- NULL
+  }
+  if (!is.null(map_hit)) {
+    chap_acronym <- as.character(map_hit$chap_abbrev[1])
+  }
+
+  # Recode flag from the map when the caller left all flags FALSE.
+  if (!is.null(map_hit) && "recode" %in% names(map_hit) &&
+      !any(c(IR, PR, KR, BR, HR, MR, AR, CR))) {
+    rc <- toupper(as.character(map_hit$recode[1]))
+    if (rc %in% c("IR", "PR", "KR", "BR", "HR", "MR", "AR", "CR")) {
+      assign(rc, TRUE)
+    } else {
+      warning("chapter_map recode '", rc, "' for ", new_id,
+              " not recognised; all recode flags left FALSE.")
+    }
+  }
+
   chapter_info <- dhs_chapters[dhs_chapters$Acronym == chap_acronym, ]
 
   if (nrow(chapter_info) == 0) {
-    stop("Chapter acronym '", chap_acronym, "' not found in dhs_chapters.")
+    stop("Chapter acronym '", chap_acronym, "' is not a DHS report-chapter ",
+         "acronym. Supply `chapter_map` with a row for ", new_id, ".")
   }
 
   # Look up indicator details from the DHS dictionary
