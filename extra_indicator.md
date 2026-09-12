@@ -43,8 +43,14 @@ registered with addNewIndicator(chapter_map=). 40 validated on TZ_2022, 36 on ZM
 - **Chapter 17 - Domestic Violence** (5): DV_FMVL_W_POS, DV_PCPV_W_CHP, DV_PCSV_W_EMP, DV_PCSV_W_RLG, DV_STPV_W_HLP
 - **Chapter 18 - Female Genital Cutting** (1): FG_KFCC_M_HFC
 
-Pending: 13 functions whose factory copy was revised after the July migration
-(CH_VACS_C_PN3, CO_MOBB_M_MOB, CO_MOBB_W_MOB, ED_EDAT_B_CSC, ED_EDAT_B_HGH,
-ED_EDAT_B_NED, ED_EDAT_M_PRI, ED_EDAT_M_SPR, ED_EDAT_W_CSC, ED_EDAT_W_SPR,
-ED_MDIA_W_RDO, ED_MDIA_W_TLV, RH_ANCN_W_NON) still hold the July code in R/;
-the seven ED_EDAT ones switch recode to PR when refreshed.
+### 2026-09-12 — 8 July-migrated functions refreshed to the factory's September code
+
+CO_MOBB_M_MOB and ED_EDAT_B_CSC, ED_EDAT_B_HGH, ED_EDAT_B_NED, ED_EDAT_M_PRI,
+ED_EDAT_M_SPR, ED_EDAT_W_CSC, ED_EDAT_W_SPR replaced with the passing_current
+versions (all validated on ZM_2018 within 0.5 ppt). The seven ED_EDAT functions now
+read the PR household roster (hv109) like the rest of the family; their indicatorList
+recode flags changed from IR/MR/BR to PR. No row added or removed (434 rows).
+
+Pending: 5 functions authored in the package before the factory existed
+(CH_VACS_C_PN3, CO_MOBB_W_MOB, ED_MDIA_W_RDO, ED_MDIA_W_TLV, RH_ANCN_W_NON) differ
+from their factory copies; review definitions before replacing.

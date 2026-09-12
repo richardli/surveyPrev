@@ -3,14 +3,18 @@
 \name{ED_EDAT_B_CSC}
 \alias{ED_EDAT_B_CSC}
 \title{Population age 6 and over with completed secondary education}
+\source{
+DHS-indicator-factory sideproject/results/passing_current/Chap_ED/ED_EDAT_B_CSC.R; validated on ZM_2018 (published 7.6, observed 7.6346, abs_error 0.0346).
+}
 \usage{
-ED_EDAT_B_CSC(BRdata)
+ED_EDAT_B_CSC(PRdata)
 }
 \arguments{
-\item{BRdata}{A DHS Births Recode (BR) data.frame.}
+\item{PRdata}{A DHS Household Member Recode (PR) data.frame.}
 }
 \value{
-A data.frame with a `value` column.
+A data.frame with a `value` column (1/0/NA), ready for
+  surveyPrev::getDHSindicator().
 }
 \description{
 Percentage of the de facto household population age 6 and over with some secondary education

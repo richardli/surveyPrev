@@ -2,24 +2,26 @@
 #'
 #' Percentage of the de facto male household population age 6 and over with no education education
 #'
-#' @param MRdata A DHS Men's Recode (MR) data.frame.
-#' @return A data.frame with a `value` column.
+#' @param PRdata A DHS Household Member Recode (PR) data.frame.
+#' @return A data.frame with a `value` column (1/0/NA), ready for
+#'   surveyPrev::getDHSindicator().
+#' @source DHS-indicator-factory sideproject/results/passing_current/Chap_ED/ED_EDAT_M_SPR.R; validated on ZM_2018 (published 39.9, observed 40.3186, abs_error 0.4186).
 #' @export
-ED_EDAT_M_SPR <- function(MRdata) {
-  # Male population age 6 and over with some primary education
-  # Denominator: all men in MRdata (age 15+, which satisfies age 6+)
-  # Numerator: primary as highest level attended (mv106 == 1)
-  # Weight: mv005 / 1,000,000
-  
-  result <- MRdata %>%
-    mutate(
-      value = case_when(
-        mv106 == 1 ~ 1,  # primary as highest level
-        mv106 %in% c(0, 2, 3) ~ 0,  # no education, secondary, or higher
-        TRUE ~ NA_real_  # missing/don't know
-      )
-    ) %>%
-    select(mv001, mv002, mv005, mv022, mv023, mv024, mv025, value)
-  
+ED_EDAT_M_SPR <- function(PRdata) {
+  # Male population age 6 and over: SPR educational attainment.
+  # Denominator: de facto household males age 6+ (hv103==1, hv105>=6),
+  #   known educational attainment (hv109 in 0:5).
+  # @source LLM-authored | seed=ED_EDAT_M_SPR | iter=3 | fix=migrated to PR household
+  #   population 6+ with hv109 for family consistency; validated on ZM_2018.
+  result <- PRdata %>%
+    mutate(hv103 = haven::zap_labels(hv103), hv105 = haven::zap_labels(hv105),
+           hv104 = haven::zap_labels(hv104), e = haven::zap_labels(hv109)) %>%
+    filter(hv103 == 1, hv105 >= 6, hv104 == 1) %>%
+    mutate(value = case_when(
+      e %in% 0:5 & (e == 1) ~ 1,
+      e %in% 0:5 ~ 0,
+      TRUE ~ NA_real_
+    )) %>%
+    select(hv001, hv002, hv005, hv022, hv023, hv024, hv025, value)
   return(as.data.frame(result))
 }

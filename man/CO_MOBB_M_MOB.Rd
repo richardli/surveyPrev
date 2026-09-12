@@ -3,6 +3,9 @@
 \name{CO_MOBB_M_MOB}
 \alias{CO_MOBB_M_MOB}
 \title{Men who own a mobile phone}
+\source{
+DHS-indicator-factory sideproject/results/passing_current/Chap_CO/CO_MOBB_M_MOB.R; validated on ZM_2018 (published 66, observed 65.9917, abs_error 0.0083).
+}
 \usage{
 CO_MOBB_M_MOB(MRdata)
 }
@@ -10,7 +13,8 @@ CO_MOBB_M_MOB(MRdata)
 \item{MRdata}{A DHS Men's Recode (MR) data.frame.}
 }
 \value{
-A data.frame with a `value` column.
+A data.frame with a `value` column (1/0/NA), ready for
+  surveyPrev::getDHSindicator().
 }
 \description{
 Percentage of men who own a mobile phone

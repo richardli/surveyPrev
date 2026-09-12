@@ -3,14 +3,18 @@
 \name{ED_EDAT_W_SPR}
 \alias{ED_EDAT_W_SPR}
 \title{Female population age 6 and over with some primary education}
+\source{
+DHS-indicator-factory sideproject/results/passing_current/Chap_ED/ED_EDAT_W_SPR.R; validated on ZM_2018 (published 44, observed 44.2095, abs_error 0.2095).
+}
 \usage{
-ED_EDAT_W_SPR(IRdata)
+ED_EDAT_W_SPR(PRdata)
 }
 \arguments{
-\item{IRdata}{A DHS Individual Recode (IR) data.frame.}
+\item{PRdata}{A DHS Household Member Recode (PR) data.frame.}
 }
 \value{
-A data.frame with a `value` column.
+A data.frame with a `value` column (1/0/NA), ready for
+  surveyPrev::getDHSindicator().
 }
 \description{
 Percentage of the de facto female household population age 6 and over with no education education

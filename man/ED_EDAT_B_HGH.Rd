@@ -3,14 +3,18 @@
 \name{ED_EDAT_B_HGH}
 \alias{ED_EDAT_B_HGH}
 \title{Population age 6 and over who attended higher education}
+\source{
+DHS-indicator-factory sideproject/results/passing_current/Chap_ED/ED_EDAT_B_HGH.R; validated on ZM_2018 (published 4.1, observed 4.0911, abs_error 0.0089).
+}
 \usage{
-ED_EDAT_B_HGH(BRdata)
+ED_EDAT_B_HGH(PRdata)
 }
 \arguments{
-\item{BRdata}{A DHS Births Recode (BR) data.frame.}
+\item{PRdata}{A DHS Household Member Recode (PR) data.frame.}
 }
 \value{
-A data.frame with a `value` column.
+A data.frame with a `value` column (1/0/NA), ready for
+  surveyPrev::getDHSindicator().
 }
 \description{
 Percentage of the de facto household population age 6 and over who attended higher education

@@ -3,14 +3,18 @@
 \name{ED_EDAT_M_PRI}
 \alias{ED_EDAT_M_PRI}
 \title{Male population age 6 and over who attended primary education}
+\source{
+DHS-indicator-factory sideproject/results/passing_current/Chap_ED/ED_EDAT_M_PRI.R; validated on ZM_2018 (published 49.6, observed 50.0973, abs_error 0.4973).
+}
 \usage{
-ED_EDAT_M_PRI(MRdata)
+ED_EDAT_M_PRI(PRdata)
 }
 \arguments{
-\item{MRdata}{A DHS Men's Recode (MR) data.frame.}
+\item{PRdata}{A DHS Household Member Recode (PR) data.frame.}
 }
 \value{
-A data.frame with a `value` column.
+A data.frame with a `value` column (1/0/NA), ready for
+  surveyPrev::getDHSindicator().
 }
 \description{
 Percentage of the de facto male household population age 6 and over who attended primary education
