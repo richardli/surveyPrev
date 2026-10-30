@@ -766,6 +766,9 @@ directEST_varfix = function (data, cluster.info, admin, strata = "all", CI = 0.9
         res.admin2.fix <- res.admin2 %>%
           rows_update(admin2_res, by = "admin2.name.full", unmatched = "ignore")
         res.admin2 = res.admin2.fix
+        # admin2_res held only the fixed areas; restore the full table so the
+        # posterior draws below cover every area
+        admin2_res <- res.admin2
       }
 
 
@@ -1099,6 +1102,9 @@ directEST_varfix = function (data, cluster.info, admin, strata = "all", CI = 0.9
         res.admin1.fix <- res.admin1 %>%
           rows_update(admin1_res, by = "admin1.name", unmatched = "ignore")
         res.admin1 = res.admin1.fix
+        # admin1_res held only the fixed areas; restore the full table so the
+        # posterior draws below cover every area
+        admin1_res <- res.admin1
       }
 
 
@@ -1131,6 +1137,7 @@ directEST_varfix = function (data, cluster.info, admin, strata = "all", CI = 0.9
                       sd = sqrt(admin1_res$direct.logit.var))
       draw.all = expit(apply(dd, 1, FUN = function(x) rnorm(10000,
                                                             mean = x[1], sd = x[2])))
+      colnames(draw.all) = admin1_res$admin1.name
       res.admin1 = list(res.admin1 = res.admin1,
                         admin1_post = draw.all,
                         fixed_areas=trigger_area,
